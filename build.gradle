@@ -1,0 +1,39 @@
+apply plugin: 'idea'
+apply plugin: 'java'
+apply plugin: 'kotlin'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
+
+ext.kotlinVersion = '0.11.91.1'
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:0.11.91.1"
+        classpath 'org.zeroturnaround:zt-exec:1.6'
+    }
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+test {
+    useTestNG()
+}
+
+dependencies {
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: "${kotlinVersion}"
+
+    compile 'org.mongodb:mongo-java-driver:3.0.0'
+    compile 'org.zeroturnaround:zt-exec:1.6'
+    compile 'org.apache.commons:commons-lang3:3.4'
+    compile 'org.apache.commons:commons-compress:1.9'
+
+    testCompile 'org.testng:testng:6.8.21'
+}
