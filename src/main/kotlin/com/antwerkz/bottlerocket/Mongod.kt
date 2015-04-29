@@ -6,6 +6,8 @@ import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.exec.ProcessResult
 import org.zeroturnaround.exec.StartedProcess
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
+import org.zeroturnaround.process.JavaProcess
+import org.zeroturnaround.process.Processes
 import java.io.File
 import java.io.FileOutputStream
 
@@ -21,13 +23,13 @@ public class Mongod(public val name: String, public var port: Int,
     public val pidFile: File = File(dbPath, "${name}.pid")
     public var processResult: StartedProcess? = null
 
+    private var process: JavaProcess? = null
+
     fun start() {
         dbPath.mkdirs()
         logDir.mkdirs()
         val file = downloadManager.download(version);
         mongod = "${file}/bin/${if (SystemUtils.IS_OS_WINDOWS) "mongod.exe" else "mongod"}"
-        println("pidFile = ${pidFile}")
-        println("dbPath = ${dbPath}")
 
         println("Starting mongod with ${mongod}")
         val args = listOf(mongod,
@@ -36,13 +38,21 @@ public class Mongod(public val name: String, public var port: Int,
               "--dbpath", dbPath.toString(),
               "--pidfilepath", pidFile.toString()
         )
-        println("args = ${args}")
         processResult = ProcessExecutor()
               .command(args)
-//              .redirectOutput(FileOutputStream(File(dbPath, "${name}.out")))
-              .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${name}")).asInfo())
-              .redirectError(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${name}")).asWarn())
+              .redirectOutput(FileOutputStream(File(dbPath, "${name}.out")))
+              .redirectError(FileOutputStream(File(dbPath, "${name}.err")))
+//              .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${name}")).asInfo())
+//              .redirectError(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${name}")).asInfo())
               .destroyOnExit()
               .start()
+
+        process = Processes.newJavaProcess(processResult?.process());
+
+    }
+
+    fun shutdown(): Boolean {
+        process?.destroy(false)
+        return false;
     }
 }
