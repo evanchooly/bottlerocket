@@ -1,9 +1,11 @@
 package com.antwerkz.bottlerocket;
 
 //import com.antwerkz.bottlerocket.MongoCluster.ClusterBuilder;
+
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
@@ -50,7 +52,6 @@ public class MongoClusterTest {
             client.close();
         }
 
-        LOG.warn("*************");
         mongod.start();
         client = new MongoClient("localhost", 30000);
         try {
@@ -60,8 +61,31 @@ public class MongoClusterTest {
         } finally {
             client.close();
         }
+    }
 
-        //        Thread.sleep(30000);
-//        final MongoCluster cluster = builder.build();
+    @Test
+    public void replicaSet() {
+        final MongoCluster cluster = new MongoCluster();
+        cluster.setReplSetSize(3);
+        cluster.setName("rocket");
+        cluster.clean();
+        final ReplicaSet replicaSet = cluster.replicaSet("rocket");
+
+        replicaSet.start();
+
+        final Mongod primary = replicaSet.getPrimary();
+        Assert.assertEquals(primary.getPort(), 30000, "30000 should be the primary at startup");
+        final MongoClient client = new MongoClient(new ServerAddress("localhost", 30000));
+        final MongoCollection<Document> collection = client.getDatabase("bottlerocket").getCollection("replication");
+        final Document document = new Document("key", "value");
+
+        collection
+              .withWriteConcern(WriteConcern.REPLICAS_SAFE)
+              .insertOne(document);
+
+        final Document first = collection.find().first();
+        Assert.assertEquals(document, first);
+
+        Assert.assertTrue(replicaSet.hasPrimary());
     }
 }
