@@ -9,16 +9,29 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 
 val TEMP_DIR = if (File("/tmp").exists()) "/tmp" else System.getProperty("java.io.tmpdir")
+val DEFAULT_MONGOD_NAME = "BottleRocket"
+val DEFAULT_PORT = 30000
+val DEFAULT_VERSION = "installed"
 
-public class MongoCluster(public var name: String = "BottleRocket",
-                          public var basePort: Int = 30000,
-                          public var version: String = "installed",
-                          public var mongosCount: Int = -1,
-                          public var replSetSize: Int = -1,
-                          public var dataDir: File = File("${TEMP_DIR}/${name}/data"),
-                          public var logDir: File = File("${TEMP_DIR}/${name}/logs")) {
+open public class MongoCluster(public var name: String = DEFAULT_MONGOD_NAME,
+                          public var basePort: Int = DEFAULT_PORT,
+                          public var version: String = DEFAULT_VERSION) : Commandable {
 
-    private val downloadManager: DownloadManager = DownloadManager()
+    public val downloadManager: DownloadManager = DownloadManager()
+
+    companion object {
+        fun singleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_PORT, version: String = DEFAULT_VERSION): Mongod {
+            return Mongod(name, port, version)
+        }
+
+        fun replicaSet(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_PORT, version: String = DEFAULT_VERSION,
+                       size: Int = 3): ReplicaSet {
+            return ReplicaSet(name, port, version, size)
+        }
+    }
+
+    public var dataDir: File = File("${TEMP_DIR}/${name}/data")
+    public var logDir: File = File("${TEMP_DIR}/${name}/logs")
 
     fun clean() {
         dataDir.deleteTree()
@@ -26,13 +39,6 @@ public class MongoCluster(public var name: String = "BottleRocket",
     }
 
 
-    fun singleNode(): Mongod {
-        return Mongod(name, basePort, version, dataDir, logDir)
-    }
-
-    fun replicaSet(replSetName: String = name): ReplicaSet {
-        return ReplicaSet(this, replSetName, size = replSetSize)
-    }
 }
 
 fun File.deleteTree() {

@@ -5,14 +5,14 @@ import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.exec.StartedProcess
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import org.zeroturnaround.process.JavaProcess
 import org.zeroturnaround.process.Processes
 import java.io.File
 import java.io.FileOutputStream
 
-public class Mongod(public val name: String, public var port: Int,
-                    public var version: String, public var  dataDir: File,
-                    public var logDir: File, public val downloadManager: DownloadManager = DownloadManager()) : Commandable {
+public class Mongod(name: String = DEFAULT_MONGOD_NAME, public var port: Int,
+                    version: String) : MongoCluster(name, port, version) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(javaClass<Mongod>())
@@ -21,10 +21,8 @@ public class Mongod(public val name: String, public var port: Int,
     public var replSetName: String? = null
 
     public val mongod: String
-    public val dbPath: File = File(dataDir, name)
-    public val logPath: File = File(logDir, "${name}.log")
     public val binDir: String
-    public val pidFile: File = File(dbPath, "${name}.pid")
+    public val pidFile: File = File(dataDir, "${name}.pid")
     public var processResult: StartedProcess? = null
         private set
     public var process: JavaProcess? = null
@@ -39,14 +37,14 @@ public class Mongod(public val name: String, public var port: Int,
 
     fun start() {
         if (process == null || !process?.isAlive()!!) {
-            dbPath.mkdirs()
+            dataDir.mkdirs()
             logDir.mkdirs()
 
-            println("Starting mongod with ${mongod}")
+            LOG.info("Starting mongod with ${mongod} on port ${port}")
             val args = arrayListOf(mongod,
                   "--port", port.toString(),
-                  "--logpath", logPath.toString(),
-                  "--dbpath", dbPath.toString(),
+                  "--logpath", "${logDir}/mongod.log",
+                  "--dbpath", dataDir.toString(),
                   "--pidfilepath", pidFile.toString(),
                   "-vvv"
             )
@@ -55,10 +53,10 @@ public class Mongod(public val name: String, public var port: Int,
             }
             processResult = ProcessExecutor()
                   .command(args)
-                  .redirectOutput(FileOutputStream(File(dbPath, "${name}.out")))
-                  .redirectError(FileOutputStream(File(dbPath, "${name}.err")))
-                  //              .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${name}")).asInfo())
-                  //              .redirectError(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${name}")).asInfo())
+//                  .redirectOutput(FileOutputStream(File(dbPath, "${name}.out")))
+//                  .redirectError(FileOutputStream(File(dbPath, "${name}.err")))
+                                .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
+                                .redirectError(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
                   .destroyOnExit()
                   .start()
             process = Processes.newJavaProcess(processResult?.process());
@@ -67,7 +65,6 @@ public class Mongod(public val name: String, public var port: Int,
 
     fun shutdown(): Boolean {
         LOG.info("Shutting down mongod on port ${port}")
-        println("Shutting down mongod on port ${port}")
         val shutdown = runCommand(this, "db.shutdownServer()")
         process?.destroy(true)
         replicaSet?.waitForPrimary()

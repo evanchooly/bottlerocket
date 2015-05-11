@@ -11,32 +11,46 @@ import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.net.InetAddress
 import java.util.concurrent.TimeUnit
 
-class ReplicaSet(cluster: MongoCluster, public val name: String, public var size: Int): Commandable {
+class ReplicaSet(name: String = DEFAULT_MONGOD_NAME, port: Int,
+                    version: String, public var size: Int): MongoCluster(name, port, version) {
     public var nodes: MutableList<Mongod> = arrayListOf()
     private var nodeMap: Map<Int, Mongod> = hashMapOf()
     public var initialized: Boolean = false;
         private set
     private var client: MongoClient? = null;
 
-    init {
-        var port = cluster.basePort
-        for ( i in 0..size - 1) {
-            val mongod = Mongod("${name}${i}", port, cluster.version, cluster.dataDir, cluster.logDir)
-            mongod.replSetName = cluster.name
-            nodes.add(mongod)
-            port += 1;
+
+    fun start() {
+        if (nodes.isEmpty()) {
+            var port = basePort
+            for ( i in 0..size - 1) {
+                val nodeName = "${name}${i}"
+                val mongod = Mongod(nodeName, port, version)
+                mongod.logDir = File(logDir, nodeName)
+                mongod.dataDir = File(dataDir, nodeName)
+                mongod.replSetName = name
+                nodes.add(mongod)
+                port += 1;
+            }
         }
+        for (node in nodes) {
+            node.start()
+            node.replicaSet = this;
+        }
+        nodeMap = nodes.toMap { it.port }
+
+        initialize()
     }
 
     private fun initialize() {
         if (initialized) {
             return;
         }
-        val primary = nodes.get(0)
-        primary.start()
+        val primary = nodes.first()
 
         initiateReplicaSet(primary)
         nodes.sequence().withIndex()
@@ -82,16 +96,6 @@ class ReplicaSet(cluster: MongoCluster, public val name: String, public var size
         }
 
         return client!!;
-    }
-
-    fun start() {
-        for (node in nodes) {
-            node.start()
-            node.replicaSet = this;
-        }
-        nodeMap = nodes.toMap { it.port }
-
-        initialize()
     }
 
     fun shutdown() {

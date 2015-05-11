@@ -22,7 +22,7 @@ public class MongoClusterTest {
 
     @Test
     public void singleNode() throws InterruptedException, UnknownHostException {
-        final Mongod mongod = new MongoCluster().singleNode();
+        final Mongod mongod = MongoCluster.Companion.singleNode("rocket", 30000, "installed");
         mongod.start();
 
         MongoClient client = new MongoClient("localhost", 30000);
@@ -65,11 +65,8 @@ public class MongoClusterTest {
 
     @Test
     public void replicaSet() {
-        final MongoCluster cluster = new MongoCluster();
-        cluster.setReplSetSize(3);
-        cluster.setName("rocket");
-        cluster.clean();
-        final ReplicaSet replicaSet = cluster.replicaSet("rocket");
+        final ReplicaSet replicaSet = MongoCluster.Companion.replicaSet("rocket", 30000, "installed", 3);
+        replicaSet.clean();
 
         replicaSet.start();
 
