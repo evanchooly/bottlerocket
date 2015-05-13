@@ -1,18 +1,12 @@
 package com.antwerkz.bottlerocket
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.ObjectWriter
 import com.jayway.awaitility.Awaitility
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
-import com.mongodb.ReplicaSetStatus
-import org.apache.commons.lang3.SystemUtils
-import org.slf4j.LoggerFactory
-import org.zeroturnaround.exec.ProcessExecutor
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.InetAddress
+import java.util.Date
+import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
 class ReplicaSet(name: String = DEFAULT_MONGOD_NAME, port: Int,
@@ -53,20 +47,37 @@ class ReplicaSet(name: String = DEFAULT_MONGOD_NAME, port: Int,
         val primary = nodes.first()
 
         initiateReplicaSet(primary)
+        println("replSet initiated.  waiting for primary.")
+        waitForPrimary()
+        println("primary found.  adding other members.")
         nodes.sequence().withIndex()
               .filter { it.index > 0 }
-              .forEach { addMember(primary, it.value) }
+              .forEach { addMember(it.value) }
 
         waitForPrimary()
         initialized = true;
+
+        println("replica set ${name} started.")
     }
 
-    private fun initiateReplicaSet(mongod: Mongod): Boolean {
-        return runCommand(mongod, "rs.initiate();\nrs.status();\nquit;\n")
+    private fun initiateReplicaSet(mongod: Mongod) {
+        val results = runCommand(mongod, "rs.initiate();")
+
+        if( !(results.getInt32("ok")?.intValue()?.equals(1) ?: false) ) {
+            throw IllegalStateException("Failed to initiate replica set: ${results}")
+        }
     }
 
-    private fun addMember(primary: Mongod, mongod: Mongod): Boolean {
-        return runCommand(primary, "rs.add(\"${InetAddress.getLocalHost().getHostName()}:${mongod.port}\");")
+    private fun addMember(mongod: Mongod) {
+        val primary = getPrimary()
+        if (primary == null) {
+            throw IllegalStateException("Replica set ${name} has no primary")
+        }
+        val results = runCommand(primary, "rs.add(\"${InetAddress.getLocalHost().getHostName()}:${mongod.port}\");")
+
+        if( results.getInt32("ok").getValue() != 1) {
+            throw RuntimeException("Failed to add member to replica set:  ${mongod}")
+        }
     }
 
     fun getNode(port: Int): Mongod? {
@@ -74,17 +85,30 @@ class ReplicaSet(name: String = DEFAULT_MONGOD_NAME, port: Int,
     }
 
     fun getPrimary(): Mongod? {
-        return nodeMap.get(getClient().getReplicaSetStatus().getMaster()?.getPort());
+        if (nodes.isEmpty()) {
+            return null;
+        }
+        val mongod = nodes.filter({ it.isRunning() }).first()
+        val result = runCommand(mongod, "db.isMaster()");
+
+        if (result.containsKey ("primary")) {
+            val host = result.getString("primary")!!.getValue()
+            return nodeMap.get(Integer.valueOf(host.split(":")[1]))
+        } else {
+            return null
+        }
     }
 
     fun hasPrimary(): Boolean {
         return getPrimary() != null;
     }
 
-    fun waitForPrimary() {
+    fun waitForPrimary(): Mongod? {
         Awaitility.await()
             .atMost(30, TimeUnit.SECONDS)
-            .until({ while (!hasPrimary()) { Thread.sleep(1000) } })
+            .until({ while (!hasPrimary()) { Thread.sleep(500) } })
+
+        return getPrimary()
     }
 
     fun getClient(): MongoClient {
@@ -99,12 +123,10 @@ class ReplicaSet(name: String = DEFAULT_MONGOD_NAME, port: Int,
     }
 
     fun shutdown() {
+        client?.close()
+        client = null;
         for (node in nodes) {
             node.shutdown()
-        }
-        if (client != null) {
-            client?.close()
-            client = null;
         }
     }
 }
