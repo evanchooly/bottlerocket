@@ -1,7 +1,5 @@
 package com.antwerkz.bottlerocket;
 
-//import com.antwerkz.bottlerocket.MongoCluster.ClusterBuilder;
-
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
@@ -22,8 +20,11 @@ public class MongoClusterTest {
 
     @Test
     public void singleNode() throws InterruptedException, UnknownHostException {
-        final Mongod mongod = MongoCluster.Companion.singleNode("rocket", 30000, "installed");
+        final MongodBuilder builder = Mongod.Companion.builder();
+        builder.setName("rocket");
+        final Mongod mongod = builder.mongod();
         try {
+            mongod.clean();
             mongod.start();
 
             MongoClient client = new MongoClient("localhost", 30000);
@@ -38,32 +39,6 @@ public class MongoClusterTest {
 
             Assert.assertEquals(collection.find().first(), document);
             client.close();
-
-/*
-            final boolean shutdown = mongod.shutdown();
-            final MongoClientOptions options = MongoClientOptions.builder()
-                                                                 .connectTimeout(1000).build();
-            client = new MongoClient(new ServerAddress("localhost", 30000), options);
-            try {
-                collection = db.getCollection("singlenode");
-                Assert.assertEquals(collection.find().first(), document);
-                Assert.fail("Connection should have timed out");
-            } catch (IllegalStateException e) {
-                // expected
-            } finally {
-                client.close();
-            }
-
-            mongod.start();
-            client = new MongoClient("localhost", 30000);
-            try {
-                db = client.getDatabase("bottlerocket");
-                collection = db.getCollection("singlenode");
-                Assert.assertEquals(collection.find().first(), document);
-            } finally {
-                client.close();
-            }
-*/
         } finally {
             mongod.shutdown();
         }
@@ -71,7 +46,9 @@ public class MongoClusterTest {
 
     @Test
     public void replicaSet() {
-        final ReplicaSet replicaSet = MongoCluster.Companion.replicaSet("rocket", 30000, "installed", 3);
+        final ReplicaSetBuilder builder = ReplicaSet.Companion.replSet();
+        builder.setName("rocket");
+        final ReplicaSet replicaSet = builder.build();
         try {
             replicaSet.clean();
 
@@ -96,6 +73,14 @@ public class MongoClusterTest {
         } finally {
             replicaSet.shutdown();
         }
-
     }
+
+/*
+    @Test
+    public void sharded() {
+        final ShardedCluster sharded = MongoCluster.Companion.sharded("shardme", 30000, "installed", 3);
+        sharded.clean();
+    }
+*/
+
 }

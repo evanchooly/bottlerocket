@@ -5,29 +5,36 @@ import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
 import java.io.File
 import java.net.InetAddress
-import java.util.Date
-import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
-class ReplicaSet(name: String = DEFAULT_MONGOD_NAME, port: Int,
-                    version: String, public var size: Int): MongoCluster(name, port, version) {
-    public var nodes: MutableList<Mongod> = arrayListOf()
+class ReplicaSet(public val name: String = DEFAULT_MONGOD_NAME, public val basePort: Int = DEFAULT_PORT,
+                 public val version: String = DEFAULT_VERSION, public var size: Int = 3,
+                 public val baseDir: File = DEFAULT_DBPATH) : MongoCluster() {
+    public val nodes: MutableList<Mongod> = arrayListOf()
     private var nodeMap: Map<Int, Mongod> = hashMapOf()
     public var initialized: Boolean = false;
         private set
     private var client: MongoClient? = null;
 
-
+    companion object {
+        fun replSet(): ReplicaSetBuilder {
+            return ReplicaSetBuilder()
+        }
+    }
+    
+    override
     fun start() {
         if (nodes.isEmpty()) {
             var port = basePort
             for ( i in 0..size - 1) {
-                val nodeName = "${name}${i}"
-                val mongod = Mongod(nodeName, port, version)
-                mongod.logDir = File(logDir, nodeName)
-                mongod.dataDir = File(dataDir, nodeName)
-                mongod.replSetName = name
-                nodes.add(mongod)
+                val builder = Mongod.builder()
+                builder.name = "${name}${i}"
+                builder.port = port
+                builder.version = version;
+                builder.logPath = File(baseDir, "logs/${builder.name}")
+                builder.dbPath = File(baseDir, "data/${builder.name}")
+                builder.replSetName = name
+                nodes.add(builder.mongod())
                 port += 1;
             }
         }
@@ -63,7 +70,7 @@ class ReplicaSet(name: String = DEFAULT_MONGOD_NAME, port: Int,
     private fun initiateReplicaSet(mongod: Mongod) {
         val results = runCommand(mongod, "rs.initiate();")
 
-        if( !(results.getInt32("ok")?.intValue()?.equals(1) ?: false) ) {
+        if ( !(results.getInt32("ok")?.intValue()?.equals(1) ?: false) ) {
             throw IllegalStateException("Failed to initiate replica set: ${results}")
         }
     }
@@ -75,13 +82,9 @@ class ReplicaSet(name: String = DEFAULT_MONGOD_NAME, port: Int,
         }
         val results = runCommand(primary, "rs.add(\"${InetAddress.getLocalHost().getHostName()}:${mongod.port}\");")
 
-        if( results.getInt32("ok").getValue() != 1) {
+        if ( results.getInt32("ok").getValue() != 1) {
             throw RuntimeException("Failed to add member to replica set:  ${mongod}")
         }
-    }
-
-    fun getNode(port: Int): Mongod? {
-        return nodeMap.get(port)
     }
 
     fun getPrimary(): Mongod? {
@@ -105,8 +108,12 @@ class ReplicaSet(name: String = DEFAULT_MONGOD_NAME, port: Int,
 
     fun waitForPrimary(): Mongod? {
         Awaitility.await()
-            .atMost(30, TimeUnit.SECONDS)
-            .until({ while (!hasPrimary()) { Thread.sleep(500) } })
+              .atMost(30, TimeUnit.SECONDS)
+              .until({
+                  while (!hasPrimary()) {
+                      Thread.sleep(500)
+                  }
+              })
 
         return getPrimary()
     }
@@ -122,11 +129,32 @@ class ReplicaSet(name: String = DEFAULT_MONGOD_NAME, port: Int,
         return client!!;
     }
 
+    override
+    fun clean() {
+        nodes.forEach { it.clean() }
+        baseDir.deleteTree()
+    }
+
+    override
     fun shutdown() {
         client?.close()
         client = null;
-        for (node in nodes) {
-            node.shutdown()
+        nodes.forEach { it.shutdown() }
+    }
+}
+
+class ReplicaSetBuilder() {
+    public var name: String = DEFAULT_MONGOD_NAME;
+        set(value) {
+            $name = value;
+            baseDir = if (baseDir == DEFAULT_REPLSET_PATH) File("${TEMP_DIR}/${name}") else baseDir
         }
+    public var basePort: Int = DEFAULT_PORT;
+    public var version: String = DEFAULT_VERSION;
+    public var size: Int = 3;
+    public var baseDir: File = DEFAULT_REPLSET_PATH;
+    
+    fun build(): ReplicaSet {
+        return ReplicaSet(name, basePort, version, size, baseDir)
     }
 }
