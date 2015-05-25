@@ -36,8 +36,6 @@ dependencies {
     compile 'org.apache.commons:commons-lang3:3.4'
     compile 'org.apache.commons:commons-compress:1.9'
     compile 'com.jayway.awaitility:awaitility:1.6.3'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.5.3'
-    compile 'com.beust:klaxon:0.12'
 
     testCompile 'org.testng:testng:6.8.21'
     testCompile 'org.slf4j:slf4j-simple:1.7.12'

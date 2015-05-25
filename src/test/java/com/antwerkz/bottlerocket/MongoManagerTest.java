@@ -6,9 +6,9 @@ import java.io.IOException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class DownloadManagerTest {
+public class MongoManagerTest {
 
-    private final DownloadManager manager = new DownloadManager();
+    private final MongoManager manager = new MongoManager("installed");
 
     @Test
     public void testUseInstalled() throws IOException {
@@ -43,6 +43,6 @@ public class DownloadManagerTest {
 
     @Test
     public void testDownload() throws Exception {
-        manager.download("3.0.2");
+        new MongoManager("3.0.2");
     }
 }

@@ -1,8 +1,7 @@
 package com.antwerkz.bottlerocket;
 
+import com.jayway.awaitility.Awaitility;
 import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -14,26 +13,36 @@ import org.testng.annotations.Test;
 
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 public class MongoClusterTest {
-    private static final Logger LOG = LoggerFactory.getLogger(MongoClusterTest.class);
-
+    @Test
+    public void await() {
+        final Callable<Boolean> waiting = () -> {
+            System.out.println("waiting");
+            return false;
+        };
+        Awaitility.await()
+            .atMost(30, TimeUnit.SECONDS)
+            .until(waiting);
+    }
     @Test
     public void singleNode() throws InterruptedException, UnknownHostException {
-        final MongodBuilder builder = Mongod.Companion.builder();
+        final SingleNodeBuilder builder = SingleNode.builder();
         builder.setName("rocket");
-        final Mongod mongod = builder.mongod();
+        final SingleNode mongod = builder.build();
         try {
             mongod.clean();
             mongod.start();
 
-            MongoClient client = new MongoClient("localhost", 30000);
+            final MongoClient client = new MongoClient("localhost", 30000);
             final List<String> names = client.getDatabaseNames();
             Assert.assertFalse(names.isEmpty(), names.toString());
 
-            MongoDatabase db = client.getDatabase("bottlerocket");
+            final MongoDatabase db = client.getDatabase("bottlerocket");
             db.drop();
-            MongoCollection<Document> collection = db.getCollection("singlenode");
+            final MongoCollection<Document> collection = db.getCollection("singlenode");
             final Document document = new Document("key", "value");
             collection.insertOne(document);
 
@@ -46,7 +55,7 @@ public class MongoClusterTest {
 
     @Test
     public void replicaSet() {
-        final ReplicaSetBuilder builder = ReplicaSet.Companion.replSet();
+        final ReplicaSetBuilder builder = ReplicaSet.builder();
         builder.setName("rocket");
         final ReplicaSet replicaSet = builder.build();
         try {
@@ -62,7 +71,7 @@ public class MongoClusterTest {
 
             collection
                   .withWriteConcern(WriteConcern.ACKNOWLEDGED)
-                  .insertOne(document);
+                      .insertOne(document);
 
             final Document first = collection.find().first();
             Assert.assertEquals(document, first);
@@ -75,12 +84,12 @@ public class MongoClusterTest {
         }
     }
 
-/*
     @Test
     public void sharded() {
-        final ShardedCluster sharded = MongoCluster.Companion.sharded("shardme", 30000, "installed", 3);
+        final ShardedCluster sharded = ShardedCluster.cluster()
+            .build();
         sharded.clean();
+        sharded.start();
     }
-*/
 
 }

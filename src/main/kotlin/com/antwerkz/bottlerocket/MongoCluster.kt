@@ -1,6 +1,11 @@
 package com.antwerkz.bottlerocket
 
+import org.slf4j.LoggerFactory
+import org.zeroturnaround.exec.ProcessExecutor
+import org.zeroturnaround.process.JavaProcess
+import org.zeroturnaround.process.Processes
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
@@ -13,19 +18,19 @@ val TEMP_DIR = if (File("/tmp").exists()) "/tmp" else System.getProperty("java.i
 val DEFAULT_MONGOD_NAME = "rocket"
 val DEFAULT_PORT = 30000
 val DEFAULT_VERSION = "installed"
-val DEFAULT_DBPATH = File("${TEMP_DIR}/${DEFAULT_MONGOD_NAME}/data")
-val DEFAULT_LOGPATH = File("${TEMP_DIR}/${DEFAULT_MONGOD_NAME}/logs")
-val DEFAULT_REPLSET_PATH = File("${TEMP_DIR}/${DEFAULT_MONGOD_NAME}")
+val DEFAULT_BASE_DIR = File("${TEMP_DIR}/${DEFAULT_MONGOD_NAME}")
 
-public abstract class MongoCluster() : Commandable {
+public abstract class MongoCluster(public val name: String, public val port: Int, public val version: String, public val baseDir: File) {
+    val mongoManager: MongoManager = MongoManager(version)
 
-    public val downloadManager: DownloadManager = DownloadManager()
+    public abstract fun start();
 
-    abstract fun start();
+    public abstract fun shutdown();
 
-    abstract fun shutdown();
-
-    abstract fun clean();
+    public open fun clean() {
+        shutdown();
+        baseDir.deleteTree()
+    }
 }
 
 fun File.deleteTree() {
