@@ -168,6 +168,7 @@ public class MongoManager(public var version: String) {
             downloadName = downloadName.substring(downloadName.lastIndexOf('/') + 1)
             val download = File(downloadPath, downloadName)
             if (!download.exists()) {
+                download.getParentFile().mkdirs()
                 url.openConnection().getInputStream().use { stream -> Files.copy(stream, download.toPath()) }
             }
             return download
