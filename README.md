@@ -8,7 +8,7 @@ Installing
 ----------  
 
 | Maven | Gradle |
-==================
+------------------
 | <dependency>
     <groupId>com.antwerkz.bottlerocket</groupId>
     <artifactId>bottlerocket</artifactId>
