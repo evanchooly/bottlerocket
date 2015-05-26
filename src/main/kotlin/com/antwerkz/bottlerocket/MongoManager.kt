@@ -149,7 +149,12 @@ public class MongoManager(public var version: String) {
         while (true) {
             var download: File = extractor()
             try {
-                return extract(download)
+                val file = extract(download)
+                File(file, "bin").listFiles().forEach {
+                    it.setExecutable(true)
+                }
+
+                return file
             } catch (e: Exception) {
                 download.delete()
                 retry++
@@ -168,6 +173,7 @@ public class MongoManager(public var version: String) {
             downloadName = downloadName.substring(downloadName.lastIndexOf('/') + 1)
             val download = File(downloadPath, downloadName)
             if (!download.exists()) {
+                LOG.info("${download    } does not exist.  Downloading binaries from mongodb.org")
                 download.getParentFile().mkdirs()
                 url.openConnection().getInputStream().use { stream -> Files.copy(stream, download.toPath()) }
             }

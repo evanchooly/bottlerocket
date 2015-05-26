@@ -9,6 +9,7 @@ import org.bson.Document;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.io.File;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,9 +20,7 @@ public class MongoClusterTest {
 
     @Test
     public void singleNode() throws InterruptedException, UnknownHostException {
-        final SingleNodeBuilder builder = SingleNode.builder();
-        builder.setName("rocket");
-        final SingleNode mongod = builder.build();
+        final SingleNode mongod = SingleNode.builder().build();
         try {
             mongod.clean();
             mongod.start();
@@ -45,9 +44,7 @@ public class MongoClusterTest {
 
     @Test
     public void replicaSet() {
-        final ReplicaSetBuilder builder = ReplicaSet.builder();
-        builder.setName("rocket");
-        final ReplicaSet replicaSet = builder.build();
+        final ReplicaSet replicaSet = ReplicaSet.builder().build();
         MongoClient client = null;
         try {
             replicaSet.clean();
@@ -112,7 +109,22 @@ public class MongoClusterTest {
             }
             sharded.shutdown();
         }
-
     }
 
+    public void manualCluster() {
+        final ReplicaSetBuilder builder = ReplicaSet.builder();
+        builder.setSize(0);
+        final ReplicaSet replicaSet = builder.build();
+        replicaSet.clean();
+
+        replicaSet.addNode(new MongoManager("2.6.10").mongod("v2610", 31000, new File("/tmp/v2610"), replicaSet));
+        replicaSet.addNode(new MongoManager("3.0.2").mongod("v302", 31001, new File("/tmp/v302"), replicaSet));
+        replicaSet.addNode(replicaSet.getMongoManager().mongod("installed", 31002, new File("/tmp/installed"), replicaSet));
+
+        try {
+            replicaSet.start();
+        } finally {
+            replicaSet.shutdown();
+        }
+    }
 }

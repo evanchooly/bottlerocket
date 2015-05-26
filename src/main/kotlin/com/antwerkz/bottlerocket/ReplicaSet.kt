@@ -49,6 +49,10 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         initialize()
     }
 
+    fun addNode(node: Mongod) {
+        nodes.add(node);
+    }
+
     private fun initialize() {
         if (initialized) {
             return;
@@ -134,13 +138,6 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         }
 
         return client!!;
-    }
-
-    public fun runCommand2(port: Int, command: String): BsonDocument {
-        val client = MongoClient("localhost", port);
-        val db = client.getDatabase("admin")
-
-        return BsonDocument()
     }
 
     public fun runCommand(port: Int, command: String): BsonDocument {
