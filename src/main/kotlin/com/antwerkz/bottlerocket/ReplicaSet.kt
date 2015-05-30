@@ -63,7 +63,7 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         println("replSet initiated.  waiting for primary.")
         waitForPrimary()
         println("primary found.  adding other members.")
-        nodes.sequence().withIndex()
+        nodes.asSequence().withIndex()
               .filter { it.index > 0 }
               .forEach { addMember(it.value) }
 
@@ -109,7 +109,7 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
 
         if (result.containsKey ("primary")) {
             val host = result.getString("primary")!!.getValue()
-            return nodeMap.get(Integer.valueOf(host.split(":")[1]))
+            return nodeMap.get(Integer.valueOf(host.split(":".toRegex()).toTypedArray()[1]))
         } else {
             return null
         }

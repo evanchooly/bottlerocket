@@ -3,7 +3,7 @@ package com.antwerkz.bottlerocket.configuration
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.internal.KClassImpl
 
-public trait ConfigBlock {
+public interface ConfigBlock {
     companion object {
         var OMIT_DEFAULTED = true
     }

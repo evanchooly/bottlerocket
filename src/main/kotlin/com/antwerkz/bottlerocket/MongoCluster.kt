@@ -37,13 +37,11 @@ fun File.deleteTree() {
     if (exists()) {
         if (isDirectory()) {
             Files.walkFileTree(toPath(), object : SimpleFileVisitor<Path>() {
-                throws(javaClass<IOException>())
                 override public fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
                     Files.delete(file);
                     return FileVisitResult.CONTINUE;
                 }
 
-                throws(javaClass<IOException>())
                 override public fun postVisitDirectory(dir: Path, e: IOException?): FileVisitResult {
                     if (e == null) {
                         Files.delete(dir);

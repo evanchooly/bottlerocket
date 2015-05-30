@@ -34,6 +34,7 @@ test {
 dependencies {
 //    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: "${kotlinVersion}"
 //    compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: "${kotlinVersion}"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"
     compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
 
     compile 'org.mongodb:mongo-java-driver:3.0.1'

@@ -91,9 +91,8 @@ public class MongoManager(public var version: String) {
         return extractDownload({ downloadArchive(format(macDownload, version)) })
     }
 
-    throws(javaClass<IOException>())
     public fun useInstalled(): File {
-        val path = System.getenv("PATH").split(File.pathSeparator)
+        val path = System.getenv("PATH").split(File.pathSeparator.toRegex()).toTypedArray()
         val mongod = if (SystemUtils.IS_OS_WINDOWS) "mongod.exe" else "mongod"
 
         var file = Stream.of<String>(*path)
@@ -109,7 +108,6 @@ public class MongoManager(public var version: String) {
         return file.getParentFile().getParentFile()
     }
 
-    throws(javaClass<IOException>())
     public fun extract(download: File): File {
         if (GzipUtils.isCompressedFilename(download.getName())) {
             TarArchiveInputStream(GZIPInputStream(FileInputStream(download))).use { inputStream ->
@@ -131,11 +129,10 @@ public class MongoManager(public var version: String) {
         throw RuntimeException("Unsupported file type: ${download}")
     }
 
-    throws(javaClass<IOException>())
     private fun extract(inputStream: ArchiveInputStream) {
         var entry: ArchiveEntry? = inputStream.getNextEntry()
         while (entry != null) {
-            val file = File(downloadPath, entry!!.getName())
+            val file = File(downloadPath, entry.getName())
             file.getParentFile().mkdirs()
             val out = FileOutputStream(file)
             IOUtils.copy(inputStream, out)

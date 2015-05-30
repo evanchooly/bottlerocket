@@ -21,11 +21,11 @@ public class MongoClusterTest {
     @Test
     public void singleNode() throws InterruptedException, UnknownHostException {
         final SingleNode mongod = SingleNode.builder().build();
+        final MongoClient client = new MongoClient("localhost", 30000);
         try {
             mongod.clean();
             mongod.start();
 
-            final MongoClient client = new MongoClient("localhost", 30000);
             final List<String> names = client.listDatabaseNames().into(new ArrayList<>());
             Assert.assertFalse(names.isEmpty(), names.toString());
 
@@ -36,8 +36,8 @@ public class MongoClusterTest {
             collection.insertOne(document);
 
             Assert.assertEquals(collection.find().first(), document);
-            client.close();
         } finally {
+            client.close();
             mongod.shutdown();
         }
     }
