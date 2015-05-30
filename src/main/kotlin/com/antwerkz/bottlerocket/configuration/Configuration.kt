@@ -21,9 +21,7 @@ class Configuration(
                   .toList()
                   .join("\n")
       }
-
 }
-
 
 class SystemLog(
       Since("3.0") public var verbosity: Verbosity = Verbosity.ZERO,
