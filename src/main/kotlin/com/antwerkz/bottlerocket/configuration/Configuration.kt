@@ -1,8 +1,5 @@
 package com.antwerkz.bottlerocket.configuration
 
-import com.antwerkz
-import com.antwerkz.bottlerocket.*
-
 annotation class Since(val version: String)
 
 class Configuration(
@@ -17,16 +14,13 @@ class Configuration(
       public var auditLog: AuditLog = AuditLog(),
       public var snmp: Snmp = Snmp()
 ) : ConfigBlock {
-    override fun toYaml(): String {
-        val list = arrayListOf<String>()
-        val c = Configuration::class
-
-        c.properties.forEach {
-            list.add((it.get(this) as ConfigBlock).toYaml())
-        }
-
-        return list.join("\n").trim();
-    }
+      override fun toYaml(): String {
+            return Configuration::class.properties
+                  .map { (it.get(this) as ConfigBlock).toYaml() }
+                  .filter { it != "" }
+                  .toList()
+                  .join("\n")
+      }
 
 }
 
@@ -50,18 +44,18 @@ class ProcessManagement(
 ) : ConfigBlock
 
 class Component(
-      Since("3.0") var accessControl: Verbosity = Verbosity.ZERO,
-      Since("3.0") var command: Verbosity = Verbosity.ZERO,
-      Since("3.0") var control: Verbosity = Verbosity.ZERO,
-      Since("3.0") var geo: Verbosity = Verbosity.ZERO,
-      Since("3.0") var index: Verbosity = Verbosity.ZERO,
-      Since("3.0") var network: Verbosity = Verbosity.ZERO,
-      Since("3.0") var query: Verbosity = Verbosity.ZERO,
-      Since("3.0") var replication: Verbosity = Verbosity.ZERO,
-      Since("3.0") var sharding: Verbosity = Verbosity.ZERO,
-      Since("3.0") var storage: Verbosity = Verbosity.ZERO,
-      Since("3.0") var storageJournal: Verbosity = Verbosity.ZERO,
-      Since("3.0") var write: Verbosity = Verbosity.ZERO
+      Since("3.0") var accessControl: LogComponent.AccessControl = LogComponent.AccessControl(),
+      Since("3.0") var command: LogComponent.Command = LogComponent.Command(),
+      Since("3.0") var control: LogComponent.Control = LogComponent.Control(),
+      Since("3.0") var geo: LogComponent.Geo = LogComponent.Geo(),
+      Since("3.0") var index: LogComponent.Index = LogComponent.Index(),
+      Since("3.0") var network: LogComponent.Network = LogComponent.Network(),
+      Since("3.0") var query: LogComponent.Query = LogComponent.Query(),
+      Since("3.0") var replication: LogComponent.Replication = LogComponent.Replication(),
+      Since("3.0") var sharding: LogComponent.Sharding = LogComponent.Sharding(),
+      Since("3.0") var storage: LogComponent.Storage = LogComponent.Storage(),
+      Since("3.0") var storageJournal: LogComponent.StorageJournal = LogComponent.StorageJournal(),
+      Since("3.0") var write: LogComponent.Write = LogComponent.Write()
 ) : ConfigBlock
 
 class Net(

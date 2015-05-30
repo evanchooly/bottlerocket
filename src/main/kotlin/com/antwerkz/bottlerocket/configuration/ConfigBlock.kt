@@ -37,7 +37,7 @@ public trait ConfigBlock {
             }
         }
 
-        return if (list.isEmpty()) "" else "${nodeName()}:\n  ${list.join("\n  ")}" ;
+        return if (list.isEmpty()) "" else "${nodeName()}:\n${list.join("\n")}" ;
     }
 }
 
