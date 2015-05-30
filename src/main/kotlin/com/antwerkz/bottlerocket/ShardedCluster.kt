@@ -23,7 +23,7 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
     private var nextPort = port
 
     companion object {
-        platformStatic fun cluster(): ShardedClusterBuilder {
+        platformStatic fun builder(): ShardedClusterBuilder {
             return ShardedClusterBuilder()
         }
     }

@@ -26,7 +26,7 @@ public class MongoClusterTest {
             mongod.start();
 
             final MongoClient client = new MongoClient("localhost", 30000);
-            final List<String> names = client.getDatabaseNames();
+            final List<String> names = client.listDatabaseNames().into(new ArrayList<>());
             Assert.assertFalse(names.isEmpty(), names.toString());
 
             final MongoDatabase db = client.getDatabase("bottlerocket");
@@ -77,7 +77,7 @@ public class MongoClusterTest {
 
     @Test
     public void sharded() {
-        final ShardedCluster sharded = ShardedCluster.cluster()
+        final ShardedCluster sharded = ShardedCluster.builder()
                                                      .build();
         MongoClient client = null;
         try {
@@ -88,7 +88,7 @@ public class MongoClusterTest {
 
             final ArrayList<Document> list = client.getDatabase("config").getCollection("shards").find().into(new ArrayList<>());
             Assert.assertEquals(list.size(), 3, "Should find 3 shards");
-            for (Document document : list) {
+            for (final Document document : list) {
                 switch (document.getString("_id")) {
                     case "rocket0":
                         Assert.assertEquals(document.getString("host"), "rocket0/localhost:30003,localhost:30004,localhost:30005");

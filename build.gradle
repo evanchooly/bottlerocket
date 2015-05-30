@@ -9,7 +9,7 @@ repositories {
     jcenter()
 }
 
-ext.kotlinVersion = '0.11.91.4'
+ext.kotlinVersion = '0.12.200'
 
 buildscript {
     repositories {
@@ -18,7 +18,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:0.11.91.4"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:0.12.200"
         classpath 'org.zeroturnaround:zt-exec:1.6'
         classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
     }
@@ -32,7 +32,9 @@ test {
 }
 
 dependencies {
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: "${kotlinVersion}"
+//    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: "${kotlinVersion}"
+//    compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: "${kotlinVersion}"
+    compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
 
     compile 'org.mongodb:mongo-java-driver:3.0.1'
     compile 'org.zeroturnaround:zt-exec:1.7'
