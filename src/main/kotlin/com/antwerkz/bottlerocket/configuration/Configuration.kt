@@ -3,43 +3,92 @@ package com.antwerkz.bottlerocket.configuration
 annotation class Since(val version: String)
 
 class Configuration(
-      public var systemLog: SystemLog = SystemLog(),
-      public var processManagement: ProcessManagement = ProcessManagement(),
-      public var net: Net = Net(),
-      public var security: Security = Security(),
-      public var operationProfiling: OperationProfiling = OperationProfiling(),
-      public var storage: Storage = Storage(),
-      public var replication: Replication = Replication(),
-      public var sharding: Sharding = Sharding(),
-      public var auditLog: AuditLog = AuditLog(),
-      public var snmp: Snmp = Snmp()
+      var systemLog: SystemLog = SystemLog(),
+      var processManagement: ProcessManagement = ProcessManagement(),
+      var net: Net = Net(),
+      var security: Security = Security(),
+      var operationProfiling: OperationProfiling = OperationProfiling(),
+      var storage: Storage = Storage(),
+      var replication: Replication = Replication(),
+      var sharding: Sharding = Sharding(),
+      var auditLog: AuditLog = AuditLog(),
+      var snmp: Snmp = Snmp()
 ) : ConfigBlock {
-      override fun toYaml(): String {
-            return Configuration::class.properties
-                  .map { (it.get(this) as ConfigBlock).toYaml() }
-                  .filter { it != "" }
-                  .toList()
-                  .join("\n")
-      }
+    override fun toYaml(): String {
+        return Configuration::class.properties
+              .map { (it.get(this) as ConfigBlock).toYaml() }
+              .filter { it != "" }
+              .toList()
+              .join("\n")
+    }
+
+    fun systemLog(init: SystemLog.() -> Unit) {
+        systemLog = initConfigBlock(SystemLog(), init)
+    }
+
+    fun processManagement(init: ProcessManagement.() -> Unit) {
+        processManagement = initConfigBlock(ProcessManagement(), init)
+    }
+
+    fun net(init: Net.() -> Unit) {
+        net = initConfigBlock(Net(), init)
+    }
+
+    fun security(init: Security.() -> Unit) {
+        security = initConfigBlock(Security(), init)
+    }
+
+    fun operationProfiling(init: OperationProfiling.() -> Unit) {
+        operationProfiling = initConfigBlock(OperationProfiling(), init)
+    }
+
+    fun storage(init: Storage.() -> Unit) {
+        storage = initConfigBlock(Storage(), init)
+    }
+
+    fun replication(init: Replication.() -> Unit) {
+        replication = initConfigBlock(Replication(), init)
+    }
+
+    fun sharding(init: Sharding.() -> Unit) {
+        sharding = initConfigBlock(Sharding(), init)
+    }
+
+    fun auditLog(init: AuditLog.() -> Unit) {
+        auditLog = initConfigBlock(AuditLog(), init)
+    }
+
+    fun snmp(init: Snmp.() -> Unit) {
+        snmp = initConfigBlock(Snmp(), init)
+    }
 }
 
 class SystemLog(
-      Since("3.0") public var verbosity: Verbosity = Verbosity.ZERO,
-      public var component: Component = Component(),
-      public var quiet: Boolean = false,
-      public var traceAllExceptions: Boolean = false,
-      public var syslogFacility: String = "user",
-      public var path: String? = null,
-      public var logAppend: Boolean = false,
-      Since("3.0") public var logRotate: RotateBehavior = RotateBehavior.RENAME,
+      Since("3.0") var verbosity: Verbosity = Verbosity.ZERO,
+      var component: Component = Component(),
+      var quiet: Boolean = false,
+      var traceAllExceptions: Boolean = false,
+      var syslogFacility: String = "user",
+      var path: String? = null,
+      var logAppend: Boolean = false,
+      Since("3.0") var logRotate: RotateBehavior = RotateBehavior.RENAME,
       public var destination: Destination = Destination.STANDARD_OUT,
-      public var timeStampFormat: TimestampFormat = TimestampFormat.ISO8601_LOCAL) : ConfigBlock
+      var timeStampFormat: TimestampFormat = TimestampFormat.ISO8601_LOCAL
+) : ConfigBlock {
+    fun component(init: Component.() -> Unit) {
+        component = initConfigBlock(Component(), init)
+    }
+}
 
 class ProcessManagement(
-      public var pidFilePath: String? = null,
-      public var fork: Boolean = false,
-      public var windowsService: WindowsService = WindowsService()
-) : ConfigBlock
+      var pidFilePath: String? = null,
+      var fork: Boolean = false,
+      var windowsService: WindowsService = WindowsService()
+) : ConfigBlock {
+    fun windowsService(init: WindowsService.() -> Unit) {
+        windowsService = initConfigBlock(WindowsService(), init)
+    }
+}
 
 class Component(
       Since("3.0") var accessControl: LogComponent.AccessControl = LogComponent.AccessControl(),
@@ -54,7 +103,55 @@ class Component(
       Since("3.0") var storage: LogComponent.Storage = LogComponent.Storage(),
       Since("3.0") var storageJournal: LogComponent.StorageJournal = LogComponent.StorageJournal(),
       Since("3.0") var write: LogComponent.Write = LogComponent.Write()
-) : ConfigBlock
+) : ConfigBlock {
+    fun accessControl(init: LogComponent.AccessControl.() -> Unit) {
+        accessControl = initConfigBlock(LogComponent.AccessControl(), init)
+    }
+
+    fun command(init: LogComponent.Command.() -> Unit) {
+        command = initConfigBlock(LogComponent.Command(), init)
+    }
+
+    fun control(init: LogComponent.Control.() -> Unit) {
+        control = initConfigBlock(LogComponent.Control(), init)
+    }
+
+    fun geo(init: LogComponent.Geo.() -> Unit) {
+        geo = initConfigBlock(LogComponent.Geo(), init)
+    }
+
+    fun index(init: LogComponent.Index.() -> Unit) {
+        index = initConfigBlock(LogComponent.Index(), init)
+    }
+
+    fun network(init: LogComponent.Network.() -> Unit) {
+        network = initConfigBlock(LogComponent.Network(), init)
+    }
+
+    fun query(init: LogComponent.Query.() -> Unit) {
+        query = initConfigBlock(LogComponent.Query(), init)
+    }
+
+    fun replication(init: LogComponent.Replication.() -> Unit) {
+        replication = initConfigBlock(LogComponent.Replication(), init)
+    }
+
+    fun sharding(init: LogComponent.Sharding.() -> Unit) {
+        sharding = initConfigBlock(LogComponent.Sharding(), init)
+    }
+
+    fun storage(init: LogComponent.Storage.() -> Unit) {
+        storage = initConfigBlock(LogComponent.Storage(), init)
+    }
+
+    fun storageJournal(init: LogComponent.StorageJournal.() -> Unit) {
+        storageJournal = initConfigBlock(LogComponent.StorageJournal(), init)
+    }
+
+    fun write(init: LogComponent.Write.() -> Unit) {
+        write = initConfigBlock(LogComponent.Write(), init)
+    }
+}
 
 class Net(
       var port: Int = 27017,
@@ -66,7 +163,23 @@ class Net(
       var http: Http = Http(),
       var ssl: Ssl = Ssl(),
       var security: Security = Security()
-) : ConfigBlock
+) : ConfigBlock {
+    fun unixDomainSocket(init: UnixDomainSocket.() -> Unit) {
+        unixDomainSocket = initConfigBlock(UnixDomainSocket(), init)
+    }
+
+    fun http(init: Http.() -> Unit) {
+        http = initConfigBlock(Http(), init)
+    }
+
+    fun ssl(init: Ssl.() -> Unit) {
+        ssl = initConfigBlock(Ssl(), init)
+    }
+
+    fun security(init: Security.() -> Unit) {
+        security = initConfigBlock(Security(), init)
+    }
+}
 
 class UnixDomainSocket(
       var enabled: Boolean = true,
@@ -74,7 +187,7 @@ class UnixDomainSocket(
 ) : ConfigBlock
 
 class Http(
-      Since("2.6") var enabled: Boolean = false,
+      public Since("2.6") var enabled: Boolean = false,
       var JSONPEnabled: Boolean = false,
       var RESTInterfaceEnabled: Boolean = false
 ) : ConfigBlock
@@ -102,7 +215,11 @@ class Security(
       var authorization: State = State.DISABLED,
       var sasl: Sasl = Sasl(),
       var javascriptEnabled: Boolean = true
-) : ConfigBlock
+) : ConfigBlock {
+    fun sasl(init: Sasl.() -> Unit) {
+        sasl = initConfigBlock(Sasl(), init)
+    }
+}
 
 class Sasl(
       var hostName: String? = null,
@@ -125,7 +242,20 @@ class Storage(
       Since("3.0") var engine: String = "mmapv1",
       var mmapv1: Mmapv1 = Mmapv1(),
       Since("3.0.0") var wiredTiger: WiredTiger = WiredTiger()
-) : ConfigBlock
+) : ConfigBlock {
+
+    fun journal(init: Journal.() -> Unit) {
+        journal = initConfigBlock(Journal(), init)
+    }
+
+    fun mmapv1(init: Mmapv1.() -> Unit) {
+        mmapv1 = initConfigBlock(Mmapv1(), init)
+    }
+
+    fun wiredTiger(init: WiredTiger.() -> Unit) {
+        wiredTiger = initConfigBlock(WiredTiger(), init)
+    }
+}
 
 class Mmapv1(
       var preallocDataFiles: Boolean = true,
@@ -134,6 +264,14 @@ class Mmapv1(
       var smallFiles: Boolean = false,
       var journal: Mmapv1.Journal = Mmapv1.Journal()
 ) : ConfigBlock {
+
+    fun quota(init: Mmapv1.Quota.() -> Unit) {
+        quota = initConfigBlock(Mmapv1.Quota(), init)
+    }
+
+    fun journal(init: Mmapv1.Journal.() -> Unit) {
+        journal = initConfigBlock(Mmapv1.Journal(), init)
+    }
 
     class Quota(
           var enforced: Boolean = false,
@@ -148,13 +286,18 @@ class Mmapv1(
 }
 
 class Journal(
-      public var enabled: Boolean = true
+      var enabled: Boolean = true
 ) : ConfigBlock
 
 
 class WiredTiger(
       var engineConfig: EngineConfig = EngineConfig()
-) : ConfigBlock
+) : ConfigBlock {
+
+    fun engineConfig(init: EngineConfig.() -> Unit) {
+        engineConfig = initConfigBlock(EngineConfig(), init)
+    }
+}
 
 class EngineConfig(
       Since("3.0.0") var cacheSizeGB: Int? = null,
@@ -164,7 +307,16 @@ class EngineConfig(
       Since("3.0.0") var collectionConfig: CollectionConfig = CollectionConfig(),
       Since("3.0.0") var indexConfig: IndexConfig = IndexConfig()
 
-) : ConfigBlock
+) : ConfigBlock {
+
+    fun collectionConfig(init: CollectionConfig.() -> Unit) {
+        collectionConfig = initConfigBlock(CollectionConfig(), init)
+    }
+
+    fun indexConfig(init: IndexConfig.() -> Unit) {
+        indexConfig = initConfigBlock(IndexConfig(), init)
+    }
+}
 
 class CollectionConfig(
       Since("3.0.0") var blockCompressor: Compressor = Compressor.SNAPPY
@@ -211,3 +363,10 @@ class WindowsService(
       var serviceUser: String? = null,
       var servicePassword: String? = null
 ) : ConfigBlock
+
+
+fun configuration(init: Configuration.() -> Unit): Configuration {
+    val configuration = Configuration()
+    configuration.init()
+    return configuration
+}

@@ -1,11 +1,17 @@
 package com.antwerkz.bottlerocket.configuration
 
-import kotlin.reflect.KClass
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.KProperty
 import kotlin.reflect.jvm.internal.KClassImpl
 
 public interface ConfigBlock {
     companion object {
         var OMIT_DEFAULTED = true
+    }
+
+    protected fun initConfigBlock<T : ConfigBlock> (configBlock: T, init: T.() -> Unit): T {
+        configBlock.init()
+        return configBlock
     }
 
     fun nodeName(): String? {
