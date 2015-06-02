@@ -16,7 +16,7 @@ import java.util.List;
 
 import static java.util.Arrays.asList;
 
-public class MongoClusterTest {
+public class JavaMongoClusterTest {
 
     @Test
     public void singleNode() throws InterruptedException, UnknownHostException {

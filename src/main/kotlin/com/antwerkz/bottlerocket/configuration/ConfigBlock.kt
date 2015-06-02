@@ -27,7 +27,7 @@ public interface ConfigBlock {
         val comparison = c.jClass.newInstance()
         c.properties.forEach {
             val fieldValue = it.get(this)
-            if ( !OMIT_DEFAULTED || fieldValue != null ) {
+            if ( fieldValue != null ) {
                 var value: String
                 if (fieldValue is ConfigBlock) {
                     val yaml = fieldValue.toYaml()

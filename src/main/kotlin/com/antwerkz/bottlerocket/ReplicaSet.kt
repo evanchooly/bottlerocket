@@ -123,7 +123,11 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         Awaitility.await()
               .atMost(30, TimeUnit.SECONDS)
               .until({
-                  hasPrimary()
+                  try {
+                      hasPrimary()
+                  } catch(ignored: Exception) {
+
+                  }
               })
 
         return getPrimary()

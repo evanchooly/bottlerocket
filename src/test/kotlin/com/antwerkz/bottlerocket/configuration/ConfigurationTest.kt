@@ -1,5 +1,9 @@
 package com.antwerkz.bottlerocket.configuration
 
+import com.antwerkz.bottlerocket.configuration.blocks.Component
+import com.antwerkz.bottlerocket.configuration.blocks.ProcessManagement
+import com.antwerkz.bottlerocket.configuration.blocks.Storage
+import com.antwerkz.bottlerocket.configuration.blocks.SystemLog
 import org.testng.Assert
 import org.testng.annotations.Test
 

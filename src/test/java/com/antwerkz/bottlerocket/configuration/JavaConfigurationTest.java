@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket.configuration;
 
+import com.antwerkz.bottlerocket.configuration.blocks.SystemLog;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
