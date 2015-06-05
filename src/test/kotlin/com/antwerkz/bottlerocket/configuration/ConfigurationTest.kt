@@ -121,6 +121,17 @@ public class ConfigurationTest {
         Assert.assertEquals(configuration.toYaml(), target);
     }
 
+    Test public fun mongosConfig() {
+        val path = "/var/lib/mongo/data"
+        val configuration = configuration {
+            storage {
+                dbPath = path
+            }
+        }
+
+        Assert.assertFalse(configuration.toYaml(mode = ConfigMode.MONGOS).contains(path))
+    }
+
     public fun printAll() {
         ConfigBlock.OMIT_DEFAULTED = false
         println("Configuration() = ${Configuration().toYaml()}")

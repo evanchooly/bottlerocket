@@ -150,7 +150,7 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
               .command(listOf(mongoManager.mongo,
                     "admin", "--port", "${port}", "--quiet"))
               .redirectOutput(stream)
-              .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass<ReplicaSet>())).asInfo())
+              .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asInfo())
               .redirectInput(ByteArrayInputStream(command.toByteArray()))
               .execute()
 

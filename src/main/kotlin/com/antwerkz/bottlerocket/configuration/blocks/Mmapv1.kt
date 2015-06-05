@@ -1,12 +1,14 @@
 package com.antwerkz.bottlerocket.configuration.blocks
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
+import com.antwerkz.bottlerocket.configuration.ConfigMode
+import com.antwerkz.bottlerocket.configuration.Mode
 
 class Mmapv1(
-      var preallocDataFiles: Boolean = true,
-      var nsSize: Int = 16,
+      Mode(ConfigMode.MONGOD) var preallocDataFiles: Boolean = true,
+      Mode(ConfigMode.MONGOD) var nsSize: Int = 16,
       var quota: Mmapv1.Quota = Mmapv1.Quota(),
-      var smallFiles: Boolean = true,
+      Mode(ConfigMode.MONGOD) var smallFiles: Boolean = true,
       var journal: Mmapv1.Journal = Mmapv1.Journal()
 ) : ConfigBlock {
 
@@ -19,13 +21,13 @@ class Mmapv1(
     }
 
     class Quota(
-          var enforced: Boolean = false,
-          var maxFilesPerDB: Int = 8
+          Mode(ConfigMode.MONGOD) var enforced: Boolean = false,
+          Mode(ConfigMode.MONGOD) var maxFilesPerDB: Int = 8
     ) : ConfigBlock
 
     class Journal(
-          var debugFlags: Int = 0,
-          var commitIntervalMs: Int = 100
+          Mode(ConfigMode.MONGOD) var debugFlags: Int = 0,
+          Mode(ConfigMode.MONGOD) var commitIntervalMs: Int = 100
     ) : ConfigBlock
 
 }

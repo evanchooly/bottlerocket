@@ -10,6 +10,7 @@ import com.antwerkz.bottlerocket.configuration.blocks.Sharding
 import com.antwerkz.bottlerocket.configuration.blocks.Snmp
 import com.antwerkz.bottlerocket.configuration.blocks.Storage
 import com.antwerkz.bottlerocket.configuration.blocks.SystemLog
+import com.github.zafarkhaja.semver.Version
 
 /**
  * @see http://docs.mongodb.org/manual/reference/configuration-options/
@@ -26,9 +27,9 @@ class Configuration(
       var auditLog: AuditLog = AuditLog(),
       var snmp: Snmp = Snmp()
 ) : ConfigBlock {
-    override fun toYaml(): String {
+    override fun toYaml(version: Version, mode: ConfigMode): String {
         return Configuration::class.properties
-              .map { (it.get(this) as ConfigBlock).toYaml() }
+              .map { (it.get(this) as ConfigBlock).toYaml(version, mode) }
               .filter { it != "" }
               .toList()
               .join("\n")

@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.configuration.ConfigMode.MONGOS
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.Destination
 import com.antwerkz.bottlerocket.configuration.configuration
@@ -37,6 +38,10 @@ public open class MongoExecutable(val manager: MongoManager, val name: String, v
             }
             processManagement {
                 pidFilePath = File(baseDir, "${name}.pid").toString()
+            }
+            storage {
+                dbPath = baseDir.getAbsolutePath()
+
             }
             systemLog {
                 destination = Destination.FILE
@@ -81,7 +86,7 @@ public open class MongoExecutable(val manager: MongoManager, val name: String, v
               .command(listOf(manager.mongo,
                     "admin", "--port", "${port}", "--quiet"))
               .redirectOutput(stream)
-              .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass<ReplicaSet>())).asInfo())
+              .redirectError(Slf4jStream.of(LoggerFactory.getLogger(this.javaClass)).asInfo())
               .redirectInput(ByteArrayInputStream("db.stats()".toByteArray()))
               .execute()
 
@@ -103,7 +108,6 @@ public class Mongod(manager: MongoManager, name: String,
     }
 
     init {
-        configuration.storage.dbPath = baseDir.getAbsolutePath()
         configuration.replication.replSetName = replicaSet?.name
     }
 
@@ -142,10 +146,6 @@ public class ConfigServer(manager: MongoManager, name: String,
         private val LOG = LoggerFactory.getLogger(javaClass<Mongod>())
     }
 
-    init {
-        configuration.storage.dbPath = baseDir.getAbsolutePath()
-    }
-
     fun start() {
         if (process == null || !process?.isAlive()!!) {
             baseDir.mkdirs()
@@ -174,20 +174,17 @@ public class ConfigServer(manager: MongoManager, name: String,
 }
 
 public class Mongos(manager: MongoManager, name: String, port: Int, baseDir: File, public val configServers: List<ConfigServer>)
-: MongoExecutable(manager, name, port, baseDir) {
+    : MongoExecutable(manager, name, port, baseDir) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(javaClass<Mongos>())
-    }
-    init {
-        configuration.systemLog.path = "${baseDir}/mongos.log"
     }
 
     fun start() {
         if (process == null || !process?.isAlive()!!) {
             baseDir.mkdirs()
             val config = File(baseDir, "mongos.conf")
-            config.writeText(configuration.toYaml())
+            config.writeText(configuration.toYaml(mode = MONGOS))
 
             LOG.info("Starting mongos on port ${port}")
             var processResult = ProcessExecutor()

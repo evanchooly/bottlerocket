@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket
 
+import com.github.zafarkhaja.semver.Version
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.ArchiveInputStream
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
@@ -9,8 +10,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
-import org.zeroturnaround.process.JavaProcess
-import org.zeroturnaround.process.Processes
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -21,7 +21,7 @@ import java.nio.file.Files
 import java.util.stream.Stream
 import java.util.zip.GZIPInputStream
 
-public class MongoManager(public var version: String) {
+public class MongoManager(public var versionString: String) {
     private val LOG = LoggerFactory.getLogger(javaClass<MongoManager>())
 
     companion object {
@@ -30,6 +30,7 @@ public class MongoManager(public var version: String) {
         public var windowsDownload: String = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-%s.zip"
     }
 
+    public val version: Version
     public val downloadPath: File
     public val binDir: String
     public val mongo: String
@@ -48,19 +49,42 @@ public class MongoManager(public var version: String) {
             mongod = "${binDir}/mongod"
             mongos = "${binDir}/mongos"
         }
+        when (versionString) {
+            "installed" -> {
+                version = discoverVersion()
+            }
+            else -> {
+                version = Version.valueOf(versionString)
+            }
+
+        }
     }
 
-    
+    private fun discoverVersion(): Version {
+        val stream = ByteArrayOutputStream()
+        var processResult = ProcessExecutor()
+              .command(mongod, "--version")
+              .redirectOutput(stream)
+              .execute()
+
+        val s = String(stream.toByteArray())
+              .split('\n')[0]
+              .split(' ')[2].substring(1)
+
+        return Version.valueOf(s);
+    }
+
+
     public fun download(): File {
         val file: File
-        if ("installed" == version) {
+        if ("installed" == versionString) {
             file = useInstalled()
         } else if (SystemUtils.IS_OS_LINUX) {
-            file = downloadLinux(version)
+            file = downloadLinux(versionString)
         } else if (SystemUtils.IS_OS_MAC_OSX) {
-            file = downloadMac(version)
+            file = downloadMac(versionString)
         } else if (SystemUtils.IS_OS_WINDOWS) {
-            file = downloadWindows(version)
+            file = downloadWindows(versionString)
         } else {
             throw RuntimeException("Unsupported operating system: ${SystemUtils.OS_NAME}")
         }

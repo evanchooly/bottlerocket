@@ -1,6 +1,7 @@
 package com.antwerkz.bottlerocket.configuration;
 
 import com.antwerkz.bottlerocket.configuration.blocks.SystemLog;
+import com.github.zafarkhaja.semver.Version;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -16,7 +17,7 @@ public class JavaConfigurationTest {
             "    accessControl:\n" +
             "      verbosity: 5\n" +
             "  destination: syslog";
-        Assert.assertEquals(configuration.toYaml(), target);
+        Assert.assertEquals(configuration.toYaml(Version.valueOf("3.0.3"), ConfigMode.MONGOD), target);
     }
 
     @Test
@@ -47,6 +48,6 @@ public class JavaConfigurationTest {
             "";
         //              "setParameter:\n" +
         //              "   enableLocalhostAuthBypass: false\n" +
-        Assert.assertEquals(configuration.toYaml(), target);
+        Assert.assertEquals(configuration.toYaml(Version.valueOf("3.0.3"), ConfigMode.MONGOD), target);
     }
 }

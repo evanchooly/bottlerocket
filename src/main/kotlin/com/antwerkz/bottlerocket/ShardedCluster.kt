@@ -23,6 +23,8 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
     private var nextPort = port
 
     companion object {
+        private val LOG = LoggerFactory.getLogger(javaClass<MongoExecutable>())
+
         platformStatic fun builder(): ShardedClusterBuilder {
             return ShardedClusterBuilder()
         }
@@ -96,7 +98,7 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
         ProcessExecutor()
               .command(list)
               .redirectOutput(stream)
-              .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass<ReplicaSet>())).asInfo())
+              .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asInfo())
               .redirectInput(ByteArrayInputStream(command.toByteArray()))
               .execute()
 
@@ -104,7 +106,7 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
         try {
             return BsonDocumentCodec().decode(JsonReader(json), DecoderContext.builder().build())
         } catch(e: Exception) {
-            println("json = ${json}")
+            LOG.error("Invalid response from server: ${json}")
             throw e;
         }
     }
