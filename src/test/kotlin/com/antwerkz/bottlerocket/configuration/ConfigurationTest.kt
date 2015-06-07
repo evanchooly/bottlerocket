@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket.configuration
 
+import com.antwerkz.bottlerocket.configuration.State.ENABLED
 import com.antwerkz.bottlerocket.configuration.blocks.Component
 import com.antwerkz.bottlerocket.configuration.blocks.ProcessManagement
 import com.antwerkz.bottlerocket.configuration.blocks.Storage
@@ -132,6 +133,33 @@ public class ConfigurationTest {
         }
 
         Assert.assertFalse(configuration.toYaml(mode = ConfigMode.MONGOS).contains(path))
+    }
+
+    Test fun mergeConfig() {
+        val config = configuration {
+            storage {
+                dbPath = "/var/lib/mongo/noodle"
+            }
+            net {
+                port = 12345;
+            }
+        }
+        val update = configuration {
+            processManagement {
+                operationProfiling {
+                    slowOpThresholdMs = 50;
+                }
+            }
+            security {
+                authorization = ENABLED
+            }
+        }
+
+        Assert.assertEquals(config.security.authorization, com.antwerkz.bottlerocket.configuration.State.DISABLED)
+        config.merge(update);
+        Assert.assertEquals(config.security.authorization, ENABLED)
+        Assert.assertEquals(config.operationProfiling.slowOpThresholdMs, 50)
+        Assert.assertNotEquals(update.storage.dbPath, "/var/lib/mongo/noodle")
     }
 
     public fun printAll() {

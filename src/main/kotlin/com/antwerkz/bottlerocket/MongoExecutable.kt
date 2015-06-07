@@ -152,9 +152,6 @@ public class ConfigServer(manager: MongoManager, name: String,
             val config = File(baseDir, "configsvr.conf")
             config.writeText(configuration.toYaml())
 
-            val args = arrayListOf(manager.mongod,
-                  "--config", config.getAbsolutePath())
-
             LOG.info("Starting configsvr on port ${port}")
             var processResult = ProcessExecutor()
                   .command(manager.mongod,

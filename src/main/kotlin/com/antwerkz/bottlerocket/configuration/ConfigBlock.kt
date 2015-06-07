@@ -2,15 +2,17 @@ package com.antwerkz.bottlerocket.configuration
 
 import com.github.zafarkhaja.semver.Version
 import kotlin.reflect.KMemberProperty
+import kotlin.reflect.KMutableMemberProperty
 import kotlin.reflect.jvm.internal.KClassImpl
 import kotlin.reflect.jvm.javaField
+import kotlin.reflect.jvm.javaSetter
 
 public interface ConfigBlock {
     companion object {
         var OMIT_DEFAULTED = true
     }
 
-    protected fun initConfigBlock<T : ConfigBlock> (configBlock: T, init: T.() -> Unit): T {
+    fun initConfigBlock<T : ConfigBlock> (configBlock: T, init: T.() -> Unit): T {
         configBlock.init()
         return configBlock
     }
@@ -39,7 +41,7 @@ public interface ConfigBlock {
                         }
                     } else {
                         if ( !OMIT_DEFAULTED || fieldValue != it.get(comparison)) {
-                            list.add("  ${it.name}: ${fieldValue ?: ""}")
+                            list.add("  ${it.name}: ${fieldValue}")
                         }
                     }
                 }
@@ -47,6 +49,26 @@ public interface ConfigBlock {
         }
 
         return if (list.isEmpty()) "" else "${nodeName()}:\n${list.join("\n")}" ;
+    }
+
+    fun merge(update: ConfigBlock) {
+        val c = KClassImpl(this.javaClass)
+
+        val comparison = c.jClass.newInstance()
+        val target = this
+        c.properties.forEach { p ->
+            val fieldValue = p.get(update)
+            if ( fieldValue != null ) {
+                if (fieldValue is ConfigBlock) {
+                    (p.get(target) as ConfigBlock).merge(fieldValue)
+                } else {
+                    if ( fieldValue != p.get(comparison)) {
+                        c.mutableMemberProperty(p.name).javaSetter?.invoke(target, fieldValue)
+                    }
+                }
+            }
+        }
+
     }
 
     protected fun isValidForContext(version: Version, configMode: ConfigMode, property: KMemberProperty<ConfigBlock, *>): Boolean {

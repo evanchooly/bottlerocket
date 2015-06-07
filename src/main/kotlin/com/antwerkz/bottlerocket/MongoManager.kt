@@ -62,7 +62,7 @@ public class MongoManager(public var versionString: String) {
 
     private fun discoverVersion(): Version {
         val stream = ByteArrayOutputStream()
-        var processResult = ProcessExecutor()
+        ProcessExecutor()
               .command(mongod, "--version")
               .redirectOutput(stream)
               .execute()
