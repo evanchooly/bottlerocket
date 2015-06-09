@@ -1,9 +1,18 @@
 package com.antwerkz.bottlerocket
 
+import com.mongodb.AuthenticationMechanism
+import com.mongodb.MongoClient
+import com.mongodb.MongoClientOptions
+import com.mongodb.MongoCredential
+import com.mongodb.ServerAddress
+import org.bson.codecs.BsonDocumentCodec
+import org.bson.codecs.DecoderContext
+import org.bson.json.JsonReader
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
-import org.zeroturnaround.process.JavaProcess
-import org.zeroturnaround.process.Processes
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -12,6 +21,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.attribute.PosixFilePermission
+import java.util.EnumSet
 
 val TEMP_DIR = if (File("/tmp").exists()) "/tmp" else System.getProperty("java.io.tmpdir")
 
@@ -22,14 +33,58 @@ val DEFAULT_BASE_DIR = File("${TEMP_DIR}/${DEFAULT_MONGOD_NAME}")
 
 public abstract class MongoCluster(public val name: String, public val port: Int, public val version: String, public val baseDir: File) {
     val mongoManager: MongoManager = MongoManager(version)
+    private var client: MongoClient? = null;
 
-    public abstract fun start();
+    abstract fun start();
 
-    public abstract fun shutdown();
+    open fun shutdown() {
+        client?.close()
+        client = null;
+    }
 
-    public open fun clean() {
+    abstract fun authEnabled(): Boolean;
+
+    abstract fun enableAuth(pemFile: String = generatePemFile());
+
+    open fun clean() {
         shutdown();
         baseDir.deleteTree()
+    }
+
+    fun getClient(): MongoClient {
+        if (client == null) {
+            val builder = MongoClientOptions.builder()
+                  .connectTimeout(3000)
+            var credentials = if(authEnabled()) {
+                arrayListOf(MongoCredential.createCredential("superuser", "admin", "rocketman".toCharArray()))
+            } else {
+                listOf<MongoCredential>()
+            }
+            client = MongoClient(getServerAddressList(), credentials, builder.build())
+        }
+
+        return client!!;
+    }
+
+    abstract fun getServerAddressList(): List<ServerAddress>
+
+    private fun generatePemFile(): String {
+        val pemFile = File(baseDir, "rocket.pem")
+        if (!pemFile.exists()) {
+            pemFile.getParentFile().mkdirs()
+            val stream = FileOutputStream(pemFile)
+            try {
+                ProcessExecutor()
+                      .command(listOf("openssl",  "rand", "-base64", "741"))
+                      .redirectOutput(stream)
+                      .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asInfo())
+                      .execute()
+            } finally {
+                stream.close()
+            }
+        }
+        Files.setPosixFilePermissions(pemFile.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
+        return pemFile.getAbsolutePath();
     }
 }
 

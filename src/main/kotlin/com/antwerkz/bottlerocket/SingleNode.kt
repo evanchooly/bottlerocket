@@ -1,16 +1,14 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.configuration.State.ENABLED
+import com.antwerkz.bottlerocket.configuration.configuration
+import com.antwerkz.bottlerocket.executable.Mongod
 import com.mongodb.ServerAddress
-import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
-import org.zeroturnaround.exec.StartedProcess
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
-import org.zeroturnaround.process.JavaProcess
-import org.zeroturnaround.process.Processes
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.FileOutputStream
 import kotlin.platform.platformStatic
 
 open
@@ -22,15 +20,11 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
         platformStatic public fun builder(): SingleNodeBuilder {
             return SingleNodeBuilder()
         }
-
-        public fun configServer(): SingleNodeBuilder {
-            return SingleNodeBuilder()
-        }
     }
 
     private val mongod: Mongod = mongoManager.mongod(name, port, baseDir)
 
-    public var replicaSet: ReplicaSet? = null
+    private var adminAdded: Boolean = false
 
     override
     fun start() {
@@ -44,16 +38,84 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
         mongod.shutdown()
     }
 
+    override fun getServerAddressList(): List<ServerAddress> {
+        return listOf(mongod.getServerAddress())
+    }
+
+    override
+    fun enableAuth(pemFile: String) {
+        mongod.configuration.merge(
+              configuration {
+                  security {
+                      authorization = ENABLED
+                  }
+              }
+        )
+        start()
+        if (!adminAdded) {
+            addAdmin()
+            addRootUser()
+            adminAdded = true
+        }
+        shutdown()
+        start()
+        mongod.authEnabled = true
+    }
+
+
+    private fun addAdmin() {
+        var command = "db.createUser(\n" +
+              "  {\n" +
+              "    user: \"siteUserAdmin\",\n" +
+              "    pwd: \"password\",\n" +
+              "    roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\" } ]\n" +
+              "  }\n"
+        ProcessExecutor()
+              .command(mongoManager.mongo,
+                    "--host", "localhost",
+                    "--port", "${port}",
+                    "admin")
+              .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
+              .redirectError(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
+              .redirectInput(ByteArrayInputStream(command.toByteArray()))
+              .execute()
+    }
+
+    private fun addRootUser() {
+        ProcessExecutor()
+              .command(mongoManager.mongo,
+                    "--host", "localhost",
+                    "--port", "${port}",
+                    "admin")
+              .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
+              .redirectError(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
+              .redirectInput(ByteArrayInputStream(("db.createUser(\n" +
+                    "  {\n" +
+                    "    user: \"superuser\",\n" +
+                    "    pwd: \"rocketman\",\n" +
+                    "    roles: [ \"root\" ]\n" +
+                    "  }\n")
+                    .toByteArray()))
+              .execute()
+    }
+
+
+    override fun authEnabled(): Boolean {
+        return mongod.authEnabled
+    }
+
     fun isRunning(): Boolean {
         return mongod.isAlive();
     }
 
     override fun toString(): String {
-        var content = "name = ${name}, port = ${port}, version = ${version}, baseDir = ${baseDir}";
+        var content = "name = ${name}, version = ${version}, port = ${port}, baseDir = ${baseDir}, running = ${mongod.isAlive()}"
         if (replSetName != null) {
             content += ", replSetName = ${replSetName}"
         }
-        content += ", running = ${mongod.isAlive()}"
+        if (authEnabled()) {
+            content += ", authentication = enabled"
+        }
         return "Mongod { ${content} }"
     }
 }

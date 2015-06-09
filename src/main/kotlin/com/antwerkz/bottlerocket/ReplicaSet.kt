@@ -1,8 +1,10 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.executable.Mongod
 import com.jayway.awaitility.Awaitility
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
+import com.mongodb.ServerAddress
 import org.bson.BsonDocument
 import org.bson.codecs.BsonDocumentCodec
 import org.bson.codecs.DecoderContext
@@ -23,7 +25,6 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
     private var nodeMap: Map<Int, Mongod> = hashMapOf()
     public var initialized: Boolean = false;
         private set
-    private var client: MongoClient? = null;
 
     companion object {
         platformStatic fun builder(): ReplicaSetBuilder {
@@ -133,17 +134,6 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         return getPrimary()
     }
 
-    fun getClient(): MongoClient {
-        if (client == null) {
-            client = MongoClient(nodes.map { it.getServerAddress() },
-                  MongoClientOptions.builder()
-                        .connectTimeout(3000)
-                        .build())
-        }
-
-        return client!!;
-    }
-
     public fun runCommand(port: Int, command: String): BsonDocument {
         val stream = ByteArrayOutputStream()
         ProcessExecutor()
@@ -172,9 +162,23 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
 
     override
     fun shutdown() {
-        client?.close()
-        client = null;
+        super.shutdown()
         nodes.forEach { it.shutdown() }
+    }
+
+    override
+    fun enableAuth(pemFile: String) {
+        nodes.forEach {
+            it.enableAuth(pemFile)
+        }
+    }
+
+    override fun getServerAddressList(): List<ServerAddress> {
+        return nodes.map { it.getServerAddress() }
+    }
+
+    override fun authEnabled(): Boolean {
+        return nodes.map { it.authEnabled }.fold(true) { r, t -> r && t}
     }
 
     fun url(): String {

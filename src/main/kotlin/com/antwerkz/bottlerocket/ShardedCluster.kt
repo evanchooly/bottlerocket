@@ -1,5 +1,8 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.executable.ConfigServer
+import com.antwerkz.bottlerocket.executable.Mongos
+import com.mongodb.ServerAddress
 import org.apache.commons.lang3.SystemUtils
 import org.bson.BsonDocument
 import org.bson.codecs.BsonDocumentCodec
@@ -17,6 +20,7 @@ import kotlin.platform.platformStatic
 class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_PORT,
                      version: String = DEFAULT_VERSION, public var size: Int = 3,
                      baseDir: File = DEFAULT_BASE_DIR) : MongoCluster(name, port, version, baseDir) {
+
     var shards: MutableList<ReplicaSet> = arrayListOf()
     var mongoses: MutableList<Mongos> = arrayListOf()
     var configServers: MutableList<ConfigServer> = arrayListOf()
@@ -124,6 +128,21 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
         configServers.forEach { it.clean()}
         mongoses.forEach { it.clean()}
         baseDir.deleteTree()
+    }
+
+    override
+    fun enableAuth(pemFile: String) {
+        shards.forEach {
+            it.enableAuth(pemFile)
+        }
+    }
+
+    override fun authEnabled(): Boolean {
+        return shards.map { it.authEnabled() }.fold(true) { r, t -> r && t}
+    }
+
+    override fun getServerAddressList(): List<ServerAddress> {
+        return shards.flatMap { it.getServerAddressList() }
     }
 }
 

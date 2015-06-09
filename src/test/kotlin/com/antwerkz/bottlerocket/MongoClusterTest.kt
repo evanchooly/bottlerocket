@@ -12,11 +12,11 @@ import java.util.ArrayList
 class MongoClusterTest {
     Test
     public fun singleNode() {
-        val mongod = SingleNode.builder().build()
+        val singleNode = SingleNode.builder().build()
         val client = MongoClient("localhost", 30000)
         try {
-            mongod.clean()
-            mongod.start()
+            singleNode.clean()
+            singleNode.start()
 
             val names = client.listDatabaseNames().into(ArrayList<String>())
             Assert.assertFalse(names.isEmpty(), names.toString())
@@ -30,7 +30,7 @@ class MongoClusterTest {
             Assert.assertEquals(collection.find().first(), document)
         } finally {
             client.close()
-            mongod.shutdown()
+            singleNode.shutdown()
         }
     }
 
@@ -91,5 +91,33 @@ class MongoClusterTest {
             }
             sharded.shutdown()
         }
+    }
+
+    Test(enabled = false)
+    fun singleAuth() {
+        val singleNode = SingleNode.builder().build()
+        var client: MongoClient? = null
+        try {
+            singleNode.clean()
+            singleNode.enableAuth();
+            singleNode.start()
+
+            client = singleNode.getClient()
+
+            val names = client.listDatabaseNames().into(ArrayList<String>())
+            Assert.assertFalse(names.isEmpty(), names.toString())
+
+            val db = client.getDatabase("bottlerocket")
+            db.drop()
+            val collection = db.getCollection("singlenode")
+            val document = Document(hashMapOf("key" to "value"))
+            collection.insertOne(document)
+
+            Assert.assertEquals(collection.find().first(), document)
+        } finally {
+            client?.close()
+            singleNode.shutdown()
+        }
+
     }
 }
