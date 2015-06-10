@@ -4,6 +4,7 @@ import com.antwerkz.bottlerocket.configuration.State.ENABLED
 import com.antwerkz.bottlerocket.configuration.configuration
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.mongodb.ServerAddress
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
@@ -17,8 +18,16 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
                         public val replSetName: String? = null) : MongoCluster(name, port, version, baseDir) {
 
     companion object {
+        private val LOG: Logger = LoggerFactory.getLogger(javaClass<SingleNode>())
+
         platformStatic public fun builder(): SingleNodeBuilder {
             return SingleNodeBuilder()
+        }
+
+        platformStatic fun builder(init: SingleNodeBuilder.() -> Unit): SingleNode {
+            val builder = SingleNodeBuilder()
+            builder.init()
+            return builder().build()
         }
     }
 
@@ -44,22 +53,27 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
 
     override
     fun enableAuth(pemFile: String) {
-        mongod.configuration.merge(
-              configuration {
-                  security {
-                      authorization = ENABLED
+        if (!authEnabled()) {
+            if (isRunning()) {
+                shutdown()
+                LOG.info("Waiting for running server on ${port} to shutdown before enabling authentication.")
+                Thread.sleep(5000);
+            }
+            mongod.configuration.merge(
+                  configuration {
+                      security {
+                          authorization = ENABLED
+                      }
                   }
-              }
-        )
-        start()
-        if (!adminAdded) {
-            addAdmin()
-            addRootUser()
-            adminAdded = true
+            )
+            start()
+            if (!adminAdded) {
+                addAdmin()
+                addRootUser()
+                adminAdded = true
+            }
+            mongod.authEnabled = true
         }
-        shutdown()
-        start()
-        mongod.authEnabled = true
     }
 
 
@@ -69,7 +83,7 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
               "    user: \"siteUserAdmin\",\n" +
               "    pwd: \"password\",\n" +
               "    roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\" } ]\n" +
-              "  }\n"
+              "  })\n"
         ProcessExecutor()
               .command(mongoManager.mongo,
                     "--host", "localhost",
@@ -86,6 +100,8 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
               .command(mongoManager.mongo,
                     "--host", "localhost",
                     "--port", "${port}",
+                    "-u", "siteUserAdmin",
+                    "-p", "password",
                     "admin")
               .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
               .redirectError(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
@@ -94,7 +110,7 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
                     "    user: \"superuser\",\n" +
                     "    pwd: \"rocketman\",\n" +
                     "    roles: [ \"root\" ]\n" +
-                    "  }\n")
+                    "  });")
                     .toByteArray()))
               .execute()
     }

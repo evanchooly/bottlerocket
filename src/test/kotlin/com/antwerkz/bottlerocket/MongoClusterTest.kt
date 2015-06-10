@@ -93,14 +93,13 @@ class MongoClusterTest {
         }
     }
 
-    Test(enabled = false)
+    Test
     fun singleAuth() {
         val singleNode = SingleNode.builder().build()
         var client: MongoClient? = null
         try {
             singleNode.clean()
             singleNode.enableAuth();
-            singleNode.start()
 
             client = singleNode.getClient()
 

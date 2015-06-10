@@ -1,7 +1,23 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:2.2.+'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:0.12.200"
+        classpath 'org.zeroturnaround:zt-exec:1.6'
+        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
+    }
+}
+
 apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'com.bmuschko.nexus'
+apply plugin: 'provided-base'
 
 repositories {
     mavenLocal()
@@ -10,19 +26,6 @@ repositories {
 }
 
 ext.kotlinVersion = '0.12.200'
-
-buildscript {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        jcenter()
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:0.12.200"
-        classpath 'org.zeroturnaround:zt-exec:1.6'
-        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
-    }
-}
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
@@ -45,7 +48,8 @@ dependencies {
     compile 'com.jayway.awaitility:awaitility:1.6.3'
     compile 'com.github.zafarkhaja:java-semver:0.9.0'
 
-    testCompile 'org.testng:testng:6.8.21'
+    provided 'org.testng:testng:6.8.21'
+
     testCompile 'org.slf4j:slf4j-simple:1.7.12'
 }
 
