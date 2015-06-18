@@ -48,7 +48,7 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
     }
 
     private fun addMember(replicaSet: ReplicaSet) {
-        val replSetUrl = replicaSet.url();
+        val replSetUrl = replicaSet.replicaSetUrl();
 
         val results = runCommand(mongoses.first(), "sh.addShard(\"${replSetUrl}\");")
 
@@ -131,9 +131,9 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
     }
 
     override
-    fun enableAuth(pemFile: String) {
+    fun enableAuth() {
         shards.forEach {
-            it.enableAuth(pemFile)
+            it.enableAuth()
         }
     }
 

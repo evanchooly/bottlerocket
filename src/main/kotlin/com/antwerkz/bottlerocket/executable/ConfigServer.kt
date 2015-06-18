@@ -17,14 +17,14 @@ public class ConfigServer(manager: MongoManager, name: String,
     fun start() {
         if (process == null || !process?.isAlive()!!) {
             baseDir.mkdirs()
-            val config = File(baseDir, "configsvr.conf")
-            config.writeText(configuration.toYaml())
+            val file = File(baseDir, "configsvr.conf")
+            file.writeText(config.toYaml())
 
             LOG.info("Starting configsvr on port ${port}")
             var processResult = ProcessExecutor()
                   .command(manager.mongod,
                         "--configsvr",
-                        "--config", config.getAbsolutePath())
+                        "--config", file.getAbsolutePath())
                   .redirectOutput(FileOutputStream(File(baseDir, "configsvr.out")))
                   .redirectError(FileOutputStream(File(baseDir, "configsvr.err")))
                   //   .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())

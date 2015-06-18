@@ -24,7 +24,7 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
             return SingleNodeBuilder()
         }
 
-        platformStatic fun builder(init: SingleNodeBuilder.() -> Unit): SingleNode {
+        platformStatic fun build(init: SingleNodeBuilder.() -> Unit): SingleNode {
             val builder = SingleNodeBuilder()
             builder.init()
             return builder().build()
@@ -32,8 +32,6 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
     }
 
     private val mongod: Mongod = mongoManager.mongod(name, port, baseDir)
-
-    private var adminAdded: Boolean = false
 
     override
     fun start() {
@@ -52,76 +50,25 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
     }
 
     override
-    fun enableAuth(pemFile: String) {
+    fun enableAuth() {
         if (!authEnabled()) {
-            if (isRunning()) {
+            mongod.enableAuth()
+            if (mongod.isAlive()) {
                 shutdown()
                 LOG.info("Waiting for running server on ${port} to shutdown before enabling authentication.")
-                Thread.sleep(5000);
+                Thread.sleep(1000);
             }
-            mongod.configuration.merge(
-                  configuration {
-                      security {
-                          authorization = ENABLED
-                      }
-                  }
-            )
             start()
             if (!adminAdded) {
-                addAdmin()
-                addRootUser()
+//                mongod.addAdmin()
+                mongod.addRootUser()
                 adminAdded = true
             }
-            mongod.authEnabled = true
         }
     }
 
-
-    private fun addAdmin() {
-        var command = "db.createUser(\n" +
-              "  {\n" +
-              "    user: \"siteUserAdmin\",\n" +
-              "    pwd: \"password\",\n" +
-              "    roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\" } ]\n" +
-              "  })\n"
-        ProcessExecutor()
-              .command(mongoManager.mongo,
-                    "--host", "localhost",
-                    "--port", "${port}",
-                    "admin")
-              .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
-              .redirectError(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
-              .redirectInput(ByteArrayInputStream(command.toByteArray()))
-              .execute()
-    }
-
-    private fun addRootUser() {
-        ProcessExecutor()
-              .command(mongoManager.mongo,
-                    "--host", "localhost",
-                    "--port", "${port}",
-                    "-u", "siteUserAdmin",
-                    "-p", "password",
-                    "admin")
-              .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
-              .redirectError(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
-              .redirectInput(ByteArrayInputStream(("db.createUser(\n" +
-                    "  {\n" +
-                    "    user: \"superuser\",\n" +
-                    "    pwd: \"rocketman\",\n" +
-                    "    roles: [ \"root\" ]\n" +
-                    "  });")
-                    .toByteArray()))
-              .execute()
-    }
-
-
     override fun authEnabled(): Boolean {
         return mongod.authEnabled
-    }
-
-    fun isRunning(): Boolean {
-        return mongod.isAlive();
     }
 
     override fun toString(): String {

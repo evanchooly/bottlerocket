@@ -2,13 +2,12 @@ package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.jayway.awaitility.Awaitility
-import com.mongodb.MongoClient
-import com.mongodb.MongoClientOptions
 import com.mongodb.ServerAddress
 import org.bson.BsonDocument
 import org.bson.codecs.BsonDocumentCodec
 import org.bson.codecs.DecoderContext
 import org.bson.json.JsonReader
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
@@ -19,7 +18,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.platform.platformStatic
 
 class ReplicaSet(name: String, port: Int, version: String, public var size: Int, baseDir: File)
-    : MongoCluster(name, port, version, baseDir) {
+: MongoCluster(name, port, version, baseDir) {
 
     public val nodes: MutableList<Mongod> = arrayListOf()
     private var nodeMap: Map<Int, Mongod> = hashMapOf()
@@ -30,22 +29,31 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         platformStatic fun builder(): ReplicaSetBuilder {
             return ReplicaSetBuilder()
         }
-    }
-    
-    override
-    fun start() {
-        if (nodes.isEmpty()) {
-            var port = port
-            for ( i in 0..size - 1) {
-                val nodeName = "${name}-${port}"
-                nodes.add(mongoManager.mongod(nodeName, port, File(baseDir, nodeName), this))
-                port += 1;
-            }
+
+        platformStatic fun build(init: ReplicaSetBuilder.() -> Unit = {}): ReplicaSet {
+            val builder = ReplicaSetBuilder()
+            builder.init()
+            return builder.build()
         }
-        for (node in nodes) {
-            node.start()
+    }
+
+    init {
+        var basePort = this.port
+        for ( i in 0..size - 1) {
+            val nodeName = "${name}-${basePort}"
+            nodes.add(mongoManager.mongod(nodeName, basePort, File(baseDir, nodeName)))
+            basePort += 1;
         }
         nodeMap = nodes.toMap { it.port }
+    }
+
+    override
+    fun start() {
+        for (node in nodes) {
+            node.shutdown()
+            node.config.replication.replSetName = name
+            node.start()
+        }
 
         initialize()
     }
@@ -76,13 +84,13 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
 
     private fun initiateReplicaSet(mongod: Mongod) {
 
-        val results = runCommand(mongod.port, "rs.initiate({"
-              + "_id: \"${name}\","
-              + "   members: [{"
-              + "       _id: 1,"
-              + "       host: \"localhost:${mongod.port}\""
-              + "   }],"
-              + "});")
+        val results = mongod.runCommandWithResult("rs.initiate({"
+              + "\n   _id: \"${name}\","
+              + "\n   members: [{"
+              + "\n       _id: 1,"
+              + "\n       host: \"localhost:${mongod.port}\""
+              + "\n   }],"
+              + "\n});")
 
         if ( !(results.getInt32("ok")?.intValue()?.equals(1) ?: false) ) {
             throw IllegalStateException("Failed to initiate replica set: ${results}")
@@ -90,11 +98,10 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
     }
 
     private fun addMember(mongod: Mongod) {
-        val primary = getPrimary()
-        if (primary == null) {
-            throw IllegalStateException("Replica set ${name} has no primary")
-        }
-        val results = runCommand(primary.port, "rs.add(\"localhost:${mongod.port}\");")
+        // used to if(null) throw
+        val primary = getPrimary() ?: throw IllegalStateException("Replica set ${name} has no primary")
+
+        val results = primary.runCommandWithResult("rs.add(\"localhost:${mongod.port}\");")
 
         if ( results.getInt32("ok").getValue() != 1) {
             throw RuntimeException("Failed to add ${mongod} to replica set:  ${results}")
@@ -106,7 +113,7 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
             return null;
         }
         val mongod = nodes.filter({ it.isAlive() }).first()
-        val result = runCommand(mongod.port, "db.isMaster()");
+        val result = mongod.runCommandWithResult("db.isMaster()");
 
         if (result.containsKey ("primary")) {
             val host = result.getString("primary")!!.getValue()
@@ -134,26 +141,6 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         return getPrimary()
     }
 
-    public fun runCommand(port: Int, command: String): BsonDocument {
-        val stream = ByteArrayOutputStream()
-        ProcessExecutor()
-              .command(listOf(mongoManager.mongo,
-                    "admin", "--port", "${port}", "--quiet"))
-              .redirectOutput(stream)
-              .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asInfo())
-              .redirectInput(ByteArrayInputStream(command.toByteArray()))
-              .execute()
-
-        val json = String(stream.toByteArray()).trim()
-        try {
-            return BsonDocumentCodec().decode(JsonReader(json), DecoderContext.builder().build())
-        } catch(e: Exception) {
-            println("failed to run '${command}' against server on port ${port}")
-            println("json = ${json}")
-            throw e;
-        }
-    }
-
     override
     fun clean() {
         nodes.forEach { it.clean() }
@@ -167,9 +154,19 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
     }
 
     override
-    fun enableAuth(pemFile: String) {
-        nodes.forEach {
-            it.enableAuth(pemFile)
+    fun enableAuth() {
+        if (!initialized && !authEnabled()) {
+            val mongod = nodes.first()
+            mongod.start()
+            if (!adminAdded) {
+//                mongod.addAdmin()
+                mongod.addRootUser()
+                adminAdded = true
+            }
+            mongod.shutdown()
+            val pemFile = generatePemFile()
+            nodes.forEach { it.enableAuth(pemFile) }
+            start()
         }
     }
 
@@ -178,11 +175,11 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
     }
 
     override fun authEnabled(): Boolean {
-        return nodes.map { it.authEnabled }.fold(true) { r, t -> r && t}
+        return nodes.map { it.authEnabled }.fold(true) { r, t -> r && t }
     }
 
-    fun url(): String {
-        return "${name}/" + (nodes.map { "localhost:${it.port}"}.join(","))
+    fun replicaSetUrl(): String {
+        return "${name}/" + (nodes.map { "localhost:${it.port}" }.join(","))
     }
 }
 
@@ -196,7 +193,7 @@ class ReplicaSetBuilder() {
     public var version: String = DEFAULT_VERSION;
     public var size: Int = 3;
     public var baseDir: File = DEFAULT_BASE_DIR;
-    
+
     fun build(): ReplicaSet {
         return ReplicaSet(name, basePort, version, size, baseDir)
     }

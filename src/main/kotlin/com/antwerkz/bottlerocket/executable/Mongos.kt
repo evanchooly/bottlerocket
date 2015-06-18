@@ -19,14 +19,14 @@ public class Mongos(manager: MongoManager, name: String, port: Int, baseDir: Fil
     fun start() {
         if (process == null || !process?.isAlive()!!) {
             baseDir.mkdirs()
-            val config = File(baseDir, "mongos.conf")
-            config.writeText(configuration.toYaml(mode = MONGOS))
+            val file = File(baseDir, "mongos.conf")
+            file.writeText(config.toYaml(mode = MONGOS))
 
             LOG.info("Starting mongos on port ${port}")
             var processResult = ProcessExecutor()
                   .command(manager.mongos,
                         "--configdb", configServers.map { "localhost:${it.port}" }.join(","),
-                        "--config", config.getAbsolutePath())
+                        "--config", file.getAbsolutePath())
                   .redirectOutput(FileOutputStream(File(baseDir, "${name}.out")))
                   .redirectError(FileOutputStream(File(baseDir, "${name}.err")))
                   //                                .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())

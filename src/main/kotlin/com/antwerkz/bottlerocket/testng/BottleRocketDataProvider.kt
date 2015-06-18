@@ -13,7 +13,7 @@ public class BottleRocketDataProvider {
         System.getProperty("rocket.cluster.versions", "installed").split('.').forEach { clusterVersion ->
             System.getProperty("rocket.cluster.types", "single").split('.').forEach { type ->
                 when(type) {
-                    "single" -> { clusters.add(SingleNode.builder {
+                    "single" -> { clusters.add(SingleNode.build {
                         version = clusterVersion
                     })}
                     "replicaSet" -> {}

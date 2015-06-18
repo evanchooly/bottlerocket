@@ -1,10 +1,10 @@
 package com.antwerkz.bottlerocket
 
-import com.mongodb.AuthenticationMechanism
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
 import com.mongodb.MongoCredential
 import com.mongodb.ServerAddress
+import org.bson.BsonDocument
 import org.bson.codecs.BsonDocumentCodec
 import org.bson.codecs.DecoderContext
 import org.bson.json.JsonReader
@@ -17,6 +17,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.OutputStream
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
@@ -35,6 +36,7 @@ val DEFAULT_BASE_DIR = File("${TEMP_DIR}/${DEFAULT_MONGOD_NAME}")
 public abstract class MongoCluster(public val name: String, public val port: Int, public val version: String, public val baseDir: File) {
     val mongoManager: MongoManager = MongoManager(version)
     private var client: MongoClient? = null;
+    var adminAdded: Boolean = false
 
     abstract fun start();
 
@@ -45,7 +47,7 @@ public abstract class MongoCluster(public val name: String, public val port: Int
 
     abstract fun authEnabled(): Boolean;
 
-    abstract fun enableAuth(pemFile: String = generatePemFile());
+    abstract fun enableAuth();
 
     open fun clean() {
         shutdown();
@@ -57,7 +59,8 @@ public abstract class MongoCluster(public val name: String, public val port: Int
             val builder = MongoClientOptions.builder()
                   .connectTimeout(3000)
             var credentials = if(authEnabled()) {
-                arrayListOf(MongoCredential.createCredential("superuser", "admin", "rocketman".toCharArray()))
+                arrayListOf(MongoCredential.createCredential(MongoExecutable.SUPER_USER, "admin",
+                      MongoExecutable.SUPER_USER_PASSWORD.toCharArray()))
             } else {
                 listOf<MongoCredential>()
             }
@@ -69,7 +72,7 @@ public abstract class MongoCluster(public val name: String, public val port: Int
 
     abstract fun getServerAddressList(): List<ServerAddress>
 
-    private fun generatePemFile(): String {
+    fun generatePemFile(): String {
         val pemFile = File(baseDir, "rocket.pem")
         if (!pemFile.exists()) {
             pemFile.getParentFile().mkdirs()
@@ -87,6 +90,7 @@ public abstract class MongoCluster(public val name: String, public val port: Int
         Files.setPosixFilePermissions(pemFile.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
         return pemFile.getAbsolutePath();
     }
+
 }
 
 fun File.deleteTree() {

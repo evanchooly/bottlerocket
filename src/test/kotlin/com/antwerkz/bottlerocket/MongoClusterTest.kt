@@ -95,28 +95,35 @@ class MongoClusterTest {
 
     Test
     fun singleAuth() {
-        val singleNode = SingleNode.builder().build()
+        testClusterAuth(SingleNode.builder().build())
+    }
+
+    Test
+    fun replicaSetAuth() {
+        testClusterAuth(ReplicaSet.build())
+    }
+
+    private fun testClusterAuth(cluster: MongoCluster) {
         var client: MongoClient? = null
         try {
-            singleNode.clean()
-            singleNode.enableAuth();
-
-            client = singleNode.getClient()
+            cluster.clean()
+            cluster.enableAuth();
+            val b = cluster.authEnabled()
+            client = cluster.getClient()
 
             val names = client.listDatabaseNames().into(ArrayList<String>())
             Assert.assertFalse(names.isEmpty(), names.toString())
 
             val db = client.getDatabase("bottlerocket")
             db.drop()
-            val collection = db.getCollection("singlenode")
+            val collection = db.getCollection("auth_test")
             val document = Document(hashMapOf("key" to "value"))
             collection.insertOne(document)
 
             Assert.assertEquals(collection.find().first(), document)
         } finally {
             client?.close()
-            singleNode.shutdown()
+            cluster.shutdown()
         }
-
     }
 }

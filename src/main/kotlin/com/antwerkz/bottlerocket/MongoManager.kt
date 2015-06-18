@@ -98,8 +98,8 @@ public class MongoManager(public var versionString: String) {
         return ConfigServer(this, name, port, baseDir)
     }
 
-    public fun mongod(name: String, port: Int, baseDir: File, replicaSet: ReplicaSet? = null): Mongod {
-        return Mongod(this, name, port, baseDir, replicaSet)
+    public fun mongod(name: String, port: Int, baseDir: File): Mongod {
+        return Mongod(this, name, port, baseDir)
     }
 
     public fun mongos(name: String, port: Int, baseDir: File, configServers: List<ConfigServer>): Mongos {

@@ -1,43 +1,33 @@
 package com.antwerkz.bottlerocket.executable
 
-import com.antwerkz.bottlerocket
 import com.antwerkz.bottlerocket.MongoExecutable
 import com.antwerkz.bottlerocket.MongoManager
-import com.antwerkz.bottlerocket.ReplicaSet
-import com.antwerkz.bottlerocket.configuration.State.ENABLED
+import com.antwerkz.bottlerocket.configuration.State
+import com.antwerkz.bottlerocket.configuration.configuration
 import com.mongodb.ServerAddress
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import org.zeroturnaround.process.Processes
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
 
 public class Mongod(manager: MongoManager, name: String,
-                    port: Int, baseDir: File, val replicaSet: ReplicaSet? = null) : MongoExecutable(manager, name, port, baseDir) {
+                    port: Int, baseDir: File) : MongoExecutable(manager, name, port, baseDir) {
     companion object {
         private val LOG = LoggerFactory.getLogger(javaClass<Mongod>())
     }
 
-    init {
-        configuration.merge(
-              bottlerocket.configuration.configuration {
-                  replication {
-                      replSetName = replicaSet?.name
-                  }
-              }
-        )
-    }
+    val logger = LoggerFactory.getLogger("Mongod.${port}")
 
     public fun start() {
         if (process == null || !process?.isAlive()!!) {
             baseDir.mkdirs()
-            val config = File(baseDir, "mongod.conf")
-            config.writeText(configuration.toYaml())
+            val configFile = File(baseDir, "mongod.conf")
+            configFile.writeText(config.toYaml())
 
             val args = arrayListOf(manager.mongod,
-                  "--config", config.getAbsolutePath())
+                  "--config", configFile.getAbsolutePath())
             LOG.info("Starting mongod on port ${port}")
             var processResult = ProcessExecutor()
                   .command(args)
@@ -55,6 +45,34 @@ public class Mongod(manager: MongoManager, name: String,
         return ServerAddress("localhost", port)
     }
 
-    fun enableAuth(pemFile: String) {
+    fun enableAuth(pemFile: String? = null) {
+        config.merge(configuration {
+            security {
+//                authorization = if (pemFile == null) State.ENABLED else State.DISABLED
+                authorization = State.ENABLED
+                keyFile = pemFile
+            }
+        })
+        authEnabled = true
+    }
+
+    fun addAdmin() {
+        runCommand("db.createUser(\n" +
+              "  {\n" +
+              "    user: \"siteUserAdmin\",\n" +
+              "    pwd: \"password\",\n" +
+              "    roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\" } ]\n" +
+              "  })\n", out = logger, err = logger)
+        authEnabled = true
+    }
+
+    fun addRootUser() {
+        runCommand("db.createUser(\n" +
+              "  {\n" +
+              "    user: \"${MongoExecutable.SUPER_USER}\",\n" +
+              "    pwd: \"${MongoExecutable.SUPER_USER_PASSWORD}\",\n" +
+              "    roles: [ \"root\" ]\n" +
+              "  });", out = logger, err = logger)
+        authEnabled = true
     }
 }
