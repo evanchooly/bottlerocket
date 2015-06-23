@@ -5,7 +5,7 @@ import com.antwerkz.bottlerocket.configuration.ConfigMode
 import com.antwerkz.bottlerocket.configuration.Mode
 
 class Mmapv1(
-      Mode(ConfigMode.MONGOD) var preallocDataFiles: Boolean = true,
+      Mode(ConfigMode.MONGOD) var preallocDataFiles: Boolean = false,
       Mode(ConfigMode.MONGOD) var nsSize: Int = 16,
       var quota: Mmapv1.Quota = Mmapv1.Quota(),
       Mode(ConfigMode.MONGOD) var smallFiles: Boolean = true,

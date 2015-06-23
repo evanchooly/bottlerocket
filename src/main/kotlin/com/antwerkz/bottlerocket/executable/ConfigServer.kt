@@ -11,8 +11,10 @@ import java.io.FileOutputStream
 public class ConfigServer(manager: MongoManager, name: String,
                           port: Int, baseDir: File) : MongoExecutable(manager, name, port, baseDir) {
     companion object {
-        private val LOG = LoggerFactory.getLogger(javaClass<Mongod>())
+        private val LOG = LoggerFactory.getLogger(javaClass<ConfigServer>())
     }
+
+    override val logger = LoggerFactory.getLogger("ConfigSvr.${port}")
 
     fun start() {
         if (process == null || !process?.isAlive()!!) {

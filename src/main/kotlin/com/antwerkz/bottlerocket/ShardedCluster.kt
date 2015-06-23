@@ -3,7 +3,6 @@ package com.antwerkz.bottlerocket
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.mongodb.ServerAddress
-import org.apache.commons.lang3.SystemUtils
 import org.bson.BsonDocument
 import org.bson.codecs.BsonDocumentCodec
 import org.bson.codecs.DecoderContext
@@ -14,7 +13,6 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.net.InetAddress
 import kotlin.platform.platformStatic
 
 class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_PORT,
@@ -32,19 +30,51 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
         platformStatic fun builder(): ShardedClusterBuilder {
             return ShardedClusterBuilder()
         }
+
+        platformStatic fun build(init: ShardedClusterBuilder.() -> Unit = {}): ShardedCluster {
+            val builder = ShardedClusterBuilder()
+            builder.init()
+            return builder.build()
+        }
     }
 
-    override
-    fun start() {
+    init {
         createMongoses()
         createShards()
         createConfigServers()
+    }
 
-        configServers.forEach { it.start()}
+    private var initialized = false
+
+    override
+    fun start() {
+        configServers.forEach { it.start() }
         shards.forEach { it.start() }
-        mongoses.forEach { it.start()}
+        mongoses.forEach { it.start() }
 
-        shards.forEach { addMember(it) }
+        if (!initialized) {
+            shards.forEach { addMember(it) }
+            initialized = true
+        }
+    }
+
+    override
+    fun enableAuth(pemFile: String) {
+        shutdown()
+
+        start()
+        val mongos = mongoses.first()
+        if (!adminAdded) {
+            mongos.addRootUser()
+            adminAdded = true
+        }
+
+        configServers.forEach { it.enableAuth(pemFile) }
+        shards.forEach { it.enableAuth(pemFile) }
+        mongoses.forEach { it.enableAuth(pemFile) }
+
+        shutdown()
+        start()
     }
 
     private fun addMember(replicaSet: ReplicaSet) {
@@ -118,27 +148,21 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
     override
     fun shutdown() {
         shards.forEach { it.shutdown() }
-        configServers.forEach { it.shutdown()}
-        mongoses.forEach { it.shutdown()}
+        configServers.forEach { it.shutdown() }
+        mongoses.forEach { it.shutdown() }
     }
 
     override
     fun clean() {
         shards.forEach { it.clean() }
-        configServers.forEach { it.clean()}
-        mongoses.forEach { it.clean()}
+        configServers.forEach { it.clean() }
+        mongoses.forEach { it.clean() }
         baseDir.deleteTree()
     }
 
-    override
-    fun enableAuth() {
-        shards.forEach {
-            it.enableAuth()
-        }
-    }
-
-    override fun authEnabled(): Boolean {
-        return shards.map { it.authEnabled() }.fold(true) { r, t -> r && t}
+    override fun isAuthEnabled(): Boolean {
+        val arrayList = shards.map { Pair(it.port, it.isAuthEnabled()) }.toArrayList()
+        return shards.map { it.isAuthEnabled() }.fold(true) { r, t -> r && t }
     }
 
     override fun getServerAddressList(): List<ServerAddress> {

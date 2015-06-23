@@ -16,6 +16,8 @@ public class Mongos(manager: MongoManager, name: String, port: Int, baseDir: Fil
         private val LOG = LoggerFactory.getLogger(javaClass<Mongos>())
     }
 
+    override val logger = LoggerFactory.getLogger("Mongos.${port}")
+
     fun start() {
         if (process == null || !process?.isAlive()!!) {
             baseDir.mkdirs()
@@ -29,8 +31,6 @@ public class Mongos(manager: MongoManager, name: String, port: Int, baseDir: Fil
                         "--config", file.getAbsolutePath())
                   .redirectOutput(FileOutputStream(File(baseDir, "${name}.out")))
                   .redirectError(FileOutputStream(File(baseDir, "${name}.err")))
-                  //                                .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
-                  //                                .redirectError(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
                   .destroyOnExit()
                   .start()
             process = Processes.newJavaProcess(processResult.process());

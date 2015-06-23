@@ -6,7 +6,6 @@ import com.mongodb.WriteConcern
 import org.bson.Document
 import org.testng.Assert
 import org.testng.annotations.Test
-import java.net.UnknownHostException
 import java.util.ArrayList
 
 class MongoClusterTest {
@@ -103,12 +102,19 @@ class MongoClusterTest {
         testClusterAuth(ReplicaSet.build())
     }
 
+    Test
+    fun shardedAuth() {
+        testClusterAuth(ShardedCluster.build())
+    }
+
     private fun testClusterAuth(cluster: MongoCluster) {
         var client: MongoClient? = null
         try {
             cluster.clean()
             cluster.enableAuth();
-            val b = cluster.authEnabled()
+
+            Assert.assertTrue(cluster.isAuthEnabled())
+
             client = cluster.getClient()
 
             val names = client.listDatabaseNames().into(ArrayList<String>())

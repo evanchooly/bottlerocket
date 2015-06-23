@@ -26,6 +26,8 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         private set
 
     companion object {
+        private val LOG = LoggerFactory.getLogger(javaClass<ReplicaSet>())
+
         platformStatic fun builder(): ReplicaSetBuilder {
             return ReplicaSetBuilder()
         }
@@ -69,9 +71,9 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         val primary = nodes.first()
 
         initiateReplicaSet(primary)
-        println("replSet initiated.  waiting for primary.")
+        LOG.info("replSet initiated.  waiting for primary.")
         waitForPrimary()
-        println("primary found.  adding other members.")
+        LOG.info("primary found.  adding other members.")
         nodes.asSequence().withIndex()
               .filter { it.index > 0 }
               .forEach { addMember(it.value) }
@@ -79,7 +81,7 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         waitForPrimary()
         initialized = true;
 
-        println("replica set ${name} started.")
+        LOG.info("replica set ${name} started.")
     }
 
     private fun initiateReplicaSet(mongod: Mongod) {
@@ -154,8 +156,8 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
     }
 
     override
-    fun enableAuth() {
-        if (!initialized && !authEnabled()) {
+    fun enableAuth(pemFile: String) {
+        if (!isAuthEnabled()) {
             val mongod = nodes.first()
             mongod.start()
             if (!adminAdded) {
@@ -164,7 +166,7 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
                 adminAdded = true
             }
             mongod.shutdown()
-            val pemFile = generatePemFile()
+
             nodes.forEach { it.enableAuth(pemFile) }
             start()
         }
@@ -174,8 +176,8 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         return nodes.map { it.getServerAddress() }
     }
 
-    override fun authEnabled(): Boolean {
-        return nodes.map { it.authEnabled }.fold(true) { r, t -> r && t }
+    override fun isAuthEnabled(): Boolean {
+        return nodes.map { it.isAuthEnabled() }.fold(true) { r, t -> r && t }
     }
 
     fun replicaSetUrl(): String {

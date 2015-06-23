@@ -34,7 +34,7 @@ public interface ConfigBlock {
                 if ( fieldValue != null ) {
                     var value: String
                     if (fieldValue is ConfigBlock) {
-                        val yaml = fieldValue.toYaml()
+                        val yaml = fieldValue.toYaml(version, mode)
                         if ( yaml != "" ) {
                             value = yaml.split('\n').map { it -> "  ${it}" }.join("\n").trim()
                             list.add("  ${value}")

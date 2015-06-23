@@ -50,8 +50,8 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
     }
 
     override
-    fun enableAuth() {
-        if (!authEnabled()) {
+    fun enableAuth(pemFile: String) {
+        if (!isAuthEnabled()) {
             mongod.enableAuth()
             if (mongod.isAlive()) {
                 shutdown()
@@ -67,8 +67,8 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
         }
     }
 
-    override fun authEnabled(): Boolean {
-        return mongod.authEnabled
+    override fun isAuthEnabled(): Boolean {
+        return mongod.isAuthEnabled()
     }
 
     override fun toString(): String {
@@ -76,7 +76,7 @@ public class SingleNode(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_
         if (replSetName != null) {
             content += ", replSetName = ${replSetName}"
         }
-        if (authEnabled()) {
+        if (isAuthEnabled()) {
             content += ", authentication = enabled"
         }
         return "Mongod { ${content} }"

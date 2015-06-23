@@ -3,6 +3,7 @@ package com.antwerkz.bottlerocket
 import com.antwerkz.bottlerocket.configuration.ConfigMode.MONGOS
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.Destination
+import com.antwerkz.bottlerocket.configuration.State
 import com.antwerkz.bottlerocket.configuration.configuration
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongod
@@ -21,12 +22,13 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.lang
 
-public open class MongoExecutable(val manager: MongoManager, val name: String, val port: Int, val baseDir: File) {
+public abstract class MongoExecutable(val manager: MongoManager, val name: String, val port: Int, val baseDir: File) {
     public var process: JavaProcess? = null
         protected set
     val config: Configuration
-    public var authEnabled: Boolean = false
+    abstract val logger: Logger
 
     companion object {
         val SUPER_USER = "superuser"
@@ -56,6 +58,19 @@ public open class MongoExecutable(val manager: MongoManager, val name: String, v
         }
     }
 
+    fun enableAuth(pemFile: String? = null) {
+        config.merge(configuration {
+            security {
+                authorization = if (pemFile == null) State.ENABLED else State.DISABLED
+                keyFile = pemFile
+            }
+        })
+    }
+
+    fun isAuthEnabled(): Boolean {
+        return config.security.authorization == State.ENABLED || config.security.keyFile != null
+    }
+
     fun isAlive(): Boolean {
         return process?.isAlive() ?: false;
     }
@@ -69,15 +84,36 @@ public open class MongoExecutable(val manager: MongoManager, val name: String, v
         if (isAlive()) {
             LOG.info("Shutting down mongod on port ${port}")
             runCommand("db.shutdownServer()")
+            waitForShutdown()
             process?.destroy(true)
+            File(baseDir, "mongod.lock").delete()
         }
+    }
+
+
+    fun addRootUser() {
+        runCommand("db.createUser(\n" +
+              "  {\n" +
+              "    user: \"${MongoExecutable.SUPER_USER}\",\n" +
+              "    pwd: \"${MongoExecutable.SUPER_USER_PASSWORD}\",\n" +
+              "    roles: [ \"root\" ]\n" +
+              "  });", out = logger, err = logger)
     }
 
     fun waitForStartUp() {
         val start = System.currentTimeMillis();
-        var connected = tryConnect();
+        var connected = false;
         while (!connected && System.currentTimeMillis() - start < 30000) {
-            Thread.sleep(5000)
+            Thread.sleep(3000)
+            connected = tryConnect()
+        }
+    }
+
+    fun waitForShutdown() {
+        val start = System.currentTimeMillis();
+        var connected = tryConnect();
+        while (connected && System.currentTimeMillis() - start < 30000) {
+            Thread.sleep(3000)
             connected = tryConnect()
         }
     }
@@ -88,7 +124,7 @@ public open class MongoExecutable(val manager: MongoManager, val name: String, v
               .command(listOf(manager.mongo,
                     "admin", "--port", "${port}", "--quiet"))
               .redirectOutput(stream)
-              .redirectError(Slf4jStream.of(LoggerFactory.getLogger(this.javaClass)).asInfo())
+//              .redirectError(Slf4jStream.of(LoggerFactory.getLogger(this.javaClass)).asInfo())
               .redirectInput(ByteArrayInputStream("db.stats()".toByteArray()))
               .execute()
 
@@ -101,7 +137,7 @@ public open class MongoExecutable(val manager: MongoManager, val name: String, v
         }
     }
 
-    public fun runCommandWithResult(command: String, authEnabled: Boolean = this.authEnabled, err: Logger = LOG):
+    public fun runCommandWithResult(command: String, authEnabled: Boolean = this.isAuthEnabled(), err: Logger = LOG):
            BsonDocument {
         val stream = ByteArrayOutputStream()
         val list = command(authEnabled)
@@ -127,7 +163,7 @@ public open class MongoExecutable(val manager: MongoManager, val name: String, v
         }
     }
 
-    fun runCommand(command: String, authEnabled: Boolean = this.authEnabled, out: Logger = LOG, err: Logger = LOG) {
+    fun runCommand(command: String, authEnabled: Boolean = this.isAuthEnabled(), out: Logger = LOG, err: Logger = LOG) {
         val list = command(authEnabled)
         LOG.debug(list.join(" "))
         var commandString = ""

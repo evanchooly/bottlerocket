@@ -18,7 +18,7 @@ public class Mongod(manager: MongoManager, name: String,
         private val LOG = LoggerFactory.getLogger(javaClass<Mongod>())
     }
 
-    val logger = LoggerFactory.getLogger("Mongod.${port}")
+    override val logger = LoggerFactory.getLogger("Mongod.${port}")
 
     public fun start() {
         if (process == null || !process?.isAlive()!!) {
@@ -43,36 +43,5 @@ public class Mongod(manager: MongoManager, name: String,
 
     fun getServerAddress(): ServerAddress {
         return ServerAddress("localhost", port)
-    }
-
-    fun enableAuth(pemFile: String? = null) {
-        config.merge(configuration {
-            security {
-//                authorization = if (pemFile == null) State.ENABLED else State.DISABLED
-                authorization = State.ENABLED
-                keyFile = pemFile
-            }
-        })
-        authEnabled = true
-    }
-
-    fun addAdmin() {
-        runCommand("db.createUser(\n" +
-              "  {\n" +
-              "    user: \"siteUserAdmin\",\n" +
-              "    pwd: \"password\",\n" +
-              "    roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\" } ]\n" +
-              "  })\n", out = logger, err = logger)
-        authEnabled = true
-    }
-
-    fun addRootUser() {
-        runCommand("db.createUser(\n" +
-              "  {\n" +
-              "    user: \"${MongoExecutable.SUPER_USER}\",\n" +
-              "    pwd: \"${MongoExecutable.SUPER_USER_PASSWORD}\",\n" +
-              "    roles: [ \"root\" ]\n" +
-              "  });", out = logger, err = logger)
-        authEnabled = true
     }
 }

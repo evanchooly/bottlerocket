@@ -45,9 +45,9 @@ public abstract class MongoCluster(public val name: String, public val port: Int
         client = null;
     }
 
-    abstract fun authEnabled(): Boolean;
+    abstract fun isAuthEnabled(): Boolean;
 
-    abstract fun enableAuth();
+    abstract fun enableAuth(pemFile: String = generatePemFile());
 
     open fun clean() {
         shutdown();
@@ -58,7 +58,7 @@ public abstract class MongoCluster(public val name: String, public val port: Int
         if (client == null) {
             val builder = MongoClientOptions.builder()
                   .connectTimeout(3000)
-            var credentials = if(authEnabled()) {
+            var credentials = if(isAuthEnabled()) {
                 arrayListOf(MongoCredential.createCredential(MongoExecutable.SUPER_USER, "admin",
                       MongoExecutable.SUPER_USER_PASSWORD.toCharArray()))
             } else {
