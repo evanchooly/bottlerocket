@@ -7,6 +7,7 @@ import org.bson.Document
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.util.ArrayList
+import kotlin.reflect.KMemberFunction1
 
 class MongoClusterTest {
     Test
@@ -67,47 +68,43 @@ class MongoClusterTest {
     Test
     public fun sharded() {
         val sharded = ShardedCluster.builder().build()
-        var client: MongoClient? = null
         try {
             sharded.clean()
             sharded.start()
-            client = MongoClient(listOf(ServerAddress("localhost", 30000), ServerAddress("localhost", 30001),
-                  ServerAddress("localhost", 30002)))
-
-            val list = client.getDatabase("config").getCollection("shards").find().into(ArrayList<Document>())
-            Assert.assertEquals(list.size(), 3, "Should find 3 shards")
-            for (document in list) {
-                when (document.getString("_id")) {
-                    "rocket0" -> Assert.assertEquals(document["host"], "rocket0/localhost:30003,localhost:30004,localhost:30005")
-                    "rocket1" -> Assert.assertEquals(document["host"], "rocket1/localhost:30006,localhost:30007,localhost:30008")
-                    "rocket2" -> Assert.assertEquals(document["host"], "rocket2/localhost:30009,localhost:30010,localhost:30011")
-                    else -> Assert.fail("found unknown shard member: " + document)
-                }
-            }
+            validateShards(sharded)
         } finally {
-            if (client != null) {
-                client.close()
-            }
             sharded.shutdown()
+        }
+    }
+
+    private fun validateShards(cluster: MongoCluster) {
+        val list = cluster.getClient().getDatabase("config").getCollection("shards").find().into(ArrayList<Document>())
+        Assert.assertEquals(list.size(), 1, "Should find 1 shards")
+        for (document in list) {
+            when (document.getString("_id")) {
+                "rocket0" -> Assert.assertEquals(document["host"], "rocket0/localhost:30001,localhost:30002,localhost:30003")
+                else -> Assert.fail("found unknown shard member: " + document)
+            }
         }
     }
 
     Test
     fun singleAuth() {
-        testClusterAuth(SingleNode.builder().build())
+        testClusterAuth(SingleNode.builder().build(), {})
     }
 
     Test
     fun replicaSetAuth() {
-        testClusterAuth(ReplicaSet.build())
+        testClusterAuth(ReplicaSet.build(), {})
     }
 
     Test
     fun shardedAuth() {
-        testClusterAuth(ShardedCluster.build())
+        val cluster = ShardedCluster.build()
+        testClusterAuth(cluster, {validateShards(cluster)})
     }
 
-    private fun testClusterAuth(cluster: MongoCluster) {
+    private fun testClusterAuth(cluster: MongoCluster, test: () -> Unit) {
         var client: MongoClient? = null
         try {
             cluster.clean()
@@ -127,6 +124,8 @@ class MongoClusterTest {
             collection.insertOne(document)
 
             Assert.assertEquals(collection.find().first(), document)
+
+            test()
         } finally {
             client?.close()
             cluster.shutdown()

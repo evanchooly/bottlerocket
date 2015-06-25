@@ -16,13 +16,15 @@ import java.io.File
 import kotlin.platform.platformStatic
 
 class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_PORT,
-                     version: String = DEFAULT_VERSION, public var size: Int = 3,
-                     baseDir: File = DEFAULT_BASE_DIR) : MongoCluster(name, port, version, baseDir) {
+                     version: String = DEFAULT_VERSION, baseDir: File = DEFAULT_BASE_DIR,
+                     var shardCount: Int = 1, var mongosCount: Int = 1, var configSvrCount: Int = 1) :
+      MongoCluster(name, port, version, baseDir) {
 
     var shards: MutableList<ReplicaSet> = arrayListOf()
     var mongoses: MutableList<Mongos> = arrayListOf()
     var configServers: MutableList<ConfigServer> = arrayListOf()
     private var nextPort = port
+    private var initialized = false
 
     companion object {
         private val LOG = LoggerFactory.getLogger(javaClass<MongoExecutable>())
@@ -44,7 +46,6 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
         createConfigServers()
     }
 
-    private var initialized = false
 
     override
     fun start() {
@@ -70,7 +71,11 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
         }
 
         configServers.forEach { it.enableAuth(pemFile) }
-        shards.forEach { it.enableAuth(pemFile) }
+        shards.forEach { replSet ->
+            replSet.nodes.first().addRootUser()
+            replSet.nodes.forEach { it.enableAuth(pemFile) }
+            replSet.adminAdded = true
+        }
         mongoses.forEach { it.enableAuth(pemFile) }
 
         shutdown()
@@ -89,7 +94,7 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
 
     private fun createShards() {
         if (shards.isEmpty()) {
-            for ( i in 0..size - 1) {
+            for ( i in 0..shardCount - 1) {
                 val replSetName = "${name}${i}"
                 val replicaSet = ReplicaSet.builder()
                 replicaSet.name = replSetName
@@ -104,8 +109,8 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
 
     private fun createConfigServers() {
         if (configServers.isEmpty()) {
-            for ( i in 1..3 ) {
-                val name = "configSvr-${i}"
+            for ( i in 1..configSvrCount ) {
+                val name = "configSvr-${nextPort}"
                 val configSvr = mongoManager.configServer(name, nextPort, File(baseDir, name))
                 configServers.add(configSvr)
                 nextPort += 1;
@@ -115,8 +120,8 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
 
     private fun createMongoses() {
         if (mongoses.isEmpty()) {
-            for ( i in 1..size) {
-                val mongosName = "mongos-${i}"
+            for ( i in 1..mongosCount) {
+                val mongosName = "mongos-${nextPort}"
                 mongoses.add(mongoManager.mongos(mongosName, nextPort, File(baseDir, mongosName), configServers))
                 nextPort += 1;
 
@@ -147,9 +152,9 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
 
     override
     fun shutdown() {
-        shards.forEach { it.shutdown() }
-        configServers.forEach { it.shutdown() }
         mongoses.forEach { it.shutdown() }
+        configServers.forEach { it.shutdown() }
+        shards.forEach { it.shutdown() }
     }
 
     override
@@ -161,12 +166,11 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
     }
 
     override fun isAuthEnabled(): Boolean {
-        val arrayList = shards.map { Pair(it.port, it.isAuthEnabled()) }.toArrayList()
         return shards.map { it.isAuthEnabled() }.fold(true) { r, t -> r && t }
     }
 
     override fun getServerAddressList(): List<ServerAddress> {
-        return shards.flatMap { it.getServerAddressList() }
+        return mongoses.map { it.getServerAddress() }
     }
 }
 
@@ -178,11 +182,13 @@ class ShardedClusterBuilder() {
         }
     public var basePort: Int = DEFAULT_PORT;
     public var version: String = DEFAULT_VERSION;
-    public var size: Int = 3;
+    public var shardCount: Int = 1;
+    public var mongosCount: Int = 1;
+    public var configSvrCount: Int = 1;
     public var baseDir: File = DEFAULT_BASE_DIR;
 
     fun build(): ShardedCluster {
-        return ShardedCluster(name, basePort, version, size, baseDir)
+        return ShardedCluster(name, basePort, version, baseDir, shardCount, mongosCount, configSvrCount)
     }
 
 }

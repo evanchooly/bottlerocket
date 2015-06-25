@@ -98,7 +98,8 @@ public class ConfigurationTest {
               "  destination: syslog")
     }
 
-    Test public fun testComplexBuilder() {
+    Test
+    public fun testComplexBuilder() {
         val configuration = configuration {
             storage {
                 dbPath = "/var/lib/mongodb"
@@ -124,7 +125,8 @@ public class ConfigurationTest {
         Assert.assertEquals(configuration.toYaml(), COMPLEX_CONFIG);
     }
 
-    Test public fun mongosConfig() {
+    Test
+    public fun mongosConfig() {
         val path = "/var/lib/mongo/data"
         val configuration = configuration {
             storage {

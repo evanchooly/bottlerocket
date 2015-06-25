@@ -155,16 +155,11 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         nodes.forEach { it.shutdown() }
     }
 
-    override
-    fun enableAuth(pemFile: String) {
+    override fun enableAuth(pemFile: String) {
         if (!isAuthEnabled()) {
             val mongod = nodes.first()
             mongod.start()
-            if (!adminAdded) {
-//                mongod.addAdmin()
-                mongod.addRootUser()
-                adminAdded = true
-            }
+            mongod.addRootUser()
             mongod.shutdown()
 
             nodes.forEach { it.enableAuth(pemFile) }

@@ -40,8 +40,4 @@ public class Mongod(manager: MongoManager, name: String,
             waitForStartUp()
         }
     }
-
-    fun getServerAddress(): ServerAddress {
-        return ServerAddress("localhost", port)
-    }
 }

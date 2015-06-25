@@ -75,6 +75,10 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
         return process?.isAlive() ?: false;
     }
 
+    fun getServerAddress(): ServerAddress {
+        return ServerAddress("localhost", port)
+    }
+
     fun clean() {
         shutdown()
         baseDir.deleteTree()
