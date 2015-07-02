@@ -1,24 +1,17 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.clusters.MongoClusterBuilder
+import com.antwerkz.bottlerocket.clusters.ReplicaSetBuilder
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.jayway.awaitility.Awaitility
 import com.mongodb.ServerAddress
-import org.bson.BsonDocument
-import org.bson.codecs.BsonDocumentCodec
-import org.bson.codecs.DecoderContext
-import org.bson.json.JsonReader
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.zeroturnaround.exec.ProcessExecutor
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.platform.platformStatic
 
-class ReplicaSet(name: String, port: Int, version: String, public var size: Int, baseDir: File)
-: MongoCluster(name, port, version, baseDir) {
+class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version: String = DEFAULT_VERSION, baseDir: File = DEFAULT_BASE_DIR,
+                 val size: Int = 3) : MongoCluster(name, port, version, baseDir) {
 
     public val nodes: MutableList<Mongod> = arrayListOf()
     private var nodeMap: Map<Int, Mongod> = hashMapOf()
@@ -114,15 +107,15 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
         if (nodes.isEmpty()) {
             return null;
         }
-        val mongod = nodes.filter({ it.isAlive() }).first()
-        val result = mongod.runCommandWithResult("db.isMaster()");
+        nodes.filter({ it.isAlive() }).forEach({ mongod ->
+              val result = mongod.runCommandWithResult("db.isMaster()");
 
-        if (result.containsKey ("primary")) {
-            val host = result.getString("primary")!!.getValue()
-            return nodeMap.get(Integer.valueOf(host.split(":".toRegex()).toTypedArray()[1]))
-        } else {
-            return null
-        }
+              if (result.containsKey ("primary")) {
+                  val host = result.getString("primary")!!.getValue()
+                  return nodeMap.get(Integer.valueOf(host.split(":".toRegex()).toTypedArray()[1]))
+              }
+        })
+        return null;
     }
 
     fun hasPrimary(): Boolean {
@@ -152,17 +145,21 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
     override
     fun shutdown() {
         super.shutdown()
-        nodes.forEach { it.shutdown() }
+        val primary = getPrimary()
+        nodes.filter { it != primary }. forEach { it.shutdown() }
+        primary?.shutdown()
     }
 
-    override fun enableAuth(pemFile: String) {
+    override
+    fun enableAuth() {
+        super.enableAuth()
         if (!isAuthEnabled()) {
             val mongod = nodes.first()
             mongod.start()
             mongod.addRootUser()
             mongod.shutdown()
 
-            nodes.forEach { it.enableAuth(pemFile) }
+            nodes.forEach { it.enableAuth(keyFile) }
             start()
         }
     }
@@ -180,18 +177,3 @@ class ReplicaSet(name: String, port: Int, version: String, public var size: Int,
     }
 }
 
-class ReplicaSetBuilder() {
-    public var name: String = DEFAULT_MONGOD_NAME;
-        set(value) {
-            $name = value;
-            baseDir = if (baseDir == DEFAULT_BASE_DIR) File("${TEMP_DIR}/${name}") else baseDir
-        }
-    public var basePort: Int = DEFAULT_PORT;
-    public var version: String = DEFAULT_VERSION;
-    public var size: Int = 3;
-    public var baseDir: File = DEFAULT_BASE_DIR;
-
-    fun build(): ReplicaSet {
-        return ReplicaSet(name, basePort, version, size, baseDir)
-    }
-}

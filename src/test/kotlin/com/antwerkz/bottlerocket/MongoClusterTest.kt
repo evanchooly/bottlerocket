@@ -1,23 +1,21 @@
 package com.antwerkz.bottlerocket
 
 import com.mongodb.MongoClient
-import com.mongodb.ServerAddress
 import com.mongodb.WriteConcern
 import org.bson.Document
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.util.ArrayList
-import kotlin.reflect.KMemberFunction1
 
 class MongoClusterTest {
     Test
     public fun singleNode() {
-        val singleNode = SingleNode.builder().build()
-        val client = MongoClient("localhost", 30000)
+        val singleNode = SingleNode()
         try {
             singleNode.clean()
             singleNode.start()
 
+            val client = singleNode.getClient()
             val names = client.listDatabaseNames().into(ArrayList<String>())
             Assert.assertFalse(names.isEmpty(), names.toString())
 
@@ -29,14 +27,18 @@ class MongoClusterTest {
 
             Assert.assertEquals(collection.find().first(), document)
         } finally {
-            client.close()
             singleNode.shutdown()
         }
     }
 
     Test
+    fun singleNodeAuth() {
+        testClusterAuth(SingleNode(), {})
+    }
+
+    Test
     public fun replicaSet() {
-        val replicaSet = ReplicaSet.builder().build()
+        val replicaSet = ReplicaSet()
         var client: MongoClient? = null
         try {
             replicaSet.clean()
@@ -44,7 +46,7 @@ class MongoClusterTest {
             replicaSet.start()
 
             val primary = replicaSet.getPrimary()
-            Assert.assertEquals(primary?.port, 30000, "30000 should be the primary at startup")
+            Assert.assertEquals(primary?.port, 30000, "3000 should be the primary at startup")
             client = replicaSet.getClient()
             val collection = client.getDatabase("bottlerocket").getCollection("replication")
             val document = Document("key", "value")
@@ -66,8 +68,13 @@ class MongoClusterTest {
     }
 
     Test
+    fun replicaSetAuth() {
+        testClusterAuth(ReplicaSet(), {})
+    }
+
+    Test
     public fun sharded() {
-        val sharded = ShardedCluster.builder().build()
+        val sharded = ShardedCluster()
         try {
             sharded.clean()
             sharded.start()
@@ -75,6 +82,12 @@ class MongoClusterTest {
         } finally {
             sharded.shutdown()
         }
+    }
+
+    Test
+    fun shardedAuth() {
+        val cluster = ShardedCluster()
+        testClusterAuth(cluster, { validateShards(cluster) })
     }
 
     private fun validateShards(cluster: MongoCluster) {
@@ -86,22 +99,6 @@ class MongoClusterTest {
                 else -> Assert.fail("found unknown shard member: " + document)
             }
         }
-    }
-
-    Test
-    fun singleAuth() {
-        testClusterAuth(SingleNode.builder().build(), {})
-    }
-
-    Test
-    fun replicaSetAuth() {
-        testClusterAuth(ReplicaSet.build(), {})
-    }
-
-    Test
-    fun shardedAuth() {
-        val cluster = ShardedCluster.build()
-        testClusterAuth(cluster, {validateShards(cluster)})
     }
 
     private fun testClusterAuth(cluster: MongoCluster, test: () -> Unit) {

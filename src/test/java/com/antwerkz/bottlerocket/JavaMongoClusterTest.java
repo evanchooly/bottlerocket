@@ -1,8 +1,8 @@
 package com.antwerkz.bottlerocket;
 
+import com.antwerkz.bottlerocket.clusters.ReplicaSetBuilder;
 import com.antwerkz.bottlerocket.executable.Mongod;
 import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -15,17 +15,15 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Arrays.asList;
-
 public class JavaMongoClusterTest {
 
     @Test
     public void singleNode() throws InterruptedException, UnknownHostException {
-        final SingleNode mongod = SingleNode.builder().build();
-        final MongoClient client = new MongoClient("localhost", 30000);
+        final SingleNode single = new SingleNode();
         try {
-            mongod.clean();
-            mongod.start();
+            single.clean();
+            single.start();
+            final MongoClient client = single.getClient();
 
             final List<String> names = client.listDatabaseNames().into(new ArrayList<>());
             Assert.assertFalse(names.isEmpty(), names.toString());
@@ -38,23 +36,20 @@ public class JavaMongoClusterTest {
 
             Assert.assertEquals(collection.find().first(), document);
         } finally {
-            client.close();
-            mongod.shutdown();
+            single.shutdown();
         }
     }
 
     @Test
     public void replicaSet() {
-        final ReplicaSet replicaSet = ReplicaSet.builder().build();
-        MongoClient client = null;
+        final ReplicaSet replicaSet = new ReplicaSet();
         try {
             replicaSet.clean();
-
             replicaSet.start();
 
+            final MongoClient client = replicaSet.getClient();
             final Mongod primary = replicaSet.getPrimary();
             Assert.assertEquals(primary.getPort(), 30000, "30000 should be the primary at startup");
-            client = replicaSet.getClient();
             final MongoCollection<Document> collection = client.getDatabase("bottlerocket").getCollection("replication");
             final Document document = new Document("key", "value");
 
@@ -69,23 +64,17 @@ public class JavaMongoClusterTest {
 
             Assert.assertTrue(replicaSet.waitForPrimary() != null);
         } finally {
-            if (client != null) {
-                client.close();
-            }
             replicaSet.shutdown();
         }
     }
 
     @Test
     public void sharded() {
-        final ShardedCluster sharded = ShardedCluster.builder()
-                                                     .build();
-        MongoClient client = null;
+        final ShardedCluster sharded = new ShardedCluster();
         try {
             sharded.clean();
             sharded.start();
-            client = new MongoClient(asList(new ServerAddress("localhost", 30000), new ServerAddress("localhost", 30001),
-                                            new ServerAddress("localhost", 30002)));
+            MongoClient client = sharded.getClient();
 
             final ArrayList<Document> list = client.getDatabase("config").getCollection("shards").find().into(new ArrayList<>());
             Assert.assertEquals(list.size(), 3, "Should find 3 shards");
@@ -105,16 +94,13 @@ public class JavaMongoClusterTest {
                 }
             }
         } finally {
-            if (client != null) {
-                client.close();
-            }
             sharded.shutdown();
         }
     }
 
     public void manualCluster() {
         final ReplicaSetBuilder builder = ReplicaSet.builder();
-        builder.setSize(0);
+        builder.size(0);
         final ReplicaSet replicaSet = builder.build();
         replicaSet.clean();
 

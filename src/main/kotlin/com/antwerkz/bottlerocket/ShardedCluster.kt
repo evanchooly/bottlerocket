@@ -1,5 +1,7 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.clusters.MongoClusterBuilder
+import com.antwerkz.bottlerocket.clusters.ShardedClusterBuilder
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.mongodb.ServerAddress
@@ -15,7 +17,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.platform.platformStatic
 
-class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_PORT,
+class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
                      version: String = DEFAULT_VERSION, baseDir: File = DEFAULT_BASE_DIR,
                      var shardCount: Int = 1, var mongosCount: Int = 1, var configSvrCount: Int = 1) :
       MongoCluster(name, port, version, baseDir) {
@@ -23,8 +25,8 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
     var shards: MutableList<ReplicaSet> = arrayListOf()
     var mongoses: MutableList<Mongos> = arrayListOf()
     var configServers: MutableList<ConfigServer> = arrayListOf()
-    private var nextPort = port
-    private var initialized = false
+    var nextPort = port
+    var initialized = false
 
     companion object {
         private val LOG = LoggerFactory.getLogger(javaClass<MongoExecutable>())
@@ -60,7 +62,8 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
     }
 
     override
-    fun enableAuth(pemFile: String) {
+    fun enableAuth() {
+        super.enableAuth()
         shutdown()
 
         start()
@@ -70,13 +73,13 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
             adminAdded = true
         }
 
-        configServers.forEach { it.enableAuth(pemFile) }
+        configServers.forEach { it.enableAuth(keyFile) }
         shards.forEach { replSet ->
             replSet.nodes.first().addRootUser()
-            replSet.nodes.forEach { it.enableAuth(pemFile) }
+            replSet.nodes.forEach { it.enableAuth(keyFile) }
             replSet.adminAdded = true
         }
-        mongoses.forEach { it.enableAuth(pemFile) }
+        mongoses.forEach { it.enableAuth(keyFile) }
 
         shutdown()
         start()
@@ -95,13 +98,8 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
     private fun createShards() {
         if (shards.isEmpty()) {
             for ( i in 0..shardCount - 1) {
-                val replSetName = "${name}${i}"
-                val replicaSet = ReplicaSet.builder()
-                replicaSet.name = replSetName
-                replicaSet.basePort = nextPort
-                replicaSet.version = version
-                replicaSet.baseDir = baseDir
-                shards.add(replicaSet.build())
+                val replicaSet = ReplicaSet("${name}${i}", nextPort, version, baseDir)
+                shards.add(replicaSet)
                 nextPort += replicaSet.size;
             }
         }
@@ -172,23 +170,4 @@ class ShardedCluster(name: String = DEFAULT_MONGOD_NAME, port: Int = DEFAULT_POR
     override fun getServerAddressList(): List<ServerAddress> {
         return mongoses.map { it.getServerAddress() }
     }
-}
-
-class ShardedClusterBuilder() {
-    public var name: String = DEFAULT_MONGOD_NAME;
-        set(value) {
-            $name = value;
-            baseDir = if (baseDir == DEFAULT_BASE_DIR) File("${TEMP_DIR}/${name}") else baseDir
-        }
-    public var basePort: Int = DEFAULT_PORT;
-    public var version: String = DEFAULT_VERSION;
-    public var shardCount: Int = 1;
-    public var mongosCount: Int = 1;
-    public var configSvrCount: Int = 1;
-    public var baseDir: File = DEFAULT_BASE_DIR;
-
-    fun build(): ShardedCluster {
-        return ShardedCluster(name, basePort, version, baseDir, shardCount, mongosCount, configSvrCount)
-    }
-
 }

@@ -2,7 +2,7 @@ package com.antwerkz.bottlerocket.testng
 
 import com.antwerkz.bottlerocket.MongoCluster
 import com.antwerkz.bottlerocket.SingleNode
-import com.antwerkz.bottlerocket.SingleNodeBuilder
+import com.antwerkz.bottlerocket.clusters.SingleNodeBuilder
 import org.testng.annotations.DataProvider
 
 public class BottleRocketDataProvider {
