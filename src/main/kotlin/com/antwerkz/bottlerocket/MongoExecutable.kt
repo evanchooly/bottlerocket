@@ -88,8 +88,8 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
         if (isAlive()) {
             LOG.info("Shutting down mongod on port ${port}")
             runCommand("db.shutdownServer()")
-            waitForShutdown()
             process?.destroy(true)
+            waitForShutdown()
             File(baseDir, "mongod.lock").delete()
         }
     }
@@ -108,7 +108,7 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
         val start = System.currentTimeMillis();
         var connected = false;
         while (!connected && System.currentTimeMillis() - start < 30000) {
-            Thread.sleep(3000)
+            Thread.sleep(1000)
             connected = tryConnect()
         }
     }
@@ -117,26 +117,19 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
         val start = System.currentTimeMillis();
         var connected = tryConnect();
         while (connected && System.currentTimeMillis() - start < 30000) {
-            Thread.sleep(3000)
+            Thread.sleep(1000)
             connected = tryConnect()
         }
     }
 
     fun tryConnect(): Boolean {
-        val stream = ByteArrayOutputStream()
-        ProcessExecutor()
-              .command(listOf(manager.mongo,
-                    "admin", "--port", "${port}", "--quiet"))
-              .redirectOutput(stream)
-//              .redirectError(Slf4jStream.of(LoggerFactory.getLogger(this.javaClass)).asInfo())
-              .redirectInput(ByteArrayInputStream("db.stats()".toByteArray()))
-              .execute()
-
-        val json = String(stream.toByteArray()).trim()
         try {
-            BsonDocumentCodec().decode(JsonReader(json), DecoderContext.builder().build())
+            runCommandWithResult("db.stats()")
             return true
-        } catch(e: Exception) {
+        } catch(e: Throwable) {
+            if(this is SingleNode) {
+                LOG.info(e.getMessage())
+            }
             return false
         }
     }
@@ -161,8 +154,6 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
         try {
             return BsonDocumentCodec().decode(JsonReader(if (authEnabled) json.substring(2) else json), DecoderContext.builder().build())
         } catch(e: Exception) {
-            println("failed to run '${command}' against server on port ${port}")
-            println("json = ${json}")
             throw e;
         }
     }
@@ -191,6 +182,17 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
                   "--authenticationDatabase", "admin"))
         }
         return list
+    }
+
+    override fun toString(): String {
+        var s = "${javaClass.getSimpleName()}:${port}"
+        if(isAuthEnabled()) {
+            s += ", auth:true"
+        }
+        if(isAlive()) {
+            s += ", alive:true"
+        }
+        return s
     }
 }
 

@@ -8,6 +8,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.testng.Assert;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -16,6 +17,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JavaMongoClusterTest {
+/*
+    @AfterTest
+    public void sleep() throws InterruptedException {
+        Thread.sleep(3000);
+    }
+*/
 
     @Test
     public void singleNode() throws InterruptedException, UnknownHostException {

@@ -14,21 +14,14 @@
         </encoder>
     </appender>
 
-    <logger name="com.antwerkz.bottlerocket.MongoExecutable" level="DEBUG">
+    <logger name="com.antwerkz.bottlerocket.MongoExecutable" level="INFO">
         <appender-ref ref="STDOUT"/>
     </logger>
 
-    <logger name="freemarker.cache">
+    <logger name="org.mongodb.driver" level="ERROR">
         <appender-ref ref="FILE"/>
     </logger>
-
-    <logger name="org.pircbotx.InputParser" level="ERROR" additivity="false">
+    <logger name="org.mongodb.driver.cluster" level="ERROR">
         <appender-ref ref="FILE"/>
     </logger>
-
-<!--
-    <root level="ERROR">
-        <appender-ref ref="FILE"/>
-    </root>
--->
 </configuration>

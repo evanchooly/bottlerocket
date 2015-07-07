@@ -38,6 +38,7 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
 
     override
     fun shutdown() {
+        super.shutdown()
         mongod.shutdown()
     }
 

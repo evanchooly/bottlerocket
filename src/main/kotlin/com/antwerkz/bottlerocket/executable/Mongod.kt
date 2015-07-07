@@ -22,6 +22,7 @@ public class Mongod(manager: MongoManager, name: String,
 
     public fun start() {
         if (process == null || !process?.isAlive()!!) {
+            LOG.info("Starting mongod on port ${port}")
             baseDir.mkdirs()
             val configFile = File(baseDir, "mongod.conf")
             configFile.writeText(config.toYaml())

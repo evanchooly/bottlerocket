@@ -150,6 +150,7 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
 
     override
     fun shutdown() {
+        super.shutdown()
         mongoses.forEach { it.shutdown() }
         configServers.forEach { it.shutdown() }
         shards.forEach { it.shutdown() }

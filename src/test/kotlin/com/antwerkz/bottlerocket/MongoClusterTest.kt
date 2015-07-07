@@ -3,14 +3,28 @@ package com.antwerkz.bottlerocket
 import com.mongodb.MongoClient
 import com.mongodb.WriteConcern
 import org.bson.Document
+import org.slf4j.LoggerFactory
 import org.testng.Assert
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.AfterTest
 import org.testng.annotations.Test
+import java.io.File
 import java.util.ArrayList
 
 class MongoClusterTest {
+    companion object {
+        private val LOG = LoggerFactory.getLogger(javaClass<MongoClusterTest>())
+    }
+
+    AfterMethod
+    fun sleep() {
+        LOG.info("Sleeping between tests")
+        Thread.sleep(1000)
+    }
+
     Test
     public fun singleNode() {
-        val singleNode = SingleNode()
+        val singleNode = SingleNode(baseDir = File("/tmp/rocket/singleNode"))
         try {
             singleNode.clean()
             singleNode.start()
@@ -33,16 +47,16 @@ class MongoClusterTest {
 
     Test
     fun singleNodeAuth() {
-        testClusterAuth(SingleNode(), {})
+        Thread.currentThread().getThreadGroup().list()
+        testClusterAuth(SingleNode(baseDir = File("/tmp/rocket/singleNodeAuth")), {})
     }
 
     Test
     public fun replicaSet() {
-        val replicaSet = ReplicaSet()
+        val replicaSet = ReplicaSet(baseDir = File("/tmp/rocket/replicaSet"))
         var client: MongoClient? = null
         try {
             replicaSet.clean()
-
             replicaSet.start()
 
             val primary = replicaSet.getPrimary()
@@ -69,12 +83,12 @@ class MongoClusterTest {
 
     Test
     fun replicaSetAuth() {
-        testClusterAuth(ReplicaSet(), {})
+        testClusterAuth(ReplicaSet(baseDir = File("/tmp/rocket/replicaSetAuth")), {})
     }
 
     Test
     public fun sharded() {
-        val sharded = ShardedCluster()
+        val sharded = ShardedCluster(baseDir = File("/tmp/rocket/sharded"))
         try {
             sharded.clean()
             sharded.start()
@@ -86,7 +100,7 @@ class MongoClusterTest {
 
     Test
     fun shardedAuth() {
-        val cluster = ShardedCluster()
+        val cluster = ShardedCluster(baseDir = File("/tmp/rocket/shardedAuth"))
         testClusterAuth(cluster, { validateShards(cluster) })
     }
 
@@ -106,6 +120,7 @@ class MongoClusterTest {
         try {
             cluster.clean()
             cluster.enableAuth();
+//            cluster.start();
 
             Assert.assertTrue(cluster.isAuthEnabled())
 
