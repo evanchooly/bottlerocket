@@ -29,7 +29,6 @@ public class Mongod(manager: MongoManager, name: String,
 
             val args = arrayListOf(manager.mongod,
                   "--config", configFile.getAbsolutePath())
-            LOG.info("Starting mongod on port ${port}")
             var processResult = ProcessExecutor()
                   .command(args)
                   .redirectOutput(FileOutputStream(File(baseDir, "mongod.out")))

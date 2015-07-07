@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.mongodb.MongoClient
 import com.mongodb.WriteConcern
 import org.bson.Document
@@ -47,7 +48,6 @@ class MongoClusterTest {
 
     Test
     fun singleNodeAuth() {
-        Thread.currentThread().getThreadGroup().list()
         testClusterAuth(SingleNode(baseDir = File("/tmp/rocket/singleNodeAuth")), {})
     }
 

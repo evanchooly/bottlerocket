@@ -14,7 +14,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.antwerkz.bottlerocket.MongoExecutable" level="INFO">
+    <logger name="com.antwerkz.bottlerocket" level="DEBUG">
         <appender-ref ref="STDOUT"/>
     </logger>
 

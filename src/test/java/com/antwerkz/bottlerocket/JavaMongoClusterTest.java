@@ -8,6 +8,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
@@ -17,12 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JavaMongoClusterTest {
-/*
-    @AfterTest
+    @AfterMethod
     public void sleep() throws InterruptedException {
-        Thread.sleep(3000);
+        Thread.sleep(1000);
     }
-*/
 
     @Test
     public void singleNode() throws InterruptedException, UnknownHostException {
@@ -84,17 +83,11 @@ public class JavaMongoClusterTest {
             MongoClient client = sharded.getClient();
 
             final ArrayList<Document> list = client.getDatabase("config").getCollection("shards").find().into(new ArrayList<>());
-            Assert.assertEquals(list.size(), 3, "Should find 3 shards");
+            Assert.assertEquals(list.size(), 1, "Should find 1 shards");
             for (final Document document : list) {
                 switch (document.getString("_id")) {
                     case "rocket0":
-                        Assert.assertEquals(document.getString("host"), "rocket0/localhost:30003,localhost:30004,localhost:30005");
-                        break;
-                    case "rocket1":
-                        Assert.assertEquals(document.getString("host"), "rocket1/localhost:30006,localhost:30007,localhost:30008");
-                        break;
-                    case "rocket2":
-                        Assert.assertEquals(document.getString("host"), "rocket2/localhost:30009,localhost:30010,localhost:30011");
+                        Assert.assertEquals(document.getString("host"), "rocket0/localhost:30001,localhost:30002,localhost:30003");
                         break;
                     default:
                         Assert.fail("found unknown shard member: " + document);
