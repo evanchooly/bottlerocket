@@ -9,7 +9,6 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -25,7 +24,9 @@ public class JavaMongoClusterTest {
 
     @Test
     public void singleNode() throws InterruptedException, UnknownHostException {
-        final SingleNode single = new SingleNode();
+        final SingleNode single = SingleNode.builder()
+                                            .baseDir(new File("build/rocket-java/singleNode"))
+                                            .build();
         try {
             single.clean();
             single.start();
@@ -48,7 +49,9 @@ public class JavaMongoClusterTest {
 
     @Test
     public void replicaSet() {
-        final ReplicaSet replicaSet = new ReplicaSet();
+        final ReplicaSet replicaSet = ReplicaSet.builder()
+                                                .baseDir(new File("build/rocket-java/replicaSet"))
+                                                .build();
         try {
             replicaSet.clean();
             replicaSet.start();
@@ -76,7 +79,9 @@ public class JavaMongoClusterTest {
 
     @Test
     public void sharded() {
-        final ShardedCluster sharded = new ShardedCluster();
+        final ShardedCluster sharded = ShardedCluster.builder()
+                                                     .baseDir(new File("build/rocket-java/sharded"))
+                                                     .build();
         try {
             sharded.clean();
             sharded.start();

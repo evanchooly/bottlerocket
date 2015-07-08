@@ -25,7 +25,7 @@ class MongoClusterTest {
 
     Test
     public fun singleNode() {
-        val singleNode = SingleNode(baseDir = File("/tmp/rocket/singleNode"))
+        val singleNode = SingleNode(baseDir = File("build/rocket/singleNode"))
         try {
             singleNode.clean()
             singleNode.start()
@@ -48,12 +48,12 @@ class MongoClusterTest {
 
     Test
     fun singleNodeAuth() {
-        testClusterAuth(SingleNode(baseDir = File("/tmp/rocket/singleNodeAuth")), {})
+        testClusterAuth(SingleNode(baseDir = File("build/rocket/singleNodeAuth")), {})
     }
 
     Test
     public fun replicaSet() {
-        val replicaSet = ReplicaSet(baseDir = File("/tmp/rocket/replicaSet"))
+        val replicaSet = ReplicaSet(baseDir = File("build/rocket/replicaSet"))
         var client: MongoClient? = null
         try {
             replicaSet.clean()
@@ -83,12 +83,12 @@ class MongoClusterTest {
 
     Test
     fun replicaSetAuth() {
-        testClusterAuth(ReplicaSet(baseDir = File("/tmp/rocket/replicaSetAuth")), {})
+        testClusterAuth(ReplicaSet(baseDir = File("build/rocket/replicaSetAuth")), {})
     }
 
     Test
     public fun sharded() {
-        val sharded = ShardedCluster(baseDir = File("/tmp/rocket/sharded"))
+        val sharded = ShardedCluster(baseDir = File("build/rocket/sharded"))
         try {
             sharded.clean()
             sharded.start()
@@ -100,7 +100,7 @@ class MongoClusterTest {
 
     Test
     fun shardedAuth() {
-        val cluster = ShardedCluster(baseDir = File("/tmp/rocket/shardedAuth"))
+        val cluster = ShardedCluster(baseDir = File("build/rocket/shardedAuth"))
         testClusterAuth(cluster, { validateShards(cluster) })
     }
 

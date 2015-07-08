@@ -33,8 +33,12 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
     val mongoManager: MongoManager = MongoManager(version)
     private var client: MongoClient? = null;
     var adminAdded: Boolean = false
-    var keyFile: String = ""
-    var pemFile: String = ""
+    val keyFile: String = File(baseDir, "rocket.key").getAbsolutePath()
+    val pemFile: String = File(baseDir, "rocket.pem").getAbsolutePath()
+
+    init {
+        baseDir.mkdirs()
+    }
 
     abstract fun start();
 
@@ -46,8 +50,8 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
     abstract fun isAuthEnabled(): Boolean;
 
     open fun enableAuth() {
-        keyFile = generateKeyFile()
-        pemFile = generatePemFile()
+        generateKeyFile()
+        generatePemFile()
     }
 
     open fun clean() {
@@ -73,11 +77,11 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
 
     abstract fun getServerAddressList(): List<ServerAddress>
 
-    fun generateKeyFile(): String {
-        val keyFile = File(baseDir, "rocket.key")
-        if (!keyFile.exists()) {
-            keyFile.getParentFile().mkdirs()
-            val stream = FileOutputStream(keyFile)
+    fun generateKeyFile() {
+         val key = File(keyFile)
+        if (!key.exists()) {
+            key.getParentFile().mkdirs()
+            val stream = FileOutputStream(key)
             try {
                 ProcessExecutor()
                       .command(listOf("openssl", "rand", "-base64", "741"))
@@ -88,19 +92,19 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
                 stream.close()
             }
         }
-        Files.setPosixFilePermissions(keyFile.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
-        return keyFile.getAbsolutePath();
+        Files.setPosixFilePermissions(key.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
     }
 
-    fun generatePemFile(): String {
-        val pemFile = File(baseDir, "rocket.pem")
+    fun generatePemFile() {
+        val pem = File(pemFile)
         val key = File(baseDir, "rocket-pem.key")
         val crt = File(baseDir, "rocket-pem.crt")
-        if (!pemFile.exists()) {
-            var openssl = "openssl req -batch -newkey rsa:2048 -new -x509 -days 365 -nodes -out ${crt} -keyout ${key}";
+        if (!pem.exists()) {
+            var openssl = "openssl req -batch -newkey rsa:2048 -new -x509 -days 365 -nodes -out ${crt.getAbsolutePath()} -keyout ${key
+                  .getAbsolutePath()}";
             var cat = "cat ${key} ${crt}"
-            pemFile.getParentFile().mkdirs()
-            val stream = FileOutputStream(pemFile)
+            pem.getParentFile().mkdirs()
+            val stream = FileOutputStream(pem)
             ProcessExecutor()
                   .directory(baseDir)
                   .command(openssl.splitBy(" "))
@@ -114,10 +118,9 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
                   .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
                   .execute()
         }
-        Files.setPosixFilePermissions(pemFile.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
+        Files.setPosixFilePermissions(pem.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
         Files.setPosixFilePermissions(key.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
         Files.setPosixFilePermissions(crt.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
-        return pemFile.getAbsolutePath();
     }
 
 }

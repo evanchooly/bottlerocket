@@ -108,7 +108,7 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
         val start = System.currentTimeMillis();
         var connected = false;
         while (!connected && System.currentTimeMillis() - start < 30000) {
-            Thread.sleep(1000)
+            Thread.sleep(3000)
             connected = tryConnect()
         }
     }
@@ -117,7 +117,7 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
         val start = System.currentTimeMillis();
         var connected = tryConnect();
         while (connected && System.currentTimeMillis() - start < 30000) {
-            Thread.sleep(1000)
+            Thread.sleep(3000)
             connected = tryConnect()
         }
     }
