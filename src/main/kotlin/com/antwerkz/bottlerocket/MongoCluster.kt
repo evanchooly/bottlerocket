@@ -105,23 +105,21 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
         if (!pem.exists()) {
             var openssl = "openssl req -batch -newkey rsa:2048 -new -x509 -days 365 -nodes -out ${crt.getAbsolutePath()} -keyout ${key
                   .getAbsolutePath()}";
-            var cat = "cat ${key} ${crt}"
+            var cat = "cat ${key.getAbsolutePath()} ${crt.getAbsolutePath()}"
             pem.getParentFile().mkdirs()
-            val stream = FileOutputStream(pem)
+            val stream = FileOutputStream(pem.getAbsolutePath())
             ProcessExecutor()
                   .directory(baseDir)
                   .command(openssl.splitBy(" "))
                   .redirectOutputAsDebug()
                   .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
                   .execute()
-            Thread.sleep(1000)
             ProcessExecutor()
                   .directory(baseDir)
                   .command(cat.splitBy(" "))
                   .redirectOutput(stream)
                   .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
                   .execute()
-            Thread.sleep(1000)
         }
         Files.setPosixFilePermissions(pem.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
         Files.setPosixFilePermissions(key.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
