@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.configuration.Configuration
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
 import com.mongodb.MongoCredential
@@ -42,12 +43,16 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
 
     abstract fun start();
 
+    abstract fun isAuthEnabled(): Boolean;
+
+    abstract fun isStarted(): Boolean
+
+    abstract fun getServerAddressList(): List<ServerAddress>
+
     open fun shutdown() {
         client?.close()
         client = null;
     }
-
-    abstract fun isAuthEnabled(): Boolean;
 
     open fun enableAuth() {
         generateKeyFile()
@@ -74,8 +79,6 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
 
         return client!!;
     }
-
-    abstract fun getServerAddressList(): List<ServerAddress>
 
     fun generateKeyFile() {
          val key = File(keyFile)
@@ -123,6 +126,7 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
         Files.setPosixFilePermissions(crt.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
     }
 
+    abstract fun updateConfig(update: Configuration)
 }
 
 fun File.deleteTree() {

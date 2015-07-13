@@ -2,6 +2,7 @@ package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.MongoClusterBuilder
 import com.antwerkz.bottlerocket.clusters.ShardedClusterBuilder
+import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.mongodb.ServerAddress
@@ -61,6 +62,13 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
         }
     }
 
+    override fun isStarted(): Boolean {
+        val mongosAlive = mongoses.filter { it.isAlive() }.count() != 0
+        val configServersAlive = configServers.filter { it.isAlive() }.count() != 0
+        val shardsAlive = shards.filter { it.isStarted() }.count() != 0
+        return mongosAlive && configServersAlive && shardsAlive
+    }
+
     override
     fun enableAuth() {
         super.enableAuth()
@@ -83,6 +91,12 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
 
         shutdown()
         start()
+    }
+
+    override fun updateConfig(update: Configuration) {
+        shards.forEach {
+            it.updateConfig(update)
+        }
     }
 
     private fun addMember(replicaSet: ReplicaSet) {

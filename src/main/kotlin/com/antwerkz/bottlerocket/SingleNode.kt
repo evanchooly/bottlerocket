@@ -2,6 +2,7 @@ package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.MongoClusterBuilder
 import com.antwerkz.bottlerocket.clusters.SingleNodeBuilder
+import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.mongodb.ServerAddress
 import org.slf4j.Logger
@@ -42,6 +43,10 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
         mongod.shutdown()
     }
 
+    override fun isStarted(): Boolean {
+        return mongod.isAlive()
+    }
+
     override fun getServerAddressList(): List<ServerAddress> {
         return listOf(mongod.getServerAddress())
     }
@@ -63,6 +68,10 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
 
     override fun isAuthEnabled(): Boolean {
         return mongod.isAuthEnabled()
+    }
+
+    override fun updateConfig(update: Configuration) {
+        mongod.config.merge(update)
     }
 
     override fun toString(): String {

@@ -2,6 +2,7 @@ package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.MongoClusterBuilder
 import com.antwerkz.bottlerocket.clusters.ReplicaSetBuilder
+import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.jayway.awaitility.Awaitility
 import com.mongodb.ServerAddress
@@ -51,6 +52,10 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
         }
 
         initialize()
+    }
+
+    override fun isStarted(): Boolean {
+        return nodes.filter { it.isAlive() }.count() != 0
     }
 
     fun addNode(node: Mongod) {
@@ -161,6 +166,12 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
 
             nodes.forEach { it.enableAuth(keyFile) }
             start()
+        }
+    }
+
+    override fun updateConfig(update: Configuration) {
+        nodes.forEach {
+            it.config.merge(update)
         }
     }
 
