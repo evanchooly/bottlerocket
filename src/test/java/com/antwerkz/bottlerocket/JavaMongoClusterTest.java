@@ -16,6 +16,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.antwerkz.bottlerocket.configuration.ConfigurationPackage.configuration;
+
 public class JavaMongoClusterTest {
     @AfterMethod
     public void sleep() throws InterruptedException {
@@ -24,68 +26,47 @@ public class JavaMongoClusterTest {
 
     @Test
     public void singleNode() throws InterruptedException, UnknownHostException {
-        final SingleNode single = SingleNode.builder()
+        final SingleNode cluster = SingleNode.builder()
                                             .baseDir(new File("build/rocket-java/singleNode"))
                                             .build();
         try {
-            single.clean();
-            single.start();
-            final MongoClient client = single.getClient();
-
-            final List<String> names = client.listDatabaseNames().into(new ArrayList<>());
-            Assert.assertFalse(names.isEmpty(), names.toString());
-
-            final MongoDatabase db = client.getDatabase("bottlerocket");
-            db.drop();
-            final MongoCollection<Document> collection = db.getCollection("singlenode");
-            final Document document = new Document("key", "value");
-            collection.insertOne(document);
-
-            Assert.assertEquals(collection.find().first(), document);
+            startCluster(cluster);
+            testWrites(cluster);
         } finally {
-            single.shutdown();
+            cluster.shutdown();
         }
     }
 
     @Test
     public void replicaSet() {
-        final ReplicaSet replicaSet = ReplicaSet.builder()
+        final ReplicaSet cluster = ReplicaSet.builder()
                                                 .baseDir(new File("build/rocket-java/replicaSet"))
                                                 .build();
         try {
-            replicaSet.clean();
-            replicaSet.start();
+            startCluster(cluster);
 
-            final MongoClient client = replicaSet.getClient();
-            final Mongod primary = replicaSet.getPrimary();
+            testWrites(cluster);
+
+            final Mongod primary = cluster.getPrimary();
             Assert.assertEquals(primary.getPort(), 30000, "30000 should be the primary at startup");
-            final MongoCollection<Document> collection = client.getDatabase("bottlerocket").getCollection("replication");
-            final Document document = new Document("key", "value");
+            Assert.assertTrue(cluster.hasPrimary());
+            Assert.assertTrue(cluster.waitForPrimary() != null);
 
-            collection
-                .withWriteConcern(WriteConcern.ACKNOWLEDGED)
-                .insertOne(document);
-
-            final Document first = collection.find().first();
-            Assert.assertEquals(document, first);
-
-            Assert.assertTrue(replicaSet.hasPrimary());
-
-            Assert.assertTrue(replicaSet.waitForPrimary() != null);
         } finally {
-            replicaSet.shutdown();
+            cluster.shutdown();
         }
     }
 
     @Test
     public void sharded() {
-        final ShardedCluster sharded = ShardedCluster.builder()
+        final ShardedCluster cluster = ShardedCluster.builder()
                                                      .baseDir(new File("build/rocket-java/sharded"))
                                                      .build();
         try {
-            sharded.clean();
-            sharded.start();
-            MongoClient client = sharded.getClient();
+            startCluster(cluster);
+            testWrites(cluster);
+
+            MongoClient client = cluster.getClient();
 
             final ArrayList<Document> list = client.getDatabase("config").getCollection("shards").find().into(new ArrayList<>());
             Assert.assertEquals(list.size(), 1, "Should find 1 shards");
@@ -99,8 +80,39 @@ public class JavaMongoClusterTest {
                 }
             }
         } finally {
-            sharded.shutdown();
+            cluster.shutdown();
         }
+    }
+
+    public void startCluster(final MongoCluster cluster) {
+        cluster.clean();
+        cluster.updateConfig(configuration( c -> {
+            c.storage(s -> {
+                s.mmapv1( m -> {
+                    m.setPreallocDataFiles(false);
+                    m.setSmallFiles(true);
+                    return null;
+                });
+                return null;
+            });
+         return null;
+        }));
+        cluster.start();
+    }
+
+    public void testWrites(final MongoCluster cluster) {
+        final MongoClient client = cluster.getClient();
+
+        final List<String> names = client.listDatabaseNames().into(new ArrayList<>());
+        Assert.assertFalse(names.isEmpty(), names.toString());
+
+        final MongoDatabase db = client.getDatabase("bottlerocket");
+        db.drop();
+        final MongoCollection<Document> collection = db.getCollection("singlenode");
+        final Document document = new Document("key", "value");
+        collection.insertOne(document);
+
+        Assert.assertEquals(collection.find().first(), document);
     }
 
     public void manualCluster() {

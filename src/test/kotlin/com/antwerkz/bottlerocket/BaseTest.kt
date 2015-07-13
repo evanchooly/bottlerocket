@@ -44,10 +44,8 @@ open class BaseTest {
                   configuration {
                       storage {
                           mmapv1 {
-                              quota {
-                                  preallocDataFiles = false
-                                  smallFiles = true
-                              }
+                              preallocDataFiles = false
+                              smallFiles = true
                           }
                       }
                   }
