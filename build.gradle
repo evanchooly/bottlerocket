@@ -85,3 +85,19 @@ modifyPom {
         resultPom.dependencies*.scope = null
     }
 }
+
+tasks.withType(Test) {
+
+    beforeTest { descr ->
+        logger.info("[Test ${descr.className} > ${descr.name}]")
+    }
+
+    afterTest { descr, result ->
+        def failureStartTime = result.getResultType().toString() == "FAILURE" ? " Started at: ${result.getStartTime()}" : ""
+        logger.info("[Test ${descr.className} > ${descr.name}] ${result.getResultType()} "
+                            + "(${result.getEndTime() - result.getStartTime()} ms) ${failureStartTime}")
+
+    }
+
+    testLogging { exceptionFormat = 'full' }
+}
