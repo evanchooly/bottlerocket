@@ -68,16 +68,20 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
         if (client == null) {
             val builder = MongoClientOptions.builder()
                   .connectTimeout(3000)
-            var credentials = if (isAuthEnabled()) {
-                arrayListOf(MongoCredential.createCredential(MongoExecutable.SUPER_USER, "admin",
-                      MongoExecutable.SUPER_USER_PASSWORD.toCharArray()))
-            } else {
-                listOf<MongoCredential>()
-            }
-            client = MongoClient(getServerAddressList(), credentials, builder.build())
+            client = MongoClient(getServerAddressList(), getCredentials(), builder.build())
         }
 
         return client!!;
+    }
+
+    fun getCredentials(): List<MongoCredential> {
+        var credentials = if (isAuthEnabled()) {
+            arrayListOf(MongoCredential.createCredential(MongoExecutable.SUPER_USER, "admin",
+                  MongoExecutable.SUPER_USER_PASSWORD.toCharArray()))
+        } else {
+            listOf<MongoCredential>()
+        }
+        return credentials
     }
 
     fun generateKeyFile() {
@@ -127,6 +131,8 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
     }
 
     abstract fun updateConfig(update: Configuration)
+
+    abstract fun allNodesActive() : Boolean
 }
 
 fun File.deleteTree() {

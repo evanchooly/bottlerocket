@@ -134,7 +134,6 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
                   try {
                       hasPrimary()
                   } catch(ignored: Exception) {
-
                   }
               })
 
@@ -173,6 +172,11 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
         nodes.forEach {
             it.config.merge(update)
         }
+    }
+
+    override fun allNodesActive(): Boolean {
+        println("ReplicaSet:  checking all nodes")
+        return nodes.fold(true, { active, it -> it.tryConnect() })
     }
 
     override fun getServerAddressList(): List<ServerAddress> {

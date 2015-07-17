@@ -1,6 +1,5 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.clusters.MongoClusterBuilder
 import com.antwerkz.bottlerocket.clusters.ShardedClusterBuilder
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.ConfigServer
@@ -97,6 +96,14 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
         shards.forEach {
             it.updateConfig(update)
         }
+    }
+
+    override fun allNodesActive(): Boolean {
+        var all = shards.fold(true) { active, it -> it.allNodesActive() }
+        all = configServers.fold(all) { active, it -> it.isAlive() }
+        all = mongoses.fold(all) { active, it -> it.isAlive() }
+
+        return all
     }
 
     private fun addMember(replicaSet: ReplicaSet) {

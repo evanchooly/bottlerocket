@@ -4,6 +4,8 @@ import com.antwerkz.bottlerocket.clusters.MongoClusterBuilder
 import com.antwerkz.bottlerocket.clusters.SingleNodeBuilder
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.Mongod
+import com.mongodb.MongoClient
+import com.mongodb.MongoClientOptions
 import com.mongodb.ServerAddress
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -72,6 +74,10 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
 
     override fun updateConfig(update: Configuration) {
         mongod.config.merge(update)
+    }
+
+    override fun allNodesActive(): Boolean {
+        return mongod.tryConnect()
     }
 
     override fun toString(): String {

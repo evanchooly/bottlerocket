@@ -1,11 +1,13 @@
 package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.configuration.configuration
+import com.jayway.awaitility.Awaitility
 import org.bson.Document
 import org.slf4j.LoggerFactory
 import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import java.util.ArrayList
+import java.util.concurrent.TimeUnit
 
 open class BaseTest {
     companion object {
@@ -54,6 +56,18 @@ open class BaseTest {
                 cluster?.enableAuth()
             } else {
                 cluster?.start()
+            }
+
+            var allActive = false
+            val start = System.currentTimeMillis();
+
+            while (!allActive && System.currentTimeMillis() - start < 30000) {
+                Thread.sleep(1000)
+                allActive = cluster?.allNodesActive() ?: false
+            }
+
+            if(!allActive) {
+                throw IllegalStateException("Not all cluster members are active");
             }
         }
     }
