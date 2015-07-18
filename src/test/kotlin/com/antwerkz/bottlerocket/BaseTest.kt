@@ -50,6 +50,9 @@ open class BaseTest {
                               smallFiles = true
                           }
                       }
+                      replication {
+                          oplogSizeMB = 10
+                      }
                   }
             )
             if(enableAuth) {
