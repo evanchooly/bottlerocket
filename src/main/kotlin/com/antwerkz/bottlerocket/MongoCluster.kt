@@ -132,7 +132,7 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
 
     abstract fun updateConfig(update: Configuration)
 
-    abstract fun allNodesActive() : Boolean
+    abstract fun allNodesActive()
 }
 
 fun File.deleteTree() {

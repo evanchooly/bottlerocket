@@ -61,9 +61,17 @@ open class BaseTest {
             var allActive = false
             val start = System.currentTimeMillis();
 
-            while (!allActive && System.currentTimeMillis() - start < 30000) {
+            val timeout = 30000
+            while (!allActive && System.currentTimeMillis() - start < timeout) {
                 Thread.sleep(1000)
-                allActive = cluster?.allNodesActive() ?: false
+                try {
+                    cluster?.allNodesActive()
+                    allActive = true
+                } catch(e: IllegalStateException) {
+                    if (System.currentTimeMillis() - start > timeout) {
+                        throw e
+                    }
+                }
             }
 
             if(!allActive) {

@@ -76,8 +76,10 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
         mongod.config.merge(update)
     }
 
-    override fun allNodesActive(): Boolean {
-        return mongod.tryConnect()
+    override fun allNodesActive() {
+        if(!mongod.tryConnect()) {
+            throw IllegalStateException("mongod:${port} is not active");
+        }
     }
 
     override fun toString(): String {

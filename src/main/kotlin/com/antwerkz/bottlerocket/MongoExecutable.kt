@@ -127,9 +127,6 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
             runCommandWithResult("db.stats()")
             return true
         } catch(e: Throwable) {
-            if(this is SingleNode) {
-                LOG.info(e.getMessage())
-            }
             return false
         }
     }

@@ -7,7 +7,7 @@ buildscript {
 
     dependencies {
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:2.2.+'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:0.12.613"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:0.12.1218"
         classpath 'org.zeroturnaround:zt-exec:1.6'
         classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
     }
@@ -25,7 +25,7 @@ repositories {
     jcenter()
 }
 
-ext.kotlinVersion = '0.12.613'
+ext.kotlinVersion = '0.12.1218'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8

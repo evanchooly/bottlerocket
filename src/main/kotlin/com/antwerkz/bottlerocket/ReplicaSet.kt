@@ -174,9 +174,14 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
         }
     }
 
-    override fun allNodesActive(): Boolean {
-        println("ReplicaSet:  checking all nodes")
-        return nodes.fold(true, { active, it -> it.tryConnect() })
+    override fun allNodesActive() {
+        val message = nodes.filter({ !it.tryConnect() })
+            .map( { "mongod:${it.port} is not active"})
+            .toArrayList()
+            .join()
+        if(!message.isEmpty()) {
+            throw IllegalStateException(message)
+        }
     }
 
     override fun getServerAddressList(): List<ServerAddress> {

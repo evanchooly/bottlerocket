@@ -98,12 +98,23 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
         }
     }
 
-    override fun allNodesActive(): Boolean {
-        var all = shards.fold(true) { active, it -> it.allNodesActive() }
-        all = configServers.fold(all) { active, it -> it.isAlive() }
-        all = mongoses.fold(all) { active, it -> it.isAlive() }
+    override fun allNodesActive() {
+        var list = shards.flatMap { it.nodes }
+              .filter { !it.tryConnect() }
+              .map({ "mongod:${it.port} is not active" })
+              .toArrayList()
 
-        return all
+        configServers.filter { !it.tryConnect() }
+              .map({ "configSvr:${it.port} is not active" })
+              .toCollection(list)
+
+        var message = mongoses.filter { !it.tryConnect() }
+              .map({ "mongos:${it.port} is not active" })
+              .toCollection(list)
+              .join()
+        if (!message.isEmpty()) {
+            throw IllegalStateException(message)
+        }
     }
 
     private fun addMember(replicaSet: ReplicaSet) {
