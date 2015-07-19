@@ -18,6 +18,8 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.PosixFilePermission
 import java.util.EnumSet
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 val TEMP_DIR = if (File("/tmp").exists()) "/tmp" else System.getProperty("java.io.tmpdir")
 

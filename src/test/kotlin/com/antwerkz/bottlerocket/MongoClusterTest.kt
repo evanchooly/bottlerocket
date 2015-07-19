@@ -42,7 +42,7 @@ class MongoClusterTest : BaseTest() {
     Test
     fun shardedAuth() {
         cluster = ShardedCluster(baseDir = File("build/rocket/shardedAuth"))
-        testClusterAuth({ validateShards() })
+        testClusterAuth()
         validateShards()
         testClusterWrites()
     }

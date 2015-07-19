@@ -10,6 +10,8 @@ import com.mongodb.ServerAddress
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import kotlin.platform.platformStatic
 
 open
@@ -63,6 +65,7 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
                 adminAdded = true
             }
             shutdown()
+            Thread.sleep(3000)
             mongod.enableAuth()
             start()
         }

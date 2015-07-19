@@ -1,13 +1,15 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.clusters.MongoClusterBuilder
 import com.antwerkz.bottlerocket.clusters.ReplicaSetBuilder
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.jayway.awaitility.Awaitility
+import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
+import org.bson.Document
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.ArrayList
 import java.util.concurrent.TimeUnit
 import kotlin.platform.platformStatic
 
@@ -72,9 +74,9 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
         LOG.info("replSet initiated.  waiting for primary.")
         waitForPrimary()
         LOG.info("primary found.  adding other members.")
-        nodes.asSequence().withIndex()
-              .filter { it.index > 0 }
-              .forEach { addMember(it.value) }
+        addMembers(nodes.asSequence().withIndex()
+              .filter({ it.index > 0 })
+              .map { it.value })
 
         waitForPrimary()
         initialized = true;
@@ -83,28 +85,33 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
     }
 
     private fun initiateReplicaSet(mongod: Mongod) {
-
-        val results = mongod.runCommandWithResult("rs.initiate({"
-              + "\n   _id: \"${name}\","
-              + "\n   members: [{"
-              + "\n       _id: 1,"
-              + "\n       host: \"localhost:${mongod.port}\""
-              + "\n   }],"
-              + "\n});")
-
-        if ( !(results.getInt32("ok")?.intValue()?.equals(1) ?: false) ) {
+        val results = mongod.runCommand(Document("replSetInitiate",
+              Document("_id", name)
+                    .append("members", listOf(Document("_id", 1)
+                          .append("host", "localhost:${mongod.port}"))
+                    )), ReadPreference.primaryPreferred())
+        if ( !(results?.getDouble("ok")?.toInt()?.equals(1) ?: false) ) {
             throw IllegalStateException("Failed to initiate replica set: ${results}")
         }
     }
 
-    private fun addMember(mongod: Mongod) {
-        // used to if(null) throw
+    private fun addMembers(list: Sequence<Mongod>) {
+        // used to be if(null) throw
         val primary = getPrimary() ?: throw IllegalStateException("Replica set ${name} has no primary")
 
-        val results = primary.runCommandWithResult("rs.add(\"localhost:${mongod.port}\");")
+        val config = primary.runCommand(Document("replSetGetConfig", 1)).get("config") as Document
+        config.set("version", config.getInteger("version") + 1)
+        val members: ArrayList<Document> = config.get("members") as ArrayList<Document>
+        var id = members[0].getInteger("_id")
+        list.map({
+            Document("_id", ++id)
+                  .append("host", "localhost:${it.port}")
+        }).toCollection(members)
 
-        if ( results.getInt32("ok").getValue() != 1) {
-            throw RuntimeException("Failed to add ${mongod} to replica set:  ${results}")
+        val results = primary.runCommand(Document("replSetReconfig", config));
+
+        if ( results.getDouble("ok").toInt() != 1) {
+            throw RuntimeException("Failed to add members to replica set:  ${results}")
         }
     }
 
@@ -113,12 +120,12 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
             return null;
         }
         nodes.filter({ it.isAlive() }).forEach({ mongod ->
-              val result = mongod.runCommandWithResult("db.isMaster()");
+            val result = mongod.runCommand(Document("isMaster", null));
 
-              if (result.containsKey ("primary")) {
-                  val host = result.getString("primary")!!.getValue()
-                  return nodeMap.get(Integer.valueOf(host.split(":".toRegex()).toTypedArray()[1]))
-              }
+            if (result.containsKey ("primary")) {
+                val host = result.getString("primary")
+                return nodeMap.get(Integer.valueOf(host.split(":".toRegex()).toTypedArray()[1]))
+            }
         })
         return null;
     }
@@ -150,7 +157,7 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
     fun shutdown() {
         super.shutdown()
         val primary = getPrimary()
-        nodes.filter { it != primary }. forEach { it.shutdown() }
+        nodes.filter { it != primary }.forEach { it.shutdown() }
         primary?.shutdown()
     }
 
@@ -176,10 +183,10 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
 
     override fun allNodesActive() {
         val message = nodes.filter({ !it.tryConnect() })
-            .map( { "mongod:${it.port} is not active"})
-            .toArrayList()
-            .join()
-        if(!message.isEmpty()) {
+              .map({ "mongod:${it.port} is not active" })
+              .toArrayList()
+              .join()
+        if (!message.isEmpty()) {
             throw IllegalStateException(message)
         }
     }

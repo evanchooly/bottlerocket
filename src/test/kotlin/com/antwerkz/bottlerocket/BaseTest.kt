@@ -83,7 +83,7 @@ open class BaseTest {
         }
     }
 
-    jvmOverloads fun testClusterAuth(test: () -> Unit = {}) {
+    fun testClusterAuth() {
         startCluster(true)
 
         Assert.assertTrue(cluster?.isAuthEnabled() ?: false)
@@ -92,8 +92,6 @@ open class BaseTest {
 
         val names = client?.listDatabaseNames()?.into(ArrayList<String>())
         Assert.assertFalse(names?.isEmpty() ?: true, names.toString())
-
-        test()
     }
 
     fun assertPrimary(port: Int) {

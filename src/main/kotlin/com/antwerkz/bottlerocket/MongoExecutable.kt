@@ -1,34 +1,26 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.ConfigMode.MONGOS
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.Destination
 import com.antwerkz.bottlerocket.configuration.State
 import com.antwerkz.bottlerocket.configuration.configuration
-import com.antwerkz.bottlerocket.executable.ConfigServer
-import com.antwerkz.bottlerocket.executable.Mongod
-import com.mongodb.ServerAddress
-import org.bson.BsonDocument
-import org.bson.codecs.BsonDocumentCodec
-import org.bson.codecs.DecoderContext
-import org.bson.json.JsonReader
+import com.mongodb.*
+import org.bson.Document
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import org.zeroturnaround.process.JavaProcess
-import org.zeroturnaround.process.Processes
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileOutputStream
-import java.lang
+import java.time.LocalDateTime
 
 public abstract class MongoExecutable(val manager: MongoManager, val name: String, val port: Int, val baseDir: File) {
     public var process: JavaProcess? = null
         protected set
     val config: Configuration
     abstract val logger: Logger
+    private var client: MongoClient? = null
 
     companion object {
         val SUPER_USER = "superuser"
@@ -85,23 +77,81 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
     }
 
     fun shutdown() {
+        client?.close()
+        client = null
         if (isAlive()) {
-            LOG.info("Shutting down mongod on port ${port}")
+            LOG.info("Shutting down service on port ${port}")
             runCommand("db.shutdownServer()")
             process?.destroy(true)
-            waitForShutdown()
             File(baseDir, "mongod.lock").delete()
         }
     }
 
+    private fun runCommand(command: String, authEnabled: Boolean = this.isAuthEnabled(), out: Logger = LOG, err: Logger = LOG) {
+        val list = command(authEnabled)
+        var commandString = ""
+        if (authEnabled) {
+            commandString = "db.auth(\"${MongoExecutable.SUPER_USER}\", \"${MongoExecutable.SUPER_USER_PASSWORD}\");\n"
+        }
+        commandString += command
+        ProcessExecutor()
+              .command(list)
+              .redirectInput(ByteArrayInputStream(commandString.toByteArray()))
+              .execute()
+    }
+
+    private fun command(authEnabled: Boolean): List<String> {
+        val list = arrayListOf(manager.mongo,
+              "admin", "--port", "${this.port}", "--quiet")
+        if (authEnabled) {
+            list.addAll(arrayOf("--username", MongoExecutable.SUPER_USER, "--password", MongoExecutable.SUPER_USER_PASSWORD,
+                  "--authenticationDatabase", "admin"))
+        }
+        return list
+    }
+
+
+    fun shutdownWithDriver() {
+        if (isAlive()) {
+            LOG.info("Shutting down service on port ${port}")
+            try {
+                runCommand(Document("shutdown", 0))
+            } catch(ignored: MongoSocketReadTimeoutException) {
+            } catch(ignored: MongoSocketReadException) {
+                // this happens because we're shutting down the server and can't read the result of the command
+            }
+            process?.destroy(true)
+            waitForShutdown()
+            File(baseDir, "mongod.lock").delete()
+        }
+        client?.close()
+        client = null
+    }
+
+    fun getClient(authEnabled: Boolean = this.isAuthEnabled()): MongoClient {
+        if (client == null) {
+            var credentials = if (authEnabled) {
+                arrayListOf(MongoCredential.createCredential(MongoExecutable.SUPER_USER, "admin",
+                      MongoExecutable.SUPER_USER_PASSWORD.toCharArray()))
+            } else {
+                listOf<MongoCredential>()
+            }
+
+            client = MongoClient(getServerAddress(), credentials, MongoClientOptions.builder()
+                  //                  .connectTimeout(3000)
+                  //                  .socketTimeout(3000)
+                  .maxWaitTime(1000)
+                  .readPreference(ReadPreference.primaryPreferred())
+                  .build())
+        }
+
+        return client!!;
+    }
 
     fun addRootUser() {
-        runCommand("db.createUser(\n" +
-              "  {\n" +
-              "    user: \"${MongoExecutable.SUPER_USER}\",\n" +
-              "    pwd: \"${MongoExecutable.SUPER_USER_PASSWORD}\",\n" +
-              "    roles: [ \"root\" ]\n" +
-              "  });", out = logger, err = logger)
+        runCommand(Document("createUser", MongoExecutable.SUPER_USER)
+              .append("pwd", MongoExecutable.SUPER_USER_PASSWORD)
+              .append("roles", listOf("root")))
     }
 
     fun waitForStartUp() {
@@ -124,69 +174,25 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
 
     fun tryConnect(): Boolean {
         try {
-            runCommandWithResult("db.stats()")
+            getClient().getDatabase("admin")
+                  .listCollectionNames()
             return true
         } catch(e: Throwable) {
             return false
         }
     }
 
-    public fun runCommandWithResult(command: String, authEnabled: Boolean = this.isAuthEnabled(), err: Logger = LOG):
-           BsonDocument {
-        val stream = ByteArrayOutputStream()
-        val list = command(authEnabled)
-        var commandString = ""
-        if(authEnabled) {
-            commandString = "db.auth(\"${MongoExecutable.SUPER_USER}\", \"${MongoExecutable.SUPER_USER_PASSWORD}\");\n"
-        }
-        commandString += command
-        ProcessExecutor()
-              .command(list)
-              .redirectOutput(stream)
-              .redirectError(Slf4jStream.of(err).asError())
-              .redirectInput(ByteArrayInputStream(commandString.toByteArray()))
-              .execute()
-
-        val json = String(stream.toByteArray()).trim()
-        try {
-            return BsonDocumentCodec().decode(JsonReader(if (authEnabled) json.substring(2) else json), DecoderContext.builder().build())
-        } catch(e: Exception) {
-            throw e;
-        }
-    }
-
-    fun runCommand(command: String, authEnabled: Boolean = this.isAuthEnabled(), out: Logger = LOG, err: Logger = LOG) {
-        val list = command(authEnabled)
-        LOG.debug(list.join(" "))
-        var commandString = ""
-        if(authEnabled) {
-            commandString = "db.auth(\"${MongoExecutable.SUPER_USER}\", \"${MongoExecutable.SUPER_USER_PASSWORD}\");\n"
-        }
-        commandString += command
-        ProcessExecutor()
-              .command(list)
-              .redirectOutput(Slf4jStream.of(out).asDebug())
-              .redirectError(Slf4jStream.of(err).asError())
-              .redirectInput(ByteArrayInputStream(commandString.toByteArray()))
-              .execute()
-    }
-
-    private fun command(authEnabled: Boolean): List<String> {
-        val list = arrayListOf(manager.mongo,
-              "admin", "--port", "${this.port}", "--quiet")
-        if(authEnabled) {
-            list.addAll(arrayOf("--username", MongoExecutable.SUPER_USER, "--password", MongoExecutable.SUPER_USER_PASSWORD,
-                  "--authenticationDatabase", "admin"))
-        }
-        return list
+    fun runCommand(command: Document, readPreference: ReadPreference = ReadPreference.primary()): Document {
+        return getClient().getDatabase("admin")
+              .runCommand(command, readPreference)
     }
 
     override fun toString(): String {
         var s = "${javaClass.getSimpleName()}:${port}"
-        if(isAuthEnabled()) {
+        if (isAuthEnabled()) {
             s += ", auth:true"
         }
-        if(isAlive()) {
+        if (isAlive()) {
             s += ", alive:true"
         }
         return s
