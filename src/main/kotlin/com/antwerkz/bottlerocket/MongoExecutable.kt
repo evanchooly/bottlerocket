@@ -4,16 +4,16 @@ import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.Destination
 import com.antwerkz.bottlerocket.configuration.State
 import com.antwerkz.bottlerocket.configuration.configuration
+import com.jayway.awaitility.Awaitility
 import com.mongodb.*
 import org.bson.Document
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import org.zeroturnaround.process.JavaProcess
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 public abstract class MongoExecutable(val manager: MongoManager, val name: String, val port: Int, val baseDir: File) {
     public var process: JavaProcess? = null
@@ -77,6 +77,20 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
     }
 
     fun shutdown() {
+        shutdownWithShell()
+    }
+
+    fun shutdownWithKill() {
+        client?.close()
+        client = null
+        if (isAlive()) {
+            LOG.info("Shutting down service on port ${port}")
+            process?.destroy(true)
+            File(baseDir, "mongod.lock").delete()
+        }
+    }
+
+    fun shutdownWithShell() {
         client?.close()
         client = null
         if (isAlive()) {
@@ -85,6 +99,23 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
             process?.destroy(true)
             File(baseDir, "mongod.lock").delete()
         }
+    }
+
+    fun shutdownWithDriver() {
+        if (isAlive()) {
+            LOG.info("Shutting down service on port ${port}")
+            try {
+                runCommand(Document("shutdown", 0))
+            } catch(ignored: MongoSocketReadTimeoutException) {
+            } catch(ignored: MongoSocketReadException) {
+                // this happens because we're shutting down the server and can't read the result of the command
+            }
+            process?.destroy(true)
+            waitForShutdown()
+            File(baseDir, "mongod.lock").delete()
+        }
+        client?.close()
+        client = null
     }
 
     private fun runCommand(command: String, authEnabled: Boolean = this.isAuthEnabled(), out: Logger = LOG, err: Logger = LOG) {
@@ -110,24 +141,6 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
         return list
     }
 
-
-    fun shutdownWithDriver() {
-        if (isAlive()) {
-            LOG.info("Shutting down service on port ${port}")
-            try {
-                runCommand(Document("shutdown", 0))
-            } catch(ignored: MongoSocketReadTimeoutException) {
-            } catch(ignored: MongoSocketReadException) {
-                // this happens because we're shutting down the server and can't read the result of the command
-            }
-            process?.destroy(true)
-            waitForShutdown()
-            File(baseDir, "mongod.lock").delete()
-        }
-        client?.close()
-        client = null
-    }
-
     fun getClient(authEnabled: Boolean = this.isAuthEnabled()): MongoClient {
         if (client == null) {
             var credentials = if (authEnabled) {
@@ -138,8 +151,6 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
             }
 
             client = MongoClient(getServerAddress(), credentials, MongoClientOptions.builder()
-                  //                  .connectTimeout(3000)
-                  //                  .socketTimeout(3000)
                   .maxWaitTime(1000)
                   .readPreference(ReadPreference.primaryPreferred())
                   .build())
@@ -155,21 +166,23 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
     }
 
     fun waitForStartUp() {
-        val start = System.currentTimeMillis();
-        var connected = false;
-        while (!connected && System.currentTimeMillis() - start < 30000) {
-            Thread.sleep(3000)
-            connected = tryConnect()
-        }
+        Awaitility
+              .await()
+              .atMost(30, TimeUnit.SECONDS)
+              .pollInterval(3, TimeUnit.SECONDS)
+              .until<Boolean>({
+                  tryConnect()
+              })
     }
 
     fun waitForShutdown() {
-        val start = System.currentTimeMillis();
-        var connected = tryConnect();
-        while (connected && System.currentTimeMillis() - start < 30000) {
-            Thread.sleep(3000)
-            connected = tryConnect()
-        }
+        Awaitility
+              .await()
+              .atMost(30, TimeUnit.SECONDS)
+              .pollInterval(3, TimeUnit.SECONDS)
+              .until<Boolean>({
+                  !tryConnect()
+              })
     }
 
     fun tryConnect(): Boolean {

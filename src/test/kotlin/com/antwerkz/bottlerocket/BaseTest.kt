@@ -6,6 +6,8 @@ import org.bson.Document
 import org.slf4j.LoggerFactory
 import org.testng.Assert
 import org.testng.annotations.AfterMethod
+import java.time.Duration
+import java.time.LocalDateTime
 import java.util.ArrayList
 import java.util.concurrent.TimeUnit
 
@@ -62,19 +64,19 @@ open class BaseTest {
             }
 
             var allActive = false
-            val start = System.currentTimeMillis();
+            val start = LocalDateTime.now();
 
             val timeout = 30000
-            while (!allActive && System.currentTimeMillis() - start < timeout) {
-                Thread.sleep(1000)
+            while (!allActive && Duration.between(start, LocalDateTime.now()).toMillis() < timeout) {
                 try {
                     cluster?.allNodesActive()
                     allActive = true
                 } catch(e: IllegalStateException) {
-                    if (System.currentTimeMillis() - start > timeout) {
+                    if (Duration.between(start, LocalDateTime.now()).toMillis() > timeout) {
                         throw e
                     }
                 }
+                Thread.sleep(1000)
             }
 
             if(!allActive) {
