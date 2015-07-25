@@ -161,3 +161,9 @@ fun File.deleteTree() {
         }
     }
 }
+
+enum class ClusterTypes {
+    SINGLE,
+    REPLICA_SET,
+    SHARDED
+}
