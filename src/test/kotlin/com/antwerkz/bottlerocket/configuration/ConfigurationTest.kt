@@ -1,10 +1,7 @@
 package com.antwerkz.bottlerocket.configuration
 
 import com.antwerkz.bottlerocket.configuration.State.ENABLED
-import com.antwerkz.bottlerocket.configuration.blocks.Component
-import com.antwerkz.bottlerocket.configuration.blocks.ProcessManagement
-import com.antwerkz.bottlerocket.configuration.blocks.Storage
-import com.antwerkz.bottlerocket.configuration.blocks.SystemLog
+import com.antwerkz.bottlerocket.configuration.blocks.*
 import org.testng.Assert
 import org.testng.annotations.Test
 import kotlin.platform.platformStatic
@@ -27,7 +24,9 @@ public class ConfigurationTest {
         //              "   enableLocalhostAuthBypass: false\n" +
 
     }
-    Test public fun testYaml() {
+
+    @Test
+    public fun testYaml() {
         val configuration = Configuration(
               systemLog = SystemLog(
                     destination = Destination.SYSLOG,
@@ -36,16 +35,16 @@ public class ConfigurationTest {
                     )
               )
         )
-        val target =
-              "systemLog:\n" +
-                    "  component:\n" +
-                    "    accessControl:\n" +
-                    "      verbosity: 5\n" +
-                    "  destination: syslog"
+        val target = "systemLog:\n" +
+              "  component:\n" +
+              "    accessControl:\n" +
+              "      verbosity: 5\n" +
+              "  destination: syslog"
         Assert.assertEquals(configuration.toYaml(), target)
     }
 
-    Test public fun complexExample() {
+    @Test
+    public fun complexExample() {
         val configuration = Configuration(
               storage = Storage(dbPath = "/var/lib/mongodb"),
               systemLog = SystemLog(
@@ -80,7 +79,8 @@ public class ConfigurationTest {
         Assert.assertEquals(configuration.toYaml(), target);
     }
 
-    Test public fun testBuilder() {
+    @Test
+    public fun testBuilder() {
         val config = configuration {
             systemLog {
                 destination = Destination.SYSLOG
@@ -98,7 +98,7 @@ public class ConfigurationTest {
               "  destination: syslog")
     }
 
-    Test
+    @Test
     public fun testComplexBuilder() {
         val configuration = configuration {
             storage {
@@ -125,7 +125,7 @@ public class ConfigurationTest {
         Assert.assertEquals(configuration.toYaml(), COMPLEX_CONFIG);
     }
 
-    Test
+    @Test
     public fun mongosConfig() {
         val path = "/var/lib/mongo/data"
         val configuration = configuration {
@@ -137,7 +137,8 @@ public class ConfigurationTest {
         Assert.assertFalse(configuration.toYaml(mode = ConfigMode.MONGOS).contains(path))
     }
 
-    Test fun mergeConfig() {
+    @Test
+    fun mergeConfig() {
         val config = configuration {
             storage {
                 dbPath = "/var/lib/mongo/noodle"
@@ -164,8 +165,29 @@ public class ConfigurationTest {
         Assert.assertNotEquals(update.storage.dbPath, "/var/lib/mongo/noodle")
     }
 
+    @Test
+    fun properties() {
+        val configuration = Configuration(
+              storage = Storage(dbPath = "/var/lib/mongodb"),
+              systemLog = SystemLog(
+                    destination = Destination.FILE,
+                    path = "/var/log/mongodb/mongod.log",
+                    logAppend = true,
+                    logRotate = RotateBehavior.RENAME,
+                    component = Component(
+                          accessControl = LogComponent.AccessControl(verbosity = Verbosity.TWO)
+                    )
+              ),
+              processManagement = ProcessManagement(
+                    fork = true
+              )
+        )
+
+        val s = configuration.toProperties(mode = ConfigMode.ALL, omitDefaults = false)
+        println("s = \n${s}")
+        Assert.assertNotNull(s)
+    }
     public fun printAll() {
-        ConfigBlock.OMIT_DEFAULTED = false
-        println("Configuration() = ${Configuration().toYaml()}")
+        println("Configuration() = ${Configuration().toYaml(omitDefaults = false)}")
     }
 }

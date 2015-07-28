@@ -11,28 +11,37 @@ import com.antwerkz.bottlerocket.configuration.blocks.Snmp
 import com.antwerkz.bottlerocket.configuration.blocks.Storage
 import com.antwerkz.bottlerocket.configuration.blocks.SystemLog
 import com.github.zafarkhaja.semver.Version
+import java.util.*
 
 /**
  * @see http://docs.mongodb.org/manual/reference/configuration-options/
  */
 class Configuration(
-      var systemLog: SystemLog = SystemLog(),
-      var processManagement: ProcessManagement = ProcessManagement(),
-      var net: Net = Net(),
-      var security: Security = Security(),
-      var operationProfiling: OperationProfiling = OperationProfiling(),
-      var storage: Storage = Storage(),
-      var replication: Replication = Replication(),
-      var sharding: Sharding = Sharding(),
       var auditLog: AuditLog = AuditLog(),
-      var snmp: Snmp = Snmp()
+      var net: Net = Net(),
+      var operationProfiling: OperationProfiling = OperationProfiling(),
+      var processManagement: ProcessManagement = ProcessManagement(),
+      var replication: Replication = Replication(),
+      var security: Security = Security(),
+      var sharding: Sharding = Sharding(),
+      var snmp: Snmp = Snmp(),
+      var storage: Storage = Storage(),
+      var systemLog: SystemLog = SystemLog()
 ) : ConfigBlock {
-    override fun toYaml(version: Version, mode: ConfigMode): String {
+    override fun toYaml(version: Version, mode: ConfigMode, omitDefaults: Boolean): String {
         return Configuration::class.properties
-              .map { (it.get(this) as ConfigBlock).toYaml(version, mode) }
+              .map { (it.get(this) as ConfigBlock).toYaml(version, mode, omitDefaults) }
               .filter { it != "" }
               .toList()
               .join("\n")
+    }
+
+    override fun toProperties(version: Version, mode: ConfigMode, omitDefaults: Boolean): Map<String, Any> {
+        var map = linkedMapOf<String, Any>()
+        Configuration::class.properties
+              .map { (it.get(this) as ConfigBlock).toProperties(version, mode, omitDefaults) }
+              .forEach { map.putAll(it) }
+        return map
     }
 
     fun systemLog(init: SystemLog.() -> Unit) {

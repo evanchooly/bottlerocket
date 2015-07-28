@@ -18,8 +18,4 @@ class SystemLog(
     fun component(init: Component.() -> Unit) {
         component = initConfigBlock(Component(), init)
     }
-
-    override fun toYaml(version: Version, mode: ConfigMode): String {
-        return super.toYaml(version, mode)
-    }
 }

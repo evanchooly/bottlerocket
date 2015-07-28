@@ -2,7 +2,6 @@ package com.antwerkz.bottlerocket.configuration.blocks
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.ConfigMode
-import com.antwerkz.bottlerocket.configuration.LogComponent
 import com.antwerkz.bottlerocket.configuration.Since
 import com.github.zafarkhaja.semver.Version
 
@@ -17,13 +16,9 @@ class Component(
       Since("3.0.0") var replication: LogComponent.Replication = LogComponent.Replication(),
       Since("3.0.0") var sharding: LogComponent.Sharding = LogComponent.Sharding(),
       Since("3.0.0") var storage: LogComponent.Storage = LogComponent.Storage(),
-      Since("3.0.0") var storageJournal: LogComponent.StorageJournal = LogComponent.StorageJournal(),
+//      Since("3.0.0") var storageJournal: LogComponent.StorageJournal = LogComponent.StorageJournal(),
       Since("3.0.0") var write: LogComponent.Write = LogComponent.Write()
 ) : ConfigBlock {
-    override fun toYaml(version: Version, mode: ConfigMode): String {
-        return super.toYaml(version, mode)
-    }
-
     fun accessControl(init: LogComponent.AccessControl.() -> Unit) {
         accessControl = initConfigBlock(LogComponent.AccessControl(), init)
     }
@@ -62,10 +57,6 @@ class Component(
 
     fun storage(init: LogComponent.Storage.() -> Unit) {
         storage = initConfigBlock(LogComponent.Storage(), init)
-    }
-
-    fun storageJournal(init: LogComponent.StorageJournal.() -> Unit) {
-        storageJournal = initConfigBlock(LogComponent.StorageJournal(), init)
     }
 
     fun write(init: LogComponent.Write.() -> Unit) {

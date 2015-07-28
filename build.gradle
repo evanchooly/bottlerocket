@@ -52,6 +52,8 @@ dependencies {
     provided 'org.testng:testng:6.8.21'
 
     testCompile 'ch.qos.logback:logback-classic:1.1.3'
+    testCompile 'org.apache.httpcomponents:fluent-hc:4.5'
+    testCompile 'org.jsoup:jsoup:1.8.2'
 }
 
 modifyPom {

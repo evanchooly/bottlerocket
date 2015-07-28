@@ -17,6 +17,5 @@ class Ssl(
       Since("2.4.0") var allowConnectionsWithoutCertificates: Boolean = false,
       Since("2.6.0") var allowInvalidCertificates: Boolean = false,
       Since("3.0.0") var allowInvalidHostnames: Boolean = false,
-      Since("2.4.0") var FIPSMode: Boolean = false,
-      var setParameter: Map<String, String> = mapOf()  // TODO
+      Since("2.4.0") var FIPSMode: Boolean = false
 ) : ConfigBlock

@@ -10,8 +10,7 @@ class Net(
       var unixDomainSocket: UnixDomainSocket = UnixDomainSocket(),
       var ipv6: Boolean = false,
       var http: Http = Http(),
-      var ssl: Ssl = Ssl(),
-      var security: Security = Security()
+      var ssl: Ssl = Ssl()
 ) : ConfigBlock {
     fun unixDomainSocket(init: UnixDomainSocket.() -> Unit) {
         unixDomainSocket = initConfigBlock(UnixDomainSocket(), init)
@@ -23,9 +22,5 @@ class Net(
 
     fun ssl(init: Ssl.() -> Unit) {
         ssl = initConfigBlock(Ssl(), init)
-    }
-
-    fun security(init: Security.() -> Unit) {
-        security = initConfigBlock(Security(), init)
     }
 }

@@ -10,6 +10,7 @@ Retention(RUNTIME)
 annotation class Mode(val value: ConfigMode)
 
 enum class ConfigMode {
+    ALL,
     MONGOD,
     MONGOS
 }
