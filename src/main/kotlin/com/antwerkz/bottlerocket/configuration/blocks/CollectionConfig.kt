@@ -5,6 +5,5 @@ import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.Since
 
 class CollectionConfig(
-      Since("3.0.0") var blockCompressor: Compressor = Compressor.SNAPPY
-
+      @Since("3.0.0") var blockCompressor: Compressor? = null
 ) : ConfigBlock

@@ -4,8 +4,8 @@ import com.antwerkz.bottlerocket.configuration.*
 
 class EngineConfig(
       @Since("3.0.0") var cacheSizeGB: Int? = null,
-      @Since("3.0.0") var statisticsLogDelaySecs: Int = 0,
-      @Since("3.0.0") var journalCompressor: Compressor = Compressor.SNAPPY,
-      @Since("3.0.0") var directoryForIndexes: Boolean = false
+      @Since("3.0.0") var statisticsLogDelaySecs: Int? = null,
+      @Since("3.0.0") var journalCompressor: Compressor? = null,
+      @Since("3.0.0") var directoryForIndexes: Boolean? = null
 
 ) : ConfigBlock

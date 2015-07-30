@@ -8,18 +8,28 @@ import kotlin.platform.platformStatic
 
 public class ConfigurationTest {
     companion object {
-        public platformStatic val COMPLEX_CONFIG: String = "processManagement:\n" +
-              "  fork: true\n" +
-              "storage:\n" +
-              "  dbPath: /var/lib/mongodb\n" +
-              "  repairPath: /var/lib/mongodb_tmp\n" +
-              "systemLog:\n" +
-              "  component:\n" +
-              "    accessControl:\n" +
-              "      verbosity: 2\n" +
-              "  destination: file\n" +
-              "  logAppend: true\n" +
-              "  path: /var/log/mongodb/mongod.log"
+        public platformStatic val COMPLEX_CONFIG: String =
+              "net:\n" +
+                    "  bindIp: 127.0.0.1\n" +
+                    "  port: 27017\n" +
+                    "processManagement:\n" +
+                    "  fork: true\n" +
+                    "replication:\n" +
+                    "  oplogSizeMB: 10\n" +
+                    "storage:\n" +
+                    "  dbPath: /var/lib/mongodb\n" +
+                    "  mmapv1:\n" +
+                    "    preallocDataFiles: false\n" +
+                    "    smallFiles: true\n" +
+                    "  repairPath: /var/lib/mongodb_tmp\n" +
+                    "systemLog:\n" +
+                    "  component:\n" +
+                    "    accessControl:\n" +
+                    "      verbosity: 2\n" +
+                    "  destination: file\n" +
+                    "  logAppend: true\n" +
+                    "  logRotate: rename\n" +
+                    "  path: /var/log/mongodb/mongod.log"
         //              "setParameter:\n" +
         //              "   enableLocalhostAuthBypass: false\n" +
 
@@ -35,11 +45,21 @@ public class ConfigurationTest {
                     )
               )
         )
-        val target = "systemLog:\n" +
-              "  component:\n" +
-              "    accessControl:\n" +
-              "      verbosity: 5\n" +
-              "  destination: syslog"
+        val target =
+              "net:\n" +
+                    "  bindIp: 127.0.0.1\n" +
+                    "  port: 27017\n" +
+                    "replication:\n" +
+                    "  oplogSizeMB: 10\n" +
+                    "storage:\n" +
+                    "  mmapv1:\n" +
+                    "    preallocDataFiles: false\n" +
+                    "    smallFiles: true\n" +
+                    "systemLog:\n" +
+                    "  component:\n" +
+                    "    accessControl:\n" +
+                    "      verbosity: 5\n" +
+                    "  destination: syslog"
         Assert.assertEquals(configuration.toYaml(), target)
     }
 
@@ -51,7 +71,6 @@ public class ConfigurationTest {
                     destination = Destination.FILE,
                     path = "/var/log/mongodb/mongod.log",
                     logAppend = true,
-                    logRotate = RotateBehavior.RENAME,
                     component = Component(
                           accessControl = LogComponent.AccessControl(verbosity = Verbosity.TWO)
                     )
@@ -61,21 +80,25 @@ public class ConfigurationTest {
               )
         )
         val target =
-              "processManagement:\n" +
+              "net:\n" +
+                    "  bindIp: 127.0.0.1\n" +
+                    "  port: 27017\n" +
+                    "processManagement:\n" +
                     "  fork: true\n" +
+                    "replication:\n" +
+                    "  oplogSizeMB: 10\n" +
                     "storage:\n" +
                     "  dbPath: /var/lib/mongodb\n" +
-                    "  repairPath: /var/lib/mongodb_tmp\n" +
+                    "  mmapv1:\n" +
+                    "    preallocDataFiles: false\n" +
+                    "    smallFiles: true\n" +
                     "systemLog:\n" +
                     "  component:\n" +
                     "    accessControl:\n" +
                     "      verbosity: 2\n" +
                     "  destination: file\n" +
                     "  logAppend: true\n" +
-                    "  path: /var/log/mongodb/mongod.log" +
-                    ""
-        //              "setParameter:\n" +
-        //              "   enableLocalhostAuthBypass: false\n" +
+                    "  path: /var/log/mongodb/mongod.log";
         Assert.assertEquals(configuration.toYaml(), target);
     }
 
@@ -91,11 +114,21 @@ public class ConfigurationTest {
                 }
             }
         }
-        Assert.assertEquals(config.toYaml(), "systemLog:\n" +
-              "  component:\n" +
-              "    accessControl:\n" +
-              "      verbosity: 5\n" +
-              "  destination: syslog")
+        Assert.assertEquals(config.toYaml(),
+              "net:\n" +
+                    "  bindIp: 127.0.0.1\n" +
+                    "  port: 27017\n" +
+                    "replication:\n" +
+                    "  oplogSizeMB: 10\n" +
+                    "storage:\n" +
+                    "  mmapv1:\n" +
+                    "    preallocDataFiles: false\n" +
+                    "    smallFiles: true\n" +
+                    "systemLog:\n" +
+                    "  component:\n" +
+                    "    accessControl:\n" +
+                    "      verbosity: 5\n" +
+                    "  destination: syslog")
     }
 
     @Test
@@ -158,7 +191,7 @@ public class ConfigurationTest {
             }
         }
 
-        Assert.assertEquals(config.security.authorization, com.antwerkz.bottlerocket.configuration.State.DISABLED)
+        Assert.assertNull(config.security.authorization)
         config.merge(update);
         Assert.assertEquals(config.security.authorization, ENABLED)
         Assert.assertEquals(config.operationProfiling.slowOpThresholdMs, 50)
@@ -183,11 +216,8 @@ public class ConfigurationTest {
               )
         )
 
-        val s = configuration.toProperties(mode = ConfigMode.ALL, omitDefaults = false)
+        val s = configuration.toProperties(mode = ConfigMode.ALL)
         println("s = \n${s}")
         Assert.assertNotNull(s)
-    }
-    public fun printAll() {
-        println("Configuration() = ${Configuration().toYaml(omitDefaults = false)}")
     }
 }

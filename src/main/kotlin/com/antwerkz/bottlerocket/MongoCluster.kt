@@ -1,6 +1,6 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.configuration.*
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
 import com.mongodb.MongoCredential
@@ -18,8 +18,6 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.PosixFilePermission
 import java.util.EnumSet
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 val TEMP_DIR = if (File("/tmp").exists()) "/tmp" else System.getProperty("java.io.tmpdir")
 
@@ -38,6 +36,136 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
     var adminAdded: Boolean = false
     val keyFile: String = File(baseDir, "rocket.key").getAbsolutePath()
     val pemFile: String = File(baseDir, "rocket.pem").getAbsolutePath()
+
+    companion object {
+        val DEFAULT_CONFIG: Configuration =
+              configuration {
+                  net {
+                      port = 27017
+                      bindIp = "127.0.0.1"
+                      maxIncomingConnections = 65536
+                      wireObjectCheck = true
+                      ipv6 = false
+                      http {
+                          enabled = false
+                          JSONPEnabled = false
+                          RESTInterfaceEnabled = false
+                      }
+                      ssl {
+                          @SuppressWarnings("deprecated")
+                          sslOnNormalPorts: Boolean = false
+                          mode: SslMode = SslMode.DISABLED
+                          allowConnectionsWithoutCertificates: Boolean = false
+                          allowInvalidCertificates: Boolean = false
+                          allowInvalidHostnames: Boolean = false
+                          FIPSMode: Boolean = false
+                      }
+                      unixDomainSocket {
+                          enabled = true
+                          pathPrefix = "/tmp"
+                          filePermissions = 700
+                      }
+                  }
+                  operationProfiling {
+                      slowOpThresholdMs = 100
+                      mode = ProfilingMode.OFF
+
+                  }
+                  processManagement {
+                      fork = false
+                      windowsService {
+                          serviceName = "MongoDB"
+                          displayName = "MongoDB"
+                          description = "MongoDB Server"
+                      }
+
+                  }
+                  replication {
+                      secondaryIndexPrefetch = IndexPrefetch.ALL
+                      localPingThresholdMs = 15
+                  }
+                  security {
+                      clusterAuthMode = ClusterAuthMode.KEY_FILE
+                      authorization = State.DISABLED
+                      javascriptEnabled = true
+                      sasl {
+                          serviceName = "mongodb"
+                      }
+                  }
+                  sharding {
+                      archiveMovedChunks = true
+                      autoSplit = true
+                      chunkSize = 64
+                  }
+                  snmp {
+                      subagent = true
+                      master = false
+                  }
+                  storage {
+                      dbPath = "/data/db"
+                      indexBuildRetry = true
+                      repairPath = dbPath + "_tmp"
+                      directoryPerDB = false
+                      syncPeriodSecs = 60
+                      engine: String = "mmapv1"
+                      journal {
+                          enabled = true
+                      }
+                      mmapv1 {
+                          preallocDataFiles = true
+                          nsSize = 16
+                          smallFiles = false
+                          journal {
+                              debugFlags = 0
+                              commitIntervalMs = 100
+                          }
+                          quota {
+                              enforced = false
+                              maxFilesPerDB = 8
+                          }
+                      }
+                      wiredTiger {
+                          collectionConfig {
+                              blockCompressor = Compressor.SNAPPY
+                          }
+                          engineConfig {
+                              statisticsLogDelaySecs = 0
+                              journalCompressor = Compressor.SNAPPY
+                              directoryForIndexes = false
+                          }
+                          indexConfig {
+                              prefixCompression = true
+                          }
+                      }
+                  }
+                  systemLog {
+                      verbosity = Verbosity.ZERO
+                      quiet = false
+                      traceAllExceptions = false
+                      syslogFacility = "user"
+                      logAppend = false
+                      logRotate = RotateBehavior.RENAME
+                      destination = Destination.STANDARD_OUT
+                      timeStampFormat = TimestampFormat.ISO8601_LOCAL
+                      component {
+                          accessControl { verbosity = Verbosity.ZERO }
+                          command { verbosity = Verbosity.ZERO }
+                          control { verbosity = Verbosity.ZERO }
+                          geo { verbosity = Verbosity.ZERO }
+                          index { verbosity = Verbosity.ZERO }
+                          network { verbosity = Verbosity.ZERO }
+                          query { verbosity = Verbosity.ZERO }
+                          replication { verbosity = Verbosity.ZERO }
+                          sharding { verbosity = Verbosity.ZERO }
+                          storage {
+                              verbosity = Verbosity.ZERO
+                              journal { verbosity = Verbosity.ZERO }
+                          }
+                          write { verbosity = Verbosity.ZERO }
+                      }
+                  }
+              }
+    }
 
     init {
         baseDir.mkdirs()
@@ -87,7 +215,7 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
     }
 
     fun generateKeyFile() {
-         val key = File(keyFile)
+        val key = File(keyFile)
         if (!key.exists()) {
             key.getParentFile().mkdirs()
             val stream = FileOutputStream(key)

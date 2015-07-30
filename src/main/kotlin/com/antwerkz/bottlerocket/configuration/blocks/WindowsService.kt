@@ -3,9 +3,9 @@ package com.antwerkz.bottlerocket.configuration.blocks
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
 
 class WindowsService(
-      var serviceName: String = "MongoDB",
-      var displayName: String = "MongoDB",
-      var description: String = "MongoDB Server",
+      var serviceName: String? = null,
+      var displayName: String? = null,
+      var description: String? = null,
       var serviceUser: String? = null,
       var servicePassword: String? = null
 ) : ConfigBlock

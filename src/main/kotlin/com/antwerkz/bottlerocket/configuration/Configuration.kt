@@ -1,17 +1,8 @@
 package com.antwerkz.bottlerocket.configuration
 
-import com.antwerkz.bottlerocket.configuration.blocks.AuditLog
-import com.antwerkz.bottlerocket.configuration.blocks.Net
-import com.antwerkz.bottlerocket.configuration.blocks.OperationProfiling
-import com.antwerkz.bottlerocket.configuration.blocks.ProcessManagement
-import com.antwerkz.bottlerocket.configuration.blocks.Replication
-import com.antwerkz.bottlerocket.configuration.blocks.Security
-import com.antwerkz.bottlerocket.configuration.blocks.Sharding
-import com.antwerkz.bottlerocket.configuration.blocks.Snmp
-import com.antwerkz.bottlerocket.configuration.blocks.Storage
-import com.antwerkz.bottlerocket.configuration.blocks.SystemLog
+import com.antwerkz.bottlerocket.configuration.blocks.*
 import com.github.zafarkhaja.semver.Version
-import java.util.*
+import kotlin.platform.platformStatic
 
 /**
  * @see http://docs.mongodb.org/manual/reference/configuration-options/
@@ -28,18 +19,20 @@ class Configuration(
       var storage: Storage = Storage(),
       var systemLog: SystemLog = SystemLog()
 ) : ConfigBlock {
-    override fun toYaml(version: Version, mode: ConfigMode, omitDefaults: Boolean): String {
+    @override
+    fun toYaml(version: Version, mode: ConfigMode, includeAll: Boolean): String {
         return Configuration::class.properties
-              .map { (it.get(this) as ConfigBlock).toYaml(version, mode, omitDefaults) }
+              .map { (it.get(this) as ConfigBlock).toYaml(version, mode, includeAll) }
               .filter { it != "" }
               .toList()
               .join("\n")
     }
 
-    override fun toProperties(version: Version, mode: ConfigMode, omitDefaults: Boolean): Map<String, Any> {
+    @override
+    fun toProperties(version: Version, mode: ConfigMode, includeAll: Boolean): Map<String, Any> {
         var map = linkedMapOf<String, Any>()
         Configuration::class.properties
-              .map { (it.get(this) as ConfigBlock).toProperties(version, mode, omitDefaults) }
+              .map { (it.get(this) as ConfigBlock).toProperties(version, mode, includeAll) }
               .forEach { map.putAll(it) }
         return map
     }
@@ -84,7 +77,6 @@ class Configuration(
         snmp = initConfigBlock(Snmp(), init)
     }
 }
-
 
 fun configuration(init: Configuration.() -> Unit): Configuration {
     val configuration = Configuration()

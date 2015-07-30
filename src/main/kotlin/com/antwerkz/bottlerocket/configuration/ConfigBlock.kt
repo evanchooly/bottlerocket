@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket.configuration
 
+import com.antwerkz.bottlerocket.MongoCluster
 import com.github.zafarkhaja.semver.Version
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
@@ -7,6 +8,7 @@ import kotlin.reflect.KMemberProperty
 import kotlin.reflect.jvm.internal.KClassImpl
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaSetter
+import kotlin.reflect.jvm.kotlin
 
 public interface ConfigBlock {
     fun initConfigBlock<T : ConfigBlock> (configBlock: T, init: T.() -> Unit): T {
@@ -18,24 +20,23 @@ public interface ConfigBlock {
         return this.javaClass.getSimpleName()?.toCamelCase()
     }
 
-    open fun toYaml(version: Version = Version.valueOf("3.0.0"), mode: ConfigMode = ConfigMode.MONGOD, omitDefaults: Boolean = true):
-          String {
+    open
+    fun toYaml(version: Version = Version.valueOf("3.0.0"), mode: ConfigMode = ConfigMode.MONGOD,
+                    includeAll: Boolean = false): String {
         val list = arrayListOf<String>()
-        val c = KClassImpl(this.javaClass)
 
-        val comparison = c.jClass.newInstance()
-        c.properties.forEach {
+        javaClass.kotlin.properties.forEach {
             if ( isValidForContext(version, mode, it)) {
                 val fieldValue = it.get(this)
-                if ( fieldValue != null ) {
+                if ( includeAll || fieldValue != null ) {
                     var value: String
                     if (fieldValue is ConfigBlock) {
-                        val yaml = fieldValue.toYaml(version, mode, omitDefaults)
+                        val yaml = fieldValue.toYaml(version, mode, includeAll)
                         if ( yaml != "" ) {
                             value = yaml.split('\n').map { it -> "  ${it}" }.join("\n").trim()
                             list.add("  ${value}")
                         }
-                    } else if ( !omitDefaults || fieldValue != it.get(comparison)) {
+                    } else {
                         list.add("  ${it.name}: ${fieldValue}")
                     }
                 }
@@ -46,21 +47,16 @@ public interface ConfigBlock {
     }
 
     fun toProperties(version: Version = Version.valueOf("3.0.0"), mode: ConfigMode = ConfigMode.MONGOD,
-                     omitDefaults: Boolean = true): Map<String, Any> {
+                        includeAll: Boolean = false): Map<String, Any> {
         val map = linkedMapOf<String, Any>()
-        val c = KClassImpl(this.javaClass)
 
-        val comparison = c.jClass.newInstance()
-        c.properties.forEach {
+        javaClass.kotlin.properties.forEach {
             if ( isValidForContext(version, mode, it)) {
                 val fieldValue = it.get(this)
                 if (fieldValue is ConfigBlock) {
-                    fieldValue
-                          .toProperties(version, mode, omitDefaults)
-                          .forEach {
-                              map.put("${nodeName()}.${it.key}", it.value)
-                          }
-                } else if ( !omitDefaults || fieldValue != null && fieldValue != it.get(comparison)) {
+                    fieldValue.toProperties(version, mode, includeAll)
+                          .forEach { map.put("${nodeName()}.${it.key}", it.value) }
+                } else if ( includeAll || fieldValue != null) {
                     map.put("${nodeName()}.${it.name}", fieldValue)
                 }
             }

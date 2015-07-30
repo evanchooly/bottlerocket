@@ -5,6 +5,6 @@ import com.antwerkz.bottlerocket.configuration.ConfigMode
 import com.antwerkz.bottlerocket.configuration.Mode
 
 class Snmp(
-      Mode(ConfigMode.MONGOD) var subagent: Boolean = true,
-      Mode(ConfigMode.MONGOD) var master: Boolean = false
+      @Mode(ConfigMode.MONGOD) var subagent: Boolean? = null,
+      @Mode(ConfigMode.MONGOD) var master: Boolean? = null
 ) : ConfigBlock

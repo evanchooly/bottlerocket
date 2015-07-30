@@ -38,7 +38,7 @@ public class ConfigurationDocsTest {
 
     @Test
     fun checkDocs() {
-        check(Configuration().toProperties(omitDefaults = false, mode = ConfigMode.ALL))
+        check(Configuration().toProperties(mode = ConfigMode.ALL, includeAll = true))
         Assert.assertTrue(elements.isEmpty(), "elements should be empty now but has ${elements.size()} items left: \n${elements}")
     }
 
@@ -46,47 +46,6 @@ public class ConfigurationDocsTest {
         map.keySet().forEach {
             Assert.assertTrue(elements.remove("#${it}"), "Should find #${it} in the docs.");
         }
-        /*
-                map.keySet().forEach { property: KMemberProperty<T, *> ->
-                    try {
-                        val field = property.javaField
-                        if (field != null) {
-                            val javaClazz = field.getType()
-                            if (ConfigBlock::class.java.isAssignableFrom(javaClazz)) {
-                                check(javaClazz.kotlin as KClass<T>)
-                            } else {
-                                var name = field.getName()?.toCamelCase();
-                                elements.remove("#${clazz.simpleName?.toCamelCase()}.${name?.toCamelCase()}");
-                            }
-                        } else {
-                            LOG.debug("${property}'s javaField is null")
-                        }
-                    } catch(e: NullPointerException) {
-                        println("property = ${property}")
-                        throw e;
-                    }
-                }
-        */
     }
 
-    private fun validateUrl(name: String?, value: String?) {
-        if (value == null || value.isBlank()) {
-            Assert.fail("URL for ${name} can not be blank.")
-        }
-
-        val url = URI(value)
-        val file = File("build", url.getPath().replace('/', '_'))
-
-        if (!file.exists()) {
-            Request.Get(value)
-                  .execute()
-                  .saveContent(file)
-        }
-        if (!htmlCache.containsKey(file)) {
-            htmlCache.put(file, Jsoup.parse(file, "UTF-8"))
-        }
-
-        Assert.assertTrue(htmlCache.get(file).select("a[href=#${url.getFragment()}]").isNotEmpty(),
-              "Should find a match for ${"a[href=#${url.getFragment()}]"}")
-    }
 }

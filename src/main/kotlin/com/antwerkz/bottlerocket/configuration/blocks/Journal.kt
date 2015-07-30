@@ -6,5 +6,5 @@ import com.antwerkz.bottlerocket.configuration.Verbosity
 import com.github.zafarkhaja.semver.Version
 
 class Journal(
-      var enabled: Boolean = true
+      var enabled: Boolean? = null
 ) : ConfigBlock

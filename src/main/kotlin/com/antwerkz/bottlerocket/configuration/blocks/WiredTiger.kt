@@ -4,8 +4,8 @@ import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.Since
 
 class WiredTiger(
-      @Since("3.0.0") var engineConfig: EngineConfig = EngineConfig(),
       @Since("3.0.0") var collectionConfig: CollectionConfig = CollectionConfig(),
+      @Since("3.0.0") var engineConfig: EngineConfig = EngineConfig(),
       @Since("3.0.0") var indexConfig: IndexConfig = IndexConfig()
 ) : ConfigBlock {
 

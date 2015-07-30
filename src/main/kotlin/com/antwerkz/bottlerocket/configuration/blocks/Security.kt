@@ -4,10 +4,10 @@ import com.antwerkz.bottlerocket.configuration.*
 
 class Security(
       var keyFile: String? = null,
-      Since("2.6.0") var clusterAuthMode: ClusterAuthMode = ClusterAuthMode.KEY_FILE,
-      Mode(ConfigMode.MONGOD) var authorization: State = State.DISABLED,
+      @Since("2.6.0") var clusterAuthMode: ClusterAuthMode? = null,
+      @Mode(ConfigMode.MONGOD) var authorization: State? = null,
       var sasl: Sasl = Sasl(),
-      var javascriptEnabled: Boolean = true
+      var javascriptEnabled: Boolean? = null
 ) : ConfigBlock {
     fun sasl(init: Sasl.() -> Unit) {
         sasl = initConfigBlock(Sasl(), init)

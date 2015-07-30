@@ -44,19 +44,6 @@ open class BaseTest {
     private fun startCluster(enableAuth: Boolean = false) {
         if (cluster != null && !cluster!!.isStarted() ) {
             cluster?.clean()
-            cluster?.updateConfig(
-                  configuration {
-                      storage {
-                          mmapv1 {
-                              preallocDataFiles = false
-                              smallFiles = true
-                          }
-                      }
-                      replication {
-                          oplogSizeMB = 10
-                      }
-                  }
-            )
             if(enableAuth) {
                 cluster?.enableAuth()
             } else {

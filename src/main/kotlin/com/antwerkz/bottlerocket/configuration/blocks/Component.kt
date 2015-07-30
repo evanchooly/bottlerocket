@@ -6,18 +6,17 @@ import com.antwerkz.bottlerocket.configuration.Since
 import com.github.zafarkhaja.semver.Version
 
 class Component(
-      Since("3.0.0") var accessControl: LogComponent.AccessControl = LogComponent.AccessControl(),
-      Since("3.0.0") var command: LogComponent.Command = LogComponent.Command(),
-      Since("3.0.0") var control: LogComponent.Control = LogComponent.Control(),
-      Since("3.0.0") var geo: LogComponent.Geo = LogComponent.Geo(),
-      Since("3.0.0") var index: LogComponent.Index = LogComponent.Index(),
-      Since("3.0.0") var network: LogComponent.Network = LogComponent.Network(),
-      Since("3.0.0") var query: LogComponent.Query = LogComponent.Query(),
-      Since("3.0.0") var replication: LogComponent.Replication = LogComponent.Replication(),
-      Since("3.0.0") var sharding: LogComponent.Sharding = LogComponent.Sharding(),
-      Since("3.0.0") var storage: LogComponent.Storage = LogComponent.Storage(),
-//      Since("3.0.0") var storageJournal: LogComponent.StorageJournal = LogComponent.StorageJournal(),
-      Since("3.0.0") var write: LogComponent.Write = LogComponent.Write()
+      @Since("3.0.0") var accessControl: LogComponent.AccessControl = LogComponent.AccessControl(),
+      @Since("3.0.0") var command: LogComponent.Command = LogComponent.Command(),
+      @Since("3.0.0") var control: LogComponent.Control = LogComponent.Control(),
+      @Since("3.0.0") var geo: LogComponent.Geo = LogComponent.Geo(),
+      @Since("3.0.0") var index: LogComponent.Index = LogComponent.Index(),
+      @Since("3.0.0") var network: LogComponent.Network = LogComponent.Network(),
+      @Since("3.0.0") var query: LogComponent.Query = LogComponent.Query(),
+      @Since("3.0.0") var replication: LogComponent.Replication = LogComponent.Replication(),
+      @Since("3.0.0") var sharding: LogComponent.Sharding = LogComponent.Sharding(),
+      @Since("3.0.0") var storage: LogComponent.Storage = LogComponent.Storage(),
+      @Since("3.0.0") var write: LogComponent.Write = LogComponent.Write()
 ) : ConfigBlock {
     fun accessControl(init: LogComponent.AccessControl.() -> Unit) {
         accessControl = initConfigBlock(LogComponent.AccessControl(), init)

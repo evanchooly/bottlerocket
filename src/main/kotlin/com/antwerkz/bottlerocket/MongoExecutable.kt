@@ -32,16 +32,12 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
         config = configuration {
             net {
                 this.port = this@MongoExecutable.port
-                bindIp = "localhost"
             }
             processManagement {
                 pidFilePath = File(baseDir, "${name}.pid").toString()
             }
             storage {
                 dbPath = baseDir.getAbsolutePath()
-                mmapv1 {
-                    preallocDataFiles = false;
-                }
             }
             systemLog {
                 destination = Destination.FILE

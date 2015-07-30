@@ -115,7 +115,7 @@ public class JavaMongoClusterTest {
         Assert.assertEquals(collection.find().first(), document);
     }
 
-    public void manualCluster() {
+    public void mixedCluster() {
         final ReplicaSetBuilder builder = ReplicaSet.builder();
         builder.size(0);
         final ReplicaSet replicaSet = builder.build();

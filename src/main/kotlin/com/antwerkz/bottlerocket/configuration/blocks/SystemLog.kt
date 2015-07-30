@@ -4,16 +4,16 @@ import com.antwerkz.bottlerocket.configuration.*
 import com.github.zafarkhaja.semver.Version
 
 class SystemLog(
-      Since("3.0.0") var verbosity: Verbosity = Verbosity.ZERO,
-      var component: Component = Component(),
-      var quiet: Boolean = false,
-      var traceAllExceptions: Boolean = false,
-      var syslogFacility: String = "user",
+      @Since("3.0.0") var verbosity: Verbosity? = null,
+      var quiet: Boolean? = null,
+      var traceAllExceptions: Boolean? = null,
+      var syslogFacility: String? = null,
       var path: String? = null,
-      var logAppend: Boolean = false,
-      Since("3.0.0") var logRotate: RotateBehavior = RotateBehavior.RENAME,
-      public var destination: Destination = Destination.STANDARD_OUT,
-      var timeStampFormat: TimestampFormat = TimestampFormat.ISO8601_LOCAL
+      var logAppend: Boolean? = null,
+      @Since("3.0.0") var logRotate: RotateBehavior? = null,
+      var destination: Destination? = null,
+      var timeStampFormat: TimestampFormat? = null,
+      var component: Component = Component()
 ) : ConfigBlock {
     fun component(init: Component.() -> Unit) {
         component = initConfigBlock(Component(), init)

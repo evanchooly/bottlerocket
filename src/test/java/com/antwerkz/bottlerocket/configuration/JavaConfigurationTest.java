@@ -1,6 +1,5 @@
 package com.antwerkz.bottlerocket.configuration;
 
-import com.antwerkz.bottlerocket.configuration.blocks.SystemLog;
 import com.github.zafarkhaja.semver.Version;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -11,35 +10,83 @@ import static com.antwerkz.bottlerocket.configuration.ConfigurationTest.COMPLEX_
 public class JavaConfigurationTest {
     @Test
     public void testYaml() {
-        final Configuration configuration = new Configuration();
-        configuration.getSystemLog().setDestination(Destination.SYSLOG);
-        configuration.getSystemLog().getComponent().getAccessControl().setVerbosity(Verbosity.FIVE);
+        final Configuration configuration = configuration(c -> {
+            c.systemLog(s -> {
+                s.setDestination(Destination.SYSLOG);
+                s.component(comp -> {
+                    comp.accessControl(a -> {
+                        a.setVerbosity(Verbosity.FIVE);
+                        return null;
+                    });
+                    return null;
+                });
+
+                return null;
+            });
+            return null;
+        });
         final String target =
+            "net:\n" +
+            "  bindIp: 127.0.0.1\n" +
+            "  port: 27017\n" +
+            "replication:\n" +
+            "  oplogSizeMB: 10\n" +
+            "storage:\n" +
+            "  mmapv1:\n" +
+            "    preallocDataFiles: false\n" +
+            "    smallFiles: true\n" +
             "systemLog:\n" +
             "  component:\n" +
             "    accessControl:\n" +
             "      verbosity: 5\n" +
             "  destination: syslog";
-        Assert.assertEquals(configuration.toYaml(Version.valueOf("3.0.3"), ConfigMode.MONGOD), target);
+        Assert.assertEquals(configuration.toYaml(Version.valueOf("3.0.3"), ConfigMode.MONGOD, false), target);
     }
 
     @Test
     public void complexExample() {
-        final Configuration configuration = new Configuration();
-        configuration.getStorage().setDbPath("/var/lib/mongodb");
-        configuration.getStorage().setRepairPath("/var/lib/mongodb_tmp");
-        final SystemLog systemLog = configuration.getSystemLog();
-        systemLog.setDestination(Destination.FILE);
-        systemLog.setPath("/var/log/mongodb/mongod.log");
-        systemLog.setLogAppend(true);
-        systemLog.setLogRotate(RotateBehavior.RENAME);
-        systemLog.getComponent().getAccessControl().setVerbosity(Verbosity.TWO);
-        configuration.getProcessManagement().setFork(true);
+        final Configuration configuration =
+            configuration(c -> {
+                c.storage(s -> {
+                    s.setDbPath("/var/lib/mongodb");
+                    s.setRepairPath("/var/lib/mongodb_tmp");
+                    return null;
+                });
+                c.systemLog(s -> {
+                    s.setDestination(Destination.FILE);
+                    s.setPath("/var/log/mongodb/mongod.log");
+                    s.setLogAppend(true);
+                    s.setLogRotate(RotateBehavior.RENAME);
+
+                    s.component(component -> {
+                        component.accessControl(a -> {
+                            a.setVerbosity(Verbosity.TWO);
+                            return null;
+                        });
+                        return null;
+                    });
+                    return null;
+                });
+                c.processManagement(p -> {
+                    p.setFork(true);
+                    return null;
+                });
+                return null;
+            });
+
         final String target =
+            "net:\n" +
+            "  bindIp: 127.0.0.1\n" +
+            "  port: 27017\n" +
             "processManagement:\n" +
             "  fork: true\n" +
+            "replication:\n" +
+            "  oplogSizeMB: 10\n" +
             "storage:\n" +
             "  dbPath: /var/lib/mongodb\n" +
+            "  mmapv1:\n" +
+            "    preallocDataFiles: false\n" +
+            "    smallFiles: true\n" +
             "  repairPath: /var/lib/mongodb_tmp\n" +
             "systemLog:\n" +
             "  component:\n" +
@@ -47,11 +94,12 @@ public class JavaConfigurationTest {
             "      verbosity: 2\n" +
             "  destination: file\n" +
             "  logAppend: true\n" +
+            "  logRotate: rename\n" +
             "  path: /var/log/mongodb/mongod.log" +
             "";
         //              "setParameter:\n" +
         //              "   enableLocalhostAuthBypass: false\n" +
-        Assert.assertEquals(configuration.toYaml(Version.valueOf("3.0.3"), ConfigMode.MONGOD), target);
+        Assert.assertEquals(configuration.toYaml(Version.valueOf("3.0.3"), ConfigMode.MONGOD, false), target);
     }
 
     @Test
@@ -76,6 +124,7 @@ public class JavaConfigurationTest {
                 });
                 s.setDestination(Destination.FILE);
                 s.setLogAppend(true);
+                s.setLogRotate(RotateBehavior.RENAME);
                 s.setPath("/var/log/mongodb/mongod.log");
                 return null;
             });
@@ -99,7 +148,7 @@ public class JavaConfigurationTest {
         //              "   enableLocalhostAuthBypass: false\n" +
 */
 
-        Assert.assertEquals(config.toYaml(Version.valueOf("3.0.0"), ConfigMode.MONGOD), COMPLEX_CONFIG);
+        Assert.assertEquals(config.toYaml(Version.valueOf("3.0.0"), ConfigMode.MONGOD, false), COMPLEX_CONFIG);
     }
 
 }

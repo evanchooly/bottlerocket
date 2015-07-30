@@ -1,14 +1,15 @@
 package com.antwerkz.bottlerocket.configuration.blocks
 
 import com.antwerkz.bottlerocket.configuration.*
+import com.github.zafarkhaja.semver.Version
 
 class Net(
-      var port: Int = 27017,
-      var bindIp: String = "127.0.0.1",
-      var maxIncomingConnections: Int = 65536,
-      var wireObjectCheck: Boolean = true,
+      var port: Int? = 27017,
+      var bindIp: String? = "127.0.0.1",
+      var maxIncomingConnections: Int? = null,
+      var wireObjectCheck: Boolean? = null,
       var unixDomainSocket: UnixDomainSocket = UnixDomainSocket(),
-      var ipv6: Boolean = false,
+      var ipv6: Boolean? = null,
       var http: Http = Http(),
       var ssl: Ssl = Ssl()
 ) : ConfigBlock {

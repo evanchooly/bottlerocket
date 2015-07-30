@@ -7,9 +7,9 @@ import com.antwerkz.bottlerocket.configuration.Mode
 import com.antwerkz.bottlerocket.configuration.Since
 
 class Sharding(
-      Mode(ConfigMode.MONGOD) var clusterRole: ClusterRole? = null,
-      Since("2.4.0") var archiveMovedChunks: Boolean = true,
-      var autoSplit: Boolean = true,
+      @Mode(ConfigMode.MONGOD) var clusterRole: ClusterRole? = null,
+      @Since("2.4.0") var archiveMovedChunks: Boolean? = null,
+      var autoSplit: Boolean? = null,
       var configDB: String? = null,
-      var chunkSize: Int = 64
+      var chunkSize: Int? = null
 ) : ConfigBlock
