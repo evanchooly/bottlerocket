@@ -18,6 +18,10 @@ class Component(
       @Since("3.0.0") var storage: LogComponent.Storage = LogComponent.Storage(),
       @Since("3.0.0") var write: LogComponent.Write = LogComponent.Write()
 ) : ConfigBlock {
+    override fun toProperties(version: Version, mode: ConfigMode, includeAll: Boolean): Map<String, Any> {
+        return super.toProperties(version, mode, includeAll)
+    }
+
     fun accessControl(init: LogComponent.AccessControl.() -> Unit) {
         accessControl = initConfigBlock(LogComponent.AccessControl(), init)
     }

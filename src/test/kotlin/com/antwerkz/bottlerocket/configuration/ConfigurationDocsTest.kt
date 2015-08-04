@@ -1,5 +1,7 @@
 package com.antwerkz.bottlerocket.configuration
 
+import com.antwerkz.bottlerocket.configuration.blocks.Component
+import com.antwerkz.bottlerocket.configuration.blocks.SystemLog
 import org.apache.http.client.fluent.Request
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -9,6 +11,7 @@ import org.testng.annotations.BeforeTest
 import org.testng.annotations.Test
 import java.io.File
 import java.net.URI
+import java.util.*
 
 public class ConfigurationDocsTest {
     companion object {
@@ -34,6 +37,11 @@ public class ConfigurationDocsTest {
               .filter({ it.attr("href").contains('.') })
               .map({ it.attr("href") })
               .toArrayList()
+    }
+
+    @Test
+    fun checkComponent() {
+        Component().toYaml()
     }
 
     @Test

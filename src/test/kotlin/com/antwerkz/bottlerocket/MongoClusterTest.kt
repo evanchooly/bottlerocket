@@ -1,5 +1,8 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.configuration.configuration
+import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.io.File
 
@@ -45,5 +48,34 @@ class MongoClusterTest : BaseTest() {
         testClusterAuth()
         validateShards()
         testClusterWrites()
+    }
+
+    @DataProvider(name = "clusters")
+    fun configClusters(): Array<Array<Any>> {
+        var config = configuration {
+            net {
+                http {
+                    JSONPEnabled = true
+                }
+            }
+        }
+
+        return arrayOf(
+              arrayOf(SingleNode(baseDir = File("build/rocket/single-fullConfig").getAbsoluteFile()), config),
+              arrayOf(ReplicaSet(baseDir = File("build/rocket/replicaset-fullConfig").getAbsoluteFile()), config),
+              arrayOf(ShardedCluster(baseDir = File("build/rocket/sharded-fullConfig").getAbsoluteFile()), config)
+        )
+    };
+
+    @Test(dataProvider = "clusters")
+    fun fullConfig(cluster: MongoCluster, config: Configuration) {
+        cluster.clean()
+        cluster.updateConfig(config);
+        try {
+            cluster.start();
+        } finally {
+            cluster.shutdown();
+            Thread.sleep(1000);
+        }
     }
 }

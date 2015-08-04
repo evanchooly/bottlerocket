@@ -1,9 +1,14 @@
 package com.antwerkz.bottlerocket.configuration
 
-import com.antwerkz.bottlerocket.MongoCluster
 import com.github.zafarkhaja.semver.Version
-import java.lang.annotation.Retention
-import java.lang.annotation.RetentionPolicy
+import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.introspector.Property
+import org.yaml.snakeyaml.nodes.CollectionNode
+import org.yaml.snakeyaml.nodes.NodeTuple
+import org.yaml.snakeyaml.nodes.SequenceNode
+import org.yaml.snakeyaml.nodes.Tag
+import org.yaml.snakeyaml.representer.Representer
+import java.util.*
 import kotlin.reflect.KMemberProperty
 import kotlin.reflect.jvm.internal.KClassImpl
 import kotlin.reflect.jvm.javaField
@@ -16,53 +21,19 @@ public interface ConfigBlock {
         return configBlock
     }
 
-    fun nodeName(): String? {
-        return this.javaClass.getSimpleName()?.toCamelCase()
+    fun nodeName(): String {
+        return this.javaClass.getSimpleName().toCamelCase()
     }
 
     open
     fun toYaml(version: Version = Version.valueOf("3.0.0"), mode: ConfigMode = ConfigMode.MONGOD,
-                    includeAll: Boolean = false): String {
-        val list = arrayListOf<String>()
-
-        javaClass.kotlin.properties.forEach {
-            if ( isValidForContext(version, mode, it)) {
-                val fieldValue = it.get(this)
-                if ( includeAll || fieldValue != null ) {
-                    var value: String
-                    if (fieldValue is ConfigBlock) {
-                        val yaml = fieldValue.toYaml(version, mode, includeAll)
-                        if ( yaml != "" ) {
-                            value = yaml.split('\n').map { it -> "  ${it}" }.join("\n").trim()
-                            list.add("  ${value}")
-                        }
-                    } else {
-                        list.add("  ${it.name}: ${fieldValue}")
-                    }
-                }
-            }
-        }
-
-        return if (list.isEmpty()) "" else "${nodeName()}:\n${list.join("\n")}" ;
+               includeAll: Boolean = false): String {
+        return toMap(version, mode, includeAll).toYaml();
     }
 
     fun toProperties(version: Version = Version.valueOf("3.0.0"), mode: ConfigMode = ConfigMode.MONGOD,
-                        includeAll: Boolean = false): Map<String, Any> {
-        val map = linkedMapOf<String, Any>()
-
-        javaClass.kotlin.properties.forEach {
-            if ( isValidForContext(version, mode, it)) {
-                val fieldValue = it.get(this)
-                if (fieldValue is ConfigBlock) {
-                    fieldValue.toProperties(version, mode, includeAll)
-                          .forEach { map.put("${nodeName()}.${it.key}", it.value) }
-                } else if ( includeAll || fieldValue != null) {
-                    map.put("${nodeName()}.${it.name}", fieldValue)
-                }
-            }
-        }
-
-        return map;
+                     includeAll: Boolean = false): Map<String, Any> {
+        return toMap(version, mode, includeAll).flatten();
     }
 
     fun merge(update: ConfigBlock) {
@@ -97,6 +68,62 @@ public interface ConfigBlock {
             throw e
         }
     }
+
+    private fun toMap(version: Version, mode: ConfigMode, includeAll: Boolean): Map<String, Any> {
+        val map = linkedMapOf<String, Any>()
+        javaClass.kotlin.properties.forEach {
+            if ( isValidForContext(version, mode, it)) {
+                val fieldValue = it.get(this)
+                if (fieldValue is ConfigBlock) {
+                    val fieldMap = fieldValue.toMap(version, mode, includeAll)
+                    if (!fieldMap.isEmpty()) {
+                        map.putAll(fieldMap)
+                    }
+                } else if ( includeAll || fieldValue != null) {
+                    map.put(it.name, fieldValue.toString())
+                }
+            }
+        }
+
+        return linkedMapOf(Pair(nodeName(), map))
+    }
+}
+
+fun Map<String, Any>.flatten(): Map<String, Any> {
+    val map = linkedMapOf<String, Any>()
+
+    entrySet().forEach {
+        if(it.value is Map<*, *>) {
+            val flattened = (it.value as Map<String, Any>).flatten()
+            flattened.forEach { flat ->
+                map.put("${it.key}.${flat.key}", flat.value)
+            }
+        } else {
+            map.put(it.key, it.value)
+        }
+    }
+    return map
+}
+
+fun Map<String, Any>.toYaml(indent: String = ""): String {
+    val builder = StringBuilder()
+
+    entrySet().forEach {
+        if(it.value is Map<*, *>) {
+            val yaml = (it.value as Map<String, Any>).toYaml(indent + "  ")
+            if(yaml != "") {
+                builder.append("${indent}${it.key}:\n${yaml}");
+            }
+        } else {
+            builder.append(indent)
+                  .append(it.key)
+                  .append(": ")
+                  .append(it.value)
+                  .append("\n")
+        }
+    }
+    return builder.toString()
+
 }
 
 fun String.toCamelCase(): String {

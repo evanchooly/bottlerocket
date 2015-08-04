@@ -96,6 +96,12 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
         shards.forEach {
             it.updateConfig(update)
         }
+        mongoses.forEach {
+            it.config.merge(update)
+        }
+        mongoses.forEach {
+            it.config.merge(update)
+        }
     }
 
     override fun allNodesActive() {

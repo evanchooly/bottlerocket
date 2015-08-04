@@ -1,12 +1,18 @@
 package com.antwerkz.bottlerocket.configuration.blocks
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
+import com.antwerkz.bottlerocket.configuration.ConfigMode
 import com.antwerkz.bottlerocket.configuration.Verbosity
+import com.github.zafarkhaja.semver.Version
 
 class LogComponent {
     class AccessControl(var verbosity: Verbosity? = null) : ConfigBlock
 
-    class Command(var verbosity: Verbosity? = null) : ConfigBlock
+    class Command(var verbosity: Verbosity? = null) : ConfigBlock {
+        override fun toProperties(version: Version, mode: ConfigMode, includeAll: Boolean): Map<String, Any> {
+            return super.toProperties(version, mode, includeAll)
+        }
+    }
 
     class Control(var verbosity: Verbosity? = null) : ConfigBlock
 

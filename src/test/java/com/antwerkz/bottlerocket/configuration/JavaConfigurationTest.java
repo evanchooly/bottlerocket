@@ -29,17 +29,21 @@ public class JavaConfigurationTest {
             "net:\n" +
             "  bindIp: 127.0.0.1\n" +
             "  port: 27017\n" +
+            "\n" +
             "replication:\n" +
             "  oplogSizeMB: 10\n" +
+            "\n" +
             "storage:\n" +
             "  mmapv1:\n" +
             "    preallocDataFiles: false\n" +
             "    smallFiles: true\n" +
+            "\n" +
             "systemLog:\n" +
             "  component:\n" +
             "    accessControl:\n" +
             "      verbosity: 5\n" +
-            "  destination: syslog";
+            "  destination: syslog" +
+            "\n";
         Assert.assertEquals(configuration.toYaml(Version.valueOf("3.0.3"), ConfigMode.MONGOD, false), target);
     }
 
@@ -78,16 +82,20 @@ public class JavaConfigurationTest {
             "net:\n" +
             "  bindIp: 127.0.0.1\n" +
             "  port: 27017\n" +
+            "\n" +
             "processManagement:\n" +
             "  fork: true\n" +
+            "\n" +
             "replication:\n" +
             "  oplogSizeMB: 10\n" +
+            "\n" +
             "storage:\n" +
             "  dbPath: /var/lib/mongodb\n" +
             "  mmapv1:\n" +
             "    preallocDataFiles: false\n" +
             "    smallFiles: true\n" +
             "  repairPath: /var/lib/mongodb_tmp\n" +
+            "\n" +
             "systemLog:\n" +
             "  component:\n" +
             "    accessControl:\n" +
@@ -96,7 +104,7 @@ public class JavaConfigurationTest {
             "  logAppend: true\n" +
             "  logRotate: rename\n" +
             "  path: /var/log/mongodb/mongod.log" +
-            "";
+            "\n";
         //              "setParameter:\n" +
         //              "   enableLocalhostAuthBypass: false\n" +
         Assert.assertEquals(configuration.toYaml(Version.valueOf("3.0.3"), ConfigMode.MONGOD, false), target);
