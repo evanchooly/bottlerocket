@@ -4,6 +4,7 @@ import com.antwerkz.bottlerocket.configuration.State.ENABLED
 import com.antwerkz.bottlerocket.configuration.blocks.*
 import org.testng.Assert
 import org.testng.annotations.Test
+import org.yaml.snakeyaml.Yaml
 import kotlin.platform.platformStatic
 
 public class ConfigurationTest {

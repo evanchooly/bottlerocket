@@ -69,7 +69,8 @@ public interface ConfigBlock {
         }
     }
 
-    private fun toMap(version: Version, mode: ConfigMode, includeAll: Boolean): Map<String, Any> {
+    fun toMap(version: Version = Version.valueOf("3.0.0"), mode: ConfigMode = ConfigMode.MONGOD,
+                   includeAll: Boolean = false): Map<String, Any> {
         val map = linkedMapOf<String, Any>()
         javaClass.kotlin.properties.forEach {
             if ( isValidForContext(version, mode, it)) {
