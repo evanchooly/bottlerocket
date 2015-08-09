@@ -1,11 +1,16 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.Configuration
-import com.antwerkz.bottlerocket.configuration.Destination
-import com.antwerkz.bottlerocket.configuration.State
-import com.antwerkz.bottlerocket.configuration.configuration
+import com.antwerkz.bottlerocket.configuration.ConfigBlock
+import com.antwerkz.bottlerocket.configuration.types.Destination
+import com.antwerkz.bottlerocket.configuration.types.State
 import com.jayway.awaitility.Awaitility
-import com.mongodb.*
+import com.mongodb.MongoClient
+import com.mongodb.MongoClientOptions
+import com.mongodb.MongoCredential
+import com.mongodb.MongoSocketReadException
+import com.mongodb.MongoSocketReadTimeoutException
+import com.mongodb.ReadPreference
+import com.mongodb.ServerAddress
 import org.bson.Document
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,11 +19,17 @@ import org.zeroturnaround.process.JavaProcess
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.util.concurrent.TimeUnit
+import com.antwerkz.bottlerocket.configuration.mongo24.Configuration as Config24
+import com.antwerkz.bottlerocket.configuration.mongo24.configuration as config24
+import com.antwerkz.bottlerocket.configuration.mongo26.Configuration as Config26
+import com.antwerkz.bottlerocket.configuration.mongo26.configuration as config26
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration as Config30
+import com.antwerkz.bottlerocket.configuration.mongo30.configuration as config30
 
 public abstract class MongoExecutable(val manager: MongoManager, val name: String, val port: Int, val baseDir: File) {
     public var process: JavaProcess? = null
         protected set
-    val config: Configuration
+    val config: ConfigBlock
     abstract val logger: Logger
     private var client: MongoClient? = null
 
@@ -29,7 +40,7 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
     }
 
     init {
-        config = configuration {
+        config = config30 {
             net {
                 this.port = this@MongoExecutable.port
             }
@@ -47,7 +58,7 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
     }
 
     fun enableAuth(pemFile: String? = null) {
-        config.merge(configuration {
+        config.merge(config30 {
             security {
                 authorization = if (pemFile == null) State.ENABLED else State.DISABLED
                 keyFile = pemFile
@@ -56,7 +67,15 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
     }
 
     fun isAuthEnabled(): Boolean {
-        return config.security.authorization == State.ENABLED || config.security.keyFile != null
+        return if (config is Config30) {
+            config.security.authorization == State.ENABLED || config.security.keyFile != null
+        } else if (config is Config26) {
+            config.security.authorization == State.ENABLED || config.security.keyFile != null
+        } else if (config is Config24) {
+            config.auth?: false  || config.keyFile != null
+        } else {
+            false
+        }
     }
 
     fun isAlive(): Boolean {
@@ -114,7 +133,7 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
         client = null
     }
 
-    private fun runCommand(command: String, authEnabled: Boolean = this.isAuthEnabled(), out: Logger = LOG, err: Logger = LOG) {
+    private fun runCommand(command: String, authEnabled: Boolean = this.isAuthEnabled()) {
         val list = command(authEnabled)
         var commandString = ""
         if (authEnabled) {

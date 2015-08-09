@@ -1,6 +1,6 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.configuration
 import com.jayway.awaitility.Awaitility
 import org.bson.Document
 import org.slf4j.LoggerFactory

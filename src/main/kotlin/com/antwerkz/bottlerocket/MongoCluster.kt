@@ -1,6 +1,17 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.*
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.configuration
+import com.antwerkz.bottlerocket.configuration.types.ClusterAuthMode
+import com.antwerkz.bottlerocket.configuration.types.Compressor
+import com.antwerkz.bottlerocket.configuration.types.Destination
+import com.antwerkz.bottlerocket.configuration.types.IndexPrefetch
+import com.antwerkz.bottlerocket.configuration.types.ProfilingMode
+import com.antwerkz.bottlerocket.configuration.types.RotateBehavior
+import com.antwerkz.bottlerocket.configuration.types.SslMode
+import com.antwerkz.bottlerocket.configuration.types.State
+import com.antwerkz.bottlerocket.configuration.types.TimestampFormat
+import com.antwerkz.bottlerocket.configuration.types.Verbosity
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
 import com.mongodb.MongoCredential
@@ -23,15 +34,15 @@ val TEMP_DIR = if (File("/tmp").exists()) "/tmp" else System.getProperty("java.i
 
 val DEFAULT_NAME = "rocket"
 val DEFAULT_PORT = 30000
-val DEFAULT_VERSION = "installed"
+val DEFAULT_VERSION = "3.0.5"
 val DEFAULT_BASE_DIR = File("${TEMP_DIR}/${DEFAULT_NAME}")
 
 public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
                                    public val port: Int = DEFAULT_PORT,
-                                   public val version: String = DEFAULT_VERSION,
+                                   val version: String = DEFAULT_VERSION,
                                    public val baseDir: File = DEFAULT_BASE_DIR) {
 
-    val mongoManager: MongoManager = MongoManager(version)
+    val mongoManager: MongoManager = MongoManager.of(version)
     private var client: MongoClient? = null;
     var adminAdded: Boolean = false
     val keyFile: String = File(baseDir, "rocket.key").getAbsolutePath()
@@ -288,10 +299,4 @@ fun File.deleteTree() {
             throw RuntimeException("deleteTree() can only be called on directories:  ${this}")
         }
     }
-}
-
-enum class ClusterTypes {
-    SINGLE,
-    REPLICA_SET,
-    SHARDED
 }

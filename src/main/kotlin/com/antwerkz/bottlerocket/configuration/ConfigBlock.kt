@@ -1,14 +1,8 @@
 package com.antwerkz.bottlerocket.configuration
 
 import com.github.zafarkhaja.semver.Version
-import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.introspector.Property
-import org.yaml.snakeyaml.nodes.CollectionNode
-import org.yaml.snakeyaml.nodes.NodeTuple
-import org.yaml.snakeyaml.nodes.SequenceNode
-import org.yaml.snakeyaml.nodes.Tag
-import org.yaml.snakeyaml.representer.Representer
-import java.util.*
+import com.github.zafarkhaja.semver.expr.CompositeExpression.Helper.gte
+import com.github.zafarkhaja.semver.expr.CompositeExpression.Helper.lt
 import kotlin.reflect.KMemberProperty
 import kotlin.reflect.jvm.internal.KClassImpl
 import kotlin.reflect.jvm.javaField
@@ -26,14 +20,12 @@ public interface ConfigBlock {
     }
 
     open
-    fun toYaml(version: Version = Version.valueOf("3.0.0"), mode: ConfigMode = ConfigMode.MONGOD,
-               includeAll: Boolean = false): String {
-        return toMap(version, mode, includeAll).toYaml();
+    fun toYaml(mode: ConfigMode = ConfigMode.MONGOD, includeAll: Boolean = false): String {
+        return toMap(mode, includeAll).toYaml();
     }
 
-    fun toProperties(version: Version = Version.valueOf("3.0.0"), mode: ConfigMode = ConfigMode.MONGOD,
-                     includeAll: Boolean = false): Map<String, Any> {
-        return toMap(version, mode, includeAll).flatten();
+    fun toProperties(mode: ConfigMode = ConfigMode.MONGOD, includeAll: Boolean = false): Map<String, Any> {
+        return toMap(mode, includeAll).flatten();
     }
 
     fun merge(update: ConfigBlock) {
@@ -56,27 +48,29 @@ public interface ConfigBlock {
 
     }
 
-    protected fun isValidForContext(version: Version, configMode: ConfigMode, property: KMemberProperty<ConfigBlock, *>): Boolean {
-        val since = property.javaField?.getAnnotation(javaClass<Since>())
-        val mode = property.javaField?.getAnnotation(javaClass<Mode>())
+    protected fun isSupportedMode(configMode: ConfigMode, property: KMemberProperty<ConfigBlock, *>): Boolean {
         try {
-            val b = since == null || Version.valueOf(since.version).lessThanOrEqualTo(version)
-            val b1 = mode == null || mode.value == configMode || configMode == ConfigMode.ALL
-            return b && b1;
+            val mode = getAnnotation<Mode>(property)
+            val supportedMode = mode == null || mode.value == configMode || configMode == ConfigMode.ALL
+
+            return supportedMode;
         } catch(e: Exception) {
             println("property = ${property}")
             throw e
         }
     }
 
-    fun toMap(version: Version = Version.valueOf("3.0.0"), mode: ConfigMode = ConfigMode.MONGOD,
-                   includeAll: Boolean = false): Map<String, Any> {
+    private inline fun <reified T : Annotation> getAnnotation(property: KMemberProperty<ConfigBlock, *>): T? {
+        return property.javaField?.getAnnotation(javaClass())
+    }
+
+    fun toMap(mode: ConfigMode = ConfigMode.MONGOD, includeAll: Boolean = false): Map<String, Any> {
         val map = linkedMapOf<String, Any>()
         javaClass.kotlin.properties.forEach {
-            if ( isValidForContext(version, mode, it)) {
+            if ( isSupportedMode(mode, it)) {
                 val fieldValue = it.get(this)
                 if (fieldValue is ConfigBlock) {
-                    val fieldMap = fieldValue.toMap(version, mode, includeAll)
+                    val fieldMap = fieldValue.toMap(mode, includeAll)
                     if (!fieldMap.isEmpty()) {
                         map.putAll(fieldMap)
                     }
@@ -94,7 +88,7 @@ fun Map<String, Any>.flatten(): Map<String, Any> {
     val map = linkedMapOf<String, Any>()
 
     entrySet().forEach {
-        if(it.value is Map<*, *>) {
+        if (it.value is Map<*, *>) {
             val flattened = (it.value as Map<String, Any>).flatten()
             flattened.forEach { flat ->
                 map.put("${it.key}.${flat.key}", flat.value)
@@ -110,9 +104,9 @@ fun Map<String, Any>.toYaml(indent: String = ""): String {
     val builder = StringBuilder()
 
     entrySet().forEach {
-        if(it.value is Map<*, *>) {
+        if (it.value is Map<*, *>) {
             val yaml = (it.value as Map<String, Any>).toYaml(indent + "  ")
-            if(yaml != "") {
+            if (yaml != "") {
                 builder.append("${indent}${it.key}:\n${yaml}");
             }
         } else {

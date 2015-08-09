@@ -1,10 +1,14 @@
 package com.antwerkz.bottlerocket.configuration;
 
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration;
+import com.antwerkz.bottlerocket.configuration.types.Destination;
+import com.antwerkz.bottlerocket.configuration.types.RotateBehavior;
+import com.antwerkz.bottlerocket.configuration.types.Verbosity;
 import com.github.zafarkhaja.semver.Version;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import static com.antwerkz.bottlerocket.configuration.ConfigurationPackage.configuration;
+import static com.antwerkz.bottlerocket.configuration.mongo30.Mongo30Package.configuration;
 import static com.antwerkz.bottlerocket.configuration.ConfigurationTest.COMPLEX_CONFIG;
 
 public class JavaConfigurationTest {
@@ -29,22 +33,19 @@ public class JavaConfigurationTest {
             "net:\n" +
             "  bindIp: 127.0.0.1\n" +
             "  port: 27017\n" +
-            "\n" +
             "replication:\n" +
             "  oplogSizeMB: 10\n" +
-            "\n" +
             "storage:\n" +
             "  mmapv1:\n" +
             "    preallocDataFiles: false\n" +
             "    smallFiles: true\n" +
-            "\n" +
             "systemLog:\n" +
             "  component:\n" +
             "    accessControl:\n" +
             "      verbosity: 5\n" +
             "  destination: syslog" +
             "\n";
-        Assert.assertEquals(configuration.toYaml(Version.valueOf("3.0.3"), ConfigMode.MONGOD, false), target);
+        Assert.assertEquals(configuration.toYaml(ConfigMode.MONGOD, false), target);
     }
 
     @Test
@@ -82,20 +83,16 @@ public class JavaConfigurationTest {
             "net:\n" +
             "  bindIp: 127.0.0.1\n" +
             "  port: 27017\n" +
-            "\n" +
             "processManagement:\n" +
             "  fork: true\n" +
-            "\n" +
             "replication:\n" +
             "  oplogSizeMB: 10\n" +
-            "\n" +
             "storage:\n" +
             "  dbPath: /var/lib/mongodb\n" +
             "  mmapv1:\n" +
             "    preallocDataFiles: false\n" +
             "    smallFiles: true\n" +
             "  repairPath: /var/lib/mongodb_tmp\n" +
-            "\n" +
             "systemLog:\n" +
             "  component:\n" +
             "    accessControl:\n" +
@@ -107,7 +104,7 @@ public class JavaConfigurationTest {
             "\n";
         //              "setParameter:\n" +
         //              "   enableLocalhostAuthBypass: false\n" +
-        Assert.assertEquals(configuration.toYaml(Version.valueOf("3.0.3"), ConfigMode.MONGOD, false), target);
+        Assert.assertEquals(configuration.toYaml(ConfigMode.MONGOD, false), target);
     }
 
     @Test
@@ -156,7 +153,7 @@ public class JavaConfigurationTest {
         //              "   enableLocalhostAuthBypass: false\n" +
 */
 
-        Assert.assertEquals(config.toYaml(Version.valueOf("3.0.0"), ConfigMode.MONGOD, false), COMPLEX_CONFIG);
+        Assert.assertEquals(config.toYaml(ConfigMode.MONGOD, false), COMPLEX_CONFIG);
     }
 
 }

@@ -63,6 +63,5 @@ isntances will be available starting at the default port of 30000.
 
 ## Versions
 
-BottleRocket is intended to work with a number of versions of MongoDB.  The default version to use is "installed" which will use whatever
- version of MongoDB you have installed on your path.  The version to use when building the cluster can be set via which builder is used 
- to build your cluster.  Mixed version clusters are not currently supported via the builders but are on the roadmap.
+BottleRocket is intended to work with a number of versions of MongoDB.  The version to use when building the cluster can be set via 
+which builder is used to build your cluster.  Mixed version clusters are not currently supported via the builders but are on the roadmap.

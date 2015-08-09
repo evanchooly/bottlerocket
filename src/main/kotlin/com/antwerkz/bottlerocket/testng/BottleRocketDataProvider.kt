@@ -1,6 +1,7 @@
 package com.antwerkz.bottlerocket.testng
 
 import com.antwerkz.bottlerocket.MongoCluster
+import com.antwerkz.bottlerocket.DEFAULT_VERSION
 import com.antwerkz.bottlerocket.ReplicaSet
 import com.antwerkz.bottlerocket.ShardedCluster
 import com.antwerkz.bottlerocket.SingleNode
@@ -14,7 +15,7 @@ public class BottleRocketDataProvider {
 
     DataProvider(name = "bottlerocket")
     fun cluster(): Array<Array<MongoCluster>> {
-        val clusterVersion = System.getProperty(CLUSTER_VERSIONS, "installed")
+        val clusterVersion = System.getProperty(CLUSTER_VERSIONS, DEFAULT_VERSION)
         val type = System.getProperty(CLUSTER_TYPES, "single")
         val cluster = when (type) {
             "single" -> SingleNode(version = clusterVersion)

@@ -1,9 +1,7 @@
 package com.antwerkz.bottlerocket;
 
-import com.antwerkz.bottlerocket.clusters.ReplicaSetBuilder;
 import com.antwerkz.bottlerocket.executable.Mongod;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
@@ -16,7 +14,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.antwerkz.bottlerocket.configuration.ConfigurationPackage.configuration;
+import static com.antwerkz.bottlerocket.configuration.mongo30.Mongo30Package.configuration;
 
 public class JavaMongoClusterTest {
     @AfterMethod
@@ -86,16 +84,16 @@ public class JavaMongoClusterTest {
 
     public void startCluster(final MongoCluster cluster) {
         cluster.clean();
-        cluster.updateConfig(configuration( c -> {
+        cluster.updateConfig(configuration(c -> {
             c.storage(s -> {
-                s.mmapv1( m -> {
+                s.mmapv1(m -> {
                     m.setPreallocDataFiles(false);
                     m.setSmallFiles(true);
                     return null;
                 });
                 return null;
             });
-         return null;
+            return null;
         }));
         cluster.start();
     }
@@ -115,6 +113,7 @@ public class JavaMongoClusterTest {
         Assert.assertEquals(collection.find().first(), document);
     }
 
+/*
     public void mixedCluster() {
         final ReplicaSetBuilder builder = ReplicaSet.builder();
         builder.size(0);
@@ -131,4 +130,5 @@ public class JavaMongoClusterTest {
             replicaSet.shutdown();
         }
     }
+*/
 }

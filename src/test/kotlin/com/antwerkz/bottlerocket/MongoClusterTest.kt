@@ -1,7 +1,7 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.Configuration
-import com.antwerkz.bottlerocket.configuration.configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.configuration
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.io.File

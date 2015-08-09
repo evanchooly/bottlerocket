@@ -1,7 +1,7 @@
 package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.ShardedClusterBuilder
-import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.mongodb.ServerAddress

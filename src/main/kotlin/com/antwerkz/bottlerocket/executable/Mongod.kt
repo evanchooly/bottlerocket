@@ -2,12 +2,8 @@ package com.antwerkz.bottlerocket.executable
 
 import com.antwerkz.bottlerocket.MongoExecutable
 import com.antwerkz.bottlerocket.MongoManager
-import com.antwerkz.bottlerocket.configuration.State
-import com.antwerkz.bottlerocket.configuration.configuration
-import com.mongodb.ServerAddress
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import org.zeroturnaround.process.Processes
 import java.io.File
 import java.io.FileOutputStream
@@ -25,7 +21,7 @@ public class Mongod(manager: MongoManager, name: String,
             LOG.info("Starting mongod on port ${port}")
             baseDir.mkdirs()
             val configFile = File(baseDir, "mongod.conf")
-            configFile.writeText(config.toYaml())
+            manager.writeConfig(configFile, config)
 
             val args = arrayListOf(manager.mongod,
                   "--config", configFile.getAbsolutePath())

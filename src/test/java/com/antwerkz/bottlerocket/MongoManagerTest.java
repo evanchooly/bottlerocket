@@ -4,45 +4,28 @@ import java.io.File;
 import java.io.IOException;
 
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
+import static java.lang.String.format;
 
 public class MongoManagerTest {
 
-    private final MongoManager manager = new MongoManager("installed");
+    private final MongoManager manager = MongoManager.of("3.0.3");
 
-    @Test
-    public void testUseInstalled() throws IOException {
-        final File mongod = new File("/usr/local/opt/mongodb/bin/mongod");
-        if(mongod.exists()) {
-            Assert.assertNotNull(manager.useInstalled(), "Should find the homebrew mongo installation");
-        }
+    @DataProvider(name = "urls")
+    public Object[][] urls() {
+        return new Object[][] {
+                           new Object[] { format(MongoManager.macDownload, "3.0.3")},
+                           new Object[] { format(MongoManager.linuxDownload, "3.0.3")},
+                           new Object[] { format(MongoManager.windowsDownload, "3.0.3")}
+        };
     }
 
-    @Test
-    public void testDownloadMac() throws Exception {
-
-        manager.downloadMac("3.0.2");
-
+    @Test(dataProvider = "urls")
+    public void testDownload(final String url) throws Exception {
+        manager.downloadArchive(url);
         final File file = new File(manager.getDownloadPath(), "mongodb-osx-x86_64-3.0.2");
         Assert.assertTrue(file.isDirectory(), file + " should be a directory");
-    }
-
-    @Test
-    public void testDownloadLinux() throws Exception {
-        manager.downloadLinux("3.0.2");
-        final File file = new File(manager.getDownloadPath(), "mongodb-linux-x86_64-3.0.2");
-        Assert.assertTrue(file.isDirectory(), file + " should be a directory");
-    }
-
-    @Test
-    public void testDownloadWindows() throws Exception {
-        manager.downloadWindows("3.0.2");
-        final File file = new File(manager.getDownloadPath(), "mongodb-win32-x86_64-2008plus-3.0.2");
-        Assert.assertTrue(file.isDirectory(), file + " should be a directory");
-    }
-
-    @Test
-    public void testDownload() throws Exception {
-        new MongoManager("3.0.2");
     }
 }

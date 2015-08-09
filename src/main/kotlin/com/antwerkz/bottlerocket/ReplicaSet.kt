@@ -1,7 +1,7 @@
 package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.ReplicaSetBuilder
-import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.jayway.awaitility.Awaitility
 import com.mongodb.ReadPreference
@@ -90,7 +90,7 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
                     .append("members", listOf(Document("_id", 1)
                           .append("host", "localhost:${mongod.port}"))
                     )), ReadPreference.primaryPreferred())
-        if ( !(results?.getDouble("ok")?.toInt()?.equals(1) ?: false) ) {
+        if ( !(results.getDouble("ok")?.toInt()?.equals(1) ?: false) ) {
             throw IllegalStateException("Failed to initiate replica set: ${results}")
         }
     }

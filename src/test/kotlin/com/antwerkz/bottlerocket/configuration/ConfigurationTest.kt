@@ -1,10 +1,20 @@
 package com.antwerkz.bottlerocket.configuration
 
-import com.antwerkz.bottlerocket.configuration.State.ENABLED
-import com.antwerkz.bottlerocket.configuration.blocks.*
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Component
+import com.antwerkz.bottlerocket.configuration.mongo30.blocks.LogComponent
+import com.antwerkz.bottlerocket.configuration.mongo30.blocks.ProcessManagement
+import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Ssl
+import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Storage
+import com.antwerkz.bottlerocket.configuration.mongo30.blocks.SystemLog
+import com.antwerkz.bottlerocket.configuration.mongo30.configuration
+import com.antwerkz.bottlerocket.configuration.types.Destination
+import com.antwerkz.bottlerocket.configuration.types.RotateBehavior
+import com.antwerkz.bottlerocket.configuration.types.State
+import com.antwerkz.bottlerocket.configuration.types.Verbosity
+import com.github.zafarkhaja.semver.Version
 import org.testng.Assert
 import org.testng.annotations.Test
-import org.yaml.snakeyaml.Yaml
 import kotlin.platform.platformStatic
 
 public class ConfigurationTest {
@@ -13,20 +23,16 @@ public class ConfigurationTest {
               "net:\n" +
                     "  bindIp: 127.0.0.1\n" +
                     "  port: 27017\n" +
-                    "\n" +
                     "processManagement:\n" +
                     "  fork: true\n" +
-                    "\n" +
                     "replication:\n" +
                     "  oplogSizeMB: 10\n" +
-                    "\n" +
                     "storage:\n" +
                     "  dbPath: /var/lib/mongodb\n" +
                     "  mmapv1:\n" +
                     "    preallocDataFiles: false\n" +
                     "    smallFiles: true\n" +
                     "  repairPath: /var/lib/mongodb_tmp\n" +
-                    "\n" +
                     "systemLog:\n" +
                     "  component:\n" +
                     "    accessControl:\n" +
@@ -55,15 +61,12 @@ public class ConfigurationTest {
               "net:\n" +
                     "  bindIp: 127.0.0.1\n" +
                     "  port: 27017\n" +
-                    "\n" +
                     "replication:\n" +
                     "  oplogSizeMB: 10\n" +
-                    "\n" +
                     "storage:\n" +
                     "  mmapv1:\n" +
                     "    preallocDataFiles: false\n" +
                     "    smallFiles: true\n" +
-                    "\n" +
                     "systemLog:\n" +
                     "  component:\n" +
                     "    accessControl:\n" +
@@ -94,19 +97,15 @@ public class ConfigurationTest {
               "net:\n" +
                     "  bindIp: 127.0.0.1\n" +
                     "  port: 27017\n" +
-                    "\n" +
                     "processManagement:\n" +
                     "  fork: true\n" +
-                    "\n" +
                     "replication:\n" +
                     "  oplogSizeMB: 10\n" +
-                    "\n" +
                     "storage:\n" +
                     "  dbPath: /var/lib/mongodb\n" +
                     "  mmapv1:\n" +
                     "    preallocDataFiles: false\n" +
                     "    smallFiles: true\n" +
-                    "\n" +
                     "systemLog:\n" +
                     "  component:\n" +
                     "    accessControl:\n" +
@@ -135,15 +134,12 @@ public class ConfigurationTest {
               "net:\n" +
                     "  bindIp: 127.0.0.1\n" +
                     "  port: 27017\n" +
-                    "\n" +
                     "replication:\n" +
                     "  oplogSizeMB: 10\n" +
-                    "\n" +
                     "storage:\n" +
                     "  mmapv1:\n" +
                     "    preallocDataFiles: false\n" +
                     "    smallFiles: true\n" +
-                    "\n" +
                     "systemLog:\n" +
                     "  component:\n" +
                     "    accessControl:\n" +
@@ -208,13 +204,13 @@ public class ConfigurationTest {
                 }
             }
             security {
-                authorization = ENABLED
+                authorization = State.ENABLED
             }
         }
 
         Assert.assertNull(config.security.authorization)
         config.merge(update);
-        Assert.assertEquals(config.security.authorization, ENABLED)
+        Assert.assertEquals(config.security.authorization, State.ENABLED)
         Assert.assertEquals(config.operationProfiling.slowOpThresholdMs, 50)
         Assert.assertNotEquals(update.storage.dbPath, "/var/lib/mongo/noodle")
     }

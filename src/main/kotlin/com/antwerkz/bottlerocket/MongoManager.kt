@@ -12,8 +12,6 @@ import org.apache.commons.compress.compressors.gzip.GzipUtils
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
-import org.zeroturnaround.exec.ProcessExecutor
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -23,17 +21,23 @@ import java.net.URL
 import java.nio.file.Files
 import java.util.stream.Stream
 import java.util.zip.GZIPInputStream
+import kotlin.platform.platformStatic
 
-public class MongoManager(public var versionString: String) {
+public class MongoManager(val versionManager: VersionManager) : VersionManager by versionManager {
     private val LOG = LoggerFactory.getLogger(javaClass<MongoManager>())
 
-    companion object {
+    public companion object {
         public var macDownload: String = "https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-%s.tgz"
         public var linuxDownload: String = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-%s.tgz"
         public var windowsDownload: String = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-%s.zip"
+
+        platformStatic fun of(versionString: String): MongoManager {
+            val version = Version.valueOf(versionString)
+            return MongoManager(BaseVersionManager.of(version));
+        }
+
     }
 
-    public val version: Version
     public val downloadPath: File
     public val binDir: String
     public val mongo: String
@@ -52,46 +56,20 @@ public class MongoManager(public var versionString: String) {
             mongod = "${binDir}/mongod"
             mongos = "${binDir}/mongos"
         }
-        when (versionString) {
-            "installed" -> {
-                version = discoverVersion()
-            }
-            else -> {
-                version = Version.valueOf(versionString)
-            }
-
-        }
     }
-
-    private fun discoverVersion(): Version {
-        val stream = ByteArrayOutputStream()
-        ProcessExecutor()
-              .command(mongod, "--version")
-              .redirectOutput(stream)
-              .execute()
-
-        val s = String(stream.toByteArray())
-              .split('\n')[0]
-              .split(' ')[2].substring(1)
-
-        return Version.valueOf(s);
-    }
-
 
     public fun download(): File {
-        val file: File
-        if ("installed" == versionString) {
-            file = useInstalled()
-        } else if (SystemUtils.IS_OS_LINUX) {
-            file = downloadLinux(versionString)
+        var url = if (SystemUtils.IS_OS_LINUX) {
+            linuxDownload
         } else if (SystemUtils.IS_OS_MAC_OSX) {
-            file = downloadMac(versionString)
+            macDownload
         } else if (SystemUtils.IS_OS_WINDOWS) {
-            file = downloadWindows(versionString)
+            windowsDownload
         } else {
             throw RuntimeException("Unsupported operating system: ${SystemUtils.OS_NAME}")
         }
-        return file
+
+        return extractDownload({ downloadArchive(format(url, versionManager.version)) })
     }
 
     public fun configServer(name: String, port: Int, baseDir: File): ConfigServer {
@@ -106,18 +84,7 @@ public class MongoManager(public var versionString: String) {
         return Mongos(this, name, port, baseDir, configServers)
     }
 
-    fun downloadLinux(version: String): File {
-        return extractDownload({ downloadArchive(format(linuxDownload, version)) })
-    }
-
-    fun downloadWindows(version: String): File {
-        return extractDownload({ downloadArchive(format(windowsDownload, version)) })
-    }
-
-    fun downloadMac(version: String): File {
-        return extractDownload({ downloadArchive(format(macDownload, version)) })
-    }
-
+/*
     public fun useInstalled(): File {
         val path = System.getenv("PATH").split(File.pathSeparator.toRegex()).toTypedArray()
         val mongod = if (SystemUtils.IS_OS_WINDOWS) "mongod.exe" else "mongod"
@@ -134,6 +101,7 @@ public class MongoManager(public var versionString: String) {
         }
         return file.getParentFile().getParentFile()
     }
+*/
 
     public fun extract(download: File): File {
         if (GzipUtils.isCompressedFilename(download.getName())) {
@@ -190,7 +158,7 @@ public class MongoManager(public var versionString: String) {
         }
     }
 
-    private fun downloadArchive(path: String): File {
+    fun downloadArchive(path: String): File {
         try {
             val url = URL(path)
             var downloadName = url.getPath()
