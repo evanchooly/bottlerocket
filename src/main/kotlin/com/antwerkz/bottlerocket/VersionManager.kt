@@ -32,6 +32,7 @@ abstract class BaseVersionManager(override val version: Version) : VersionManage
         fun of(version: Version): VersionManager {
             val s = version.getNormalVersion()
             return when (s.substring(0, s.lastIndexOf('.'))) {
+                "3.1" -> VersionManager30(version);
                 "3.0" -> VersionManager30(version);
                 "2.6" -> VersionManager26(version)
                 "2.4" -> VersionManager24(version)

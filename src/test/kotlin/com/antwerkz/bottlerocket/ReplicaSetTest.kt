@@ -13,7 +13,7 @@ class ReplicaSetTest : BaseTest() {
         assertPrimary(30000)
     }
 
-    //    @Test(dataProvider = "versions")
+    @Test(dataProvider = "versions")
     fun replicaSetAuth(clusterVersion: String) {
         cluster = ReplicaSet(baseDir = File("build/rocket/replicaSetAuth").getAbsoluteFile(), version = clusterVersion)
         testClusterAuth()

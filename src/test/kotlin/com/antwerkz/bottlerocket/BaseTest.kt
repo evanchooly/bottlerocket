@@ -15,6 +15,7 @@ open class BaseTest {
     companion object {
         private val LOG = LoggerFactory.getLogger(javaClass<BaseTest>())
         val versions = arrayOf(
+              arrayOf("3.1.6"),
               arrayOf("3.0.5"),
               arrayOf("2.6.10"),
               arrayOf("2.4.14"),
