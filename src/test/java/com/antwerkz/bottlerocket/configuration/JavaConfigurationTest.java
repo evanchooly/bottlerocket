@@ -1,10 +1,9 @@
 package com.antwerkz.bottlerocket.configuration;
 
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration;
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration30;
 import com.antwerkz.bottlerocket.configuration.types.Destination;
 import com.antwerkz.bottlerocket.configuration.types.RotateBehavior;
 import com.antwerkz.bottlerocket.configuration.types.Verbosity;
-import com.github.zafarkhaja.semver.Version;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -14,7 +13,7 @@ import static com.antwerkz.bottlerocket.configuration.ConfigurationTest.COMPLEX_
 public class JavaConfigurationTest {
     @Test
     public void testYaml() {
-        final Configuration configuration = configuration(c -> {
+        final Configuration30 configuration = configuration(c -> {
             c.systemLog(s -> {
                 s.setDestination(Destination.SYSLOG);
                 s.component(comp -> {
@@ -50,7 +49,7 @@ public class JavaConfigurationTest {
 
     @Test
     public void complexExample() {
-        final Configuration configuration =
+        final Configuration30 configuration =
             configuration(c -> {
                 c.storage(s -> {
                     s.setDbPath("/var/lib/mongodb");
@@ -109,7 +108,7 @@ public class JavaConfigurationTest {
 
     @Test
     public void testComplexBuilder() {
-        final Configuration config = configuration(c -> {
+        final Configuration30 config = configuration(c -> {
             c.processManagement(p -> {
                 p.setFork(true);
                 return null;

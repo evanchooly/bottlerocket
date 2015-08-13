@@ -1,6 +1,6 @@
 package com.antwerkz.bottlerocket.configuration
 
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration30
 import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Component
 import com.antwerkz.bottlerocket.configuration.mongo30.blocks.LogComponent
 import com.antwerkz.bottlerocket.configuration.mongo30.blocks.ProcessManagement
@@ -49,7 +49,7 @@ public class ConfigurationTest {
 
     @Test
     public fun testYaml() {
-        val configuration = Configuration(
+        val configuration = Configuration30(
               systemLog = SystemLog(
                     destination = Destination.SYSLOG,
                     component = Component(
@@ -79,7 +79,7 @@ public class ConfigurationTest {
 
     @Test
     public fun complexExample() {
-        val configuration = Configuration(
+        val configuration = Configuration30(
               storage = Storage(dbPath = "/var/lib/mongodb"),
               systemLog = SystemLog(
                     destination = Destination.FILE,
@@ -217,7 +217,7 @@ public class ConfigurationTest {
 
     @Test
     fun properties() {
-        val configuration = Configuration(
+        val configuration = Configuration30(
               storage = Storage(dbPath = "/var/lib/mongodb"),
               systemLog = SystemLog(
                     destination = Destination.FILE,

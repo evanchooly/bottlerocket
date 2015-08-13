@@ -2,7 +2,7 @@ package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.MongoClusterBuilder
 import com.antwerkz.bottlerocket.clusters.SingleNodeBuilder
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration30
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
@@ -75,7 +75,7 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
         return mongod.isAuthEnabled()
     }
 
-    override fun updateConfig(update: Configuration) {
+    override fun updateConfig(update: Configuration30) {
         mongod.config.merge(update)
     }
 

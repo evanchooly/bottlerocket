@@ -2,6 +2,7 @@ package com.antwerkz.bottlerocket.configuration.mongo22
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.ConfigMode
+import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.mongo24.Profile
 import com.antwerkz.bottlerocket.configuration.types.DiagnosticLog
 import com.antwerkz.bottlerocket.configuration.types.IndexPrefetch
@@ -10,7 +11,8 @@ import com.github.zafarkhaja.semver.Version
 /**
  * @see http://docs.mongodb.org/v2.2/reference/configuration-options/
  */
-class Configuration(
+suppress("UNUSED_PARAMETER")
+class Configuration22(
       var bind_ip: String? = "127.0.0.1",
       var port: Int? = 27017,
 
@@ -84,15 +86,14 @@ class Configuration(
       var shardsvr: Boolean? = null,
       var test: Boolean? = null
 
-) : ConfigBlock {
-    override fun toMap(mode: ConfigMode, includeAll: Boolean): Map<String, Any> {
-        val map = super.toMap(mode, includeAll)
-        return map.get("configuration") as Map<String, Any>
+) : Configuration {
+      override fun isAuthEnabled(): Boolean {
+        return auth ?: false || keyFile != null
     }
 }
 
-fun configuration(init: Configuration.() -> Unit): Configuration {
-    val configuration = Configuration()
+fun configuration(init: Configuration22.() -> Unit): Configuration22 {
+    val configuration = Configuration22()
     configuration.init()
     return configuration
 }

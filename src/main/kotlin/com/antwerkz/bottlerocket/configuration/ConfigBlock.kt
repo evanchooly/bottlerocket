@@ -24,7 +24,7 @@ public interface ConfigBlock {
         return toMap(mode, includeAll).toYaml();
     }
 
-    fun toProperties(mode: ConfigMode = ConfigMode.MONGOD, includeAll: Boolean = false): Map<String, Any> {
+    fun toProperties(mode: ConfigMode = ConfigMode.MONGOD, includeAll: Boolean = false): Map<String, String> {
         return toMap(mode, includeAll).flatten();
     }
 
@@ -84,28 +84,27 @@ public interface ConfigBlock {
     }
 }
 
-fun Map<String, Any>.flatten(): Map<String, Any> {
-    val map = linkedMapOf<String, Any>()
+fun Map<*, *>.flatten(prefix: String = ""): Map<String, String> {
+    val map = linkedMapOf<String, String>()
 
     entrySet().forEach {
         if (it.value is Map<*, *>) {
-            val flattened = (it.value as Map<String, Any>).flatten()
-            flattened.forEach { flat ->
-                map.put("${it.key}.${flat.key}", flat.value)
-            }
+            var subPrefix = if(prefix != "") prefix + "." + it.key else it.key.toString()
+            map.putAll(((it.value as Map<*, *>).flatten(subPrefix)));
         } else {
-            map.put(it.key, it.value)
+            var subPrefix = if(prefix != "") prefix + "." else prefix
+            map.put("${subPrefix}${it.key}", it.value.toString())
         }
     }
     return map
 }
 
-fun Map<String, Any>.toYaml(indent: String = ""): String {
+fun Map<*, *>.toYaml(indent: String = ""): String {
     val builder = StringBuilder()
 
     entrySet().forEach {
         if (it.value is Map<*, *>) {
-            val yaml = (it.value as Map<String, Any>).toYaml(indent + "  ")
+            val yaml = (it.value as Map<*, *>).toYaml(indent + "  ")
             if (yaml != "") {
                 builder.append("${indent}${it.key}:\n${yaml}");
             }

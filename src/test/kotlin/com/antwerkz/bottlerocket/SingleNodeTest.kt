@@ -1,6 +1,6 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration30
 import com.antwerkz.bottlerocket.configuration.mongo30.configuration
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -8,7 +8,6 @@ import java.io.File
 import java.lang
 
 class SingleNodeTest : BaseTest() {
-
     @Test(dataProvider = "versions")
     public fun singleNode(clusterVersion: String) {
         cluster = SingleNode(baseDir = File("build/rocket/singleNode").getAbsoluteFile(), version = clusterVersion)
@@ -23,11 +22,7 @@ class SingleNodeTest : BaseTest() {
     }
 
     @DataProvider(name = "versions")
-    fun configClusters(): Array<Array<String>> {
-        return arrayOf(
-//              arrayOf("3.0.5"),
-              arrayOf("2.6.10")//,
-//              arrayOf("2.4.14")
-        )
+    fun versions(): Array<Array<String>> {
+        return BaseTest.versions
     };
 }

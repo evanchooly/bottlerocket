@@ -1,7 +1,7 @@
 package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.ShardedClusterBuilder
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration30
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.mongodb.ServerAddress
@@ -92,7 +92,7 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
         start()
     }
 
-    override fun updateConfig(update: Configuration) {
+    override fun updateConfig(update: Configuration30) {
         shards.forEach {
             it.updateConfig(update)
         }

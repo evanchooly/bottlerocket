@@ -22,7 +22,7 @@ public class Mongos(manager: MongoManager, name: String, port: Int, baseDir: Fil
         if (process == null || !process?.isAlive()!!) {
             baseDir.mkdirs()
             val file = File(baseDir, "mongos.conf")
-            file.writeText(config.toYaml(mode = MONGOS))
+            manager.writeConfig(file, config, MONGOS)
 
             LOG.info("Starting mongos on port ${port}")
             var processResult = ProcessExecutor()

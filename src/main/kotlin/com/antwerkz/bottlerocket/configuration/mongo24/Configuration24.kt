@@ -2,17 +2,17 @@ package com.antwerkz.bottlerocket.configuration.mongo24
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.ConfigMode
+import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.types.DiagnosticLog
 import com.antwerkz.bottlerocket.configuration.types.IndexPrefetch
-import com.github.zafarkhaja.semver.Version
 
 /**
  * @see http://docs.mongodb.org/v2.4/reference/configuration-options/
  */
-class Configuration(
+class Configuration24(
       var bind_ip: String? = "127.0.0.1",
       var port: Int? = 27017,
-		
+
       var auth: Boolean? = null,
       var cpu: Boolean? = null,
       var dbpath: String? = null,
@@ -67,7 +67,7 @@ class Configuration(
       var replIndexPrefetch: IndexPrefetch? = null,
       var replSet: String? = null,
 
-        // master/slave options
+      // master/slave options
       var autoresync: Boolean? = null,
       var master: Boolean? = null,
       var only: String? = null,
@@ -85,10 +85,9 @@ class Configuration(
       var shardsvr: Boolean? = null,
       var test: Boolean? = null
 
-) : ConfigBlock {
-    override fun toMap(mode: ConfigMode, includeAll: Boolean): Map<String, Any> {
-        val map = super.toMap(mode, includeAll)
-        return map.get("configuration") as Map<String, Any>
+) : Configuration {
+    override fun isAuthEnabled(): Boolean {
+        return auth ?: false || keyFile != null
     }
 }
 
@@ -102,8 +101,8 @@ enum class Profile {
     }
 }
 
-fun configuration(init: Configuration.() -> Unit): Configuration {
-    val configuration = Configuration()
+fun configuration(init: Configuration24.() -> Unit): Configuration24 {
+    val configuration = Configuration24()
     configuration.init()
     return configuration
 }

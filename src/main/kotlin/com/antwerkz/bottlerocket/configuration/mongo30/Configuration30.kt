@@ -2,6 +2,7 @@ package com.antwerkz.bottlerocket.configuration.mongo30
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.ConfigMode
+import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.mongo30.blocks.AuditLog
 import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Net
 import com.antwerkz.bottlerocket.configuration.mongo30.blocks.OperationProfiling
@@ -12,12 +13,13 @@ import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Sharding
 import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Snmp
 import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Storage
 import com.antwerkz.bottlerocket.configuration.mongo30.blocks.SystemLog
+import com.antwerkz.bottlerocket.configuration.types.State
 import com.github.zafarkhaja.semver.Version
 
 /**
  * @see http://docs.mongodb.org/v3.0/reference/configuration-options/
  */
-class Configuration(
+class Configuration30(
       var auditLog: AuditLog = AuditLog(),
       var net: Net = Net(),
       var operationProfiling: OperationProfiling = OperationProfiling(),
@@ -28,30 +30,10 @@ class Configuration(
       var snmp: Snmp = Snmp(),
       var storage: Storage = Storage(),
       var systemLog: SystemLog = SystemLog()
-) : ConfigBlock {
-    override fun toMap(mode: ConfigMode, includeAll: Boolean): Map<String, Any> {
-        val map = super.toMap(mode, includeAll)
-        return map.get("configuration") as Map<String, Any>
+) : Configuration {
+    override fun isAuthEnabled(): Boolean {
+        return security.authorization == State.ENABLED || security.keyFile != null
     }
-    /*
-    @override
-    fun toYaml(version: Version, mode: ConfigMode, includeAll: Boolean): String {
-        return Configuration::class.properties
-              .map { (it.get(this) as ConfigBlock).toYaml(version, mode, includeAll) }
-              .filter { it != "" }
-              .toList()
-              .join("\n")
-    }
-
-    @override
-    fun toProperties(version: Version, mode: ConfigMode, includeAll: Boolean): Map<String, Any> {
-        var map = linkedMapOf<String, Any>()
-        Configuration::class.properties
-              .map { (it.get(this) as ConfigBlock).toProperties(version, mode, includeAll) }
-              .forEach { map.putAll(it) }
-        return map
-    }
-*/
 
     fun systemLog(init: SystemLog.() -> Unit) {
         systemLog = initConfigBlock(SystemLog(), init)
@@ -94,8 +76,8 @@ class Configuration(
     }
 }
 
-fun configuration(init: Configuration.() -> Unit): Configuration {
-    val configuration = Configuration()
+fun configuration(init: Configuration30.() -> Unit): Configuration30 {
+    val configuration = Configuration30()
     configuration.init()
     return configuration
 }

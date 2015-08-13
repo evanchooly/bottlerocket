@@ -13,7 +13,13 @@ import java.util.concurrent.TimeUnit
 
 open class BaseTest {
     companion object {
-        private val LOG = LoggerFactory.getLogger(javaClass<MongoClusterTest>())
+        private val LOG = LoggerFactory.getLogger(javaClass<BaseTest>())
+        val versions = arrayOf(
+              arrayOf("3.0.5"),
+              arrayOf("2.6.10"),
+              arrayOf("2.4.14"),
+              arrayOf("2.2.7")
+        )
     }
 
     var cluster: MongoCluster? = null

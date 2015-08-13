@@ -1,6 +1,6 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration30
 import com.antwerkz.bottlerocket.configuration.mongo30.configuration
 import com.antwerkz.bottlerocket.configuration.types.ClusterAuthMode
 import com.antwerkz.bottlerocket.configuration.types.Compressor
@@ -49,7 +49,7 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
     val pemFile: String = File(baseDir, "rocket.pem").getAbsolutePath()
 
     companion object {
-        val DEFAULT_CONFIG: Configuration =
+        val DEFAULT_CONFIG: Configuration30 =
               configuration {
                   net {
                       port = 27017
@@ -271,7 +271,7 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
         Files.setPosixFilePermissions(crt.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
     }
 
-    abstract fun updateConfig(update: Configuration)
+    abstract fun updateConfig(update: Configuration30)
 
     abstract fun allNodesActive()
 }

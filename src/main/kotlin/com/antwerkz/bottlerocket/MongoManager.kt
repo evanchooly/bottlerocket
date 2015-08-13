@@ -1,5 +1,8 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo30.configuration
+import com.antwerkz.bottlerocket.configuration.types.Destination.FILE
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.executable.Mongos
@@ -35,7 +38,6 @@ public class MongoManager(val versionManager: VersionManager) : VersionManager b
             val version = Version.valueOf(versionString)
             return MongoManager(BaseVersionManager.of(version));
         }
-
     }
 
     public val downloadPath: File
@@ -83,25 +85,6 @@ public class MongoManager(val versionManager: VersionManager) : VersionManager b
     public fun mongos(name: String, port: Int, baseDir: File, configServers: List<ConfigServer>): Mongos {
         return Mongos(this, name, port, baseDir, configServers)
     }
-
-/*
-    public fun useInstalled(): File {
-        val path = System.getenv("PATH").split(File.pathSeparator.toRegex()).toTypedArray()
-        val mongod = if (SystemUtils.IS_OS_WINDOWS) "mongod.exe" else "mongod"
-
-        var file = Stream.of<String>(*path)
-              .map<File>({ s -> File(s + "/" + mongod) })
-              .filter({ f -> f.exists() })
-              .findFirst()
-              .orElseThrow<RuntimeException>({ RuntimeException("mongod was not found on the PATH") })
-
-        if (Files.isSymbolicLink(file.toPath())) {
-            val link = Files.readSymbolicLink(file.toPath())
-            file = File(file.getParentFile(), link.toString())
-        }
-        return file.getParentFile().getParentFile()
-    }
-*/
 
     public fun extract(download: File): File {
         if (GzipUtils.isCompressedFilename(download.getName())) {
