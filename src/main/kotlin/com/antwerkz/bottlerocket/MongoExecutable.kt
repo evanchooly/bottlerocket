@@ -44,15 +44,6 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
         config = manager.initialConfig(baseDir, name, port)
     }
 
-    fun enableAuth(pemFile: String? = null) {
-        config.merge(config30 {
-            security {
-                authorization = if (pemFile == null) State.ENABLED else State.DISABLED
-                keyFile = pemFile
-            }
-        })
-    }
-
     fun isAuthEnabled(): Boolean {
         return config.isAuthEnabled()
     }
@@ -93,23 +84,6 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
             process?.destroy(true)
             File(baseDir, "mongod.lock").delete()
         }
-    }
-
-    fun shutdownWithDriver() {
-        if (isAlive()) {
-            LOG.info("Shutting down service on port ${port}")
-            try {
-                runCommand(Document("shutdown", 0))
-            } catch(ignored: MongoSocketReadTimeoutException) {
-            } catch(ignored: MongoSocketReadException) {
-                // this happens because we're shutting down the server and can't read the result of the command
-            }
-            process?.destroy(true)
-            waitForShutdown()
-            File(baseDir, "mongod.lock").delete()
-        }
-        client?.close()
-        client = null
     }
 
     private fun runCommand(command: String, authEnabled: Boolean = this.isAuthEnabled()) {
@@ -153,12 +127,6 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
         return client!!;
     }
 
-    fun addRootUser() {
-        runCommand(Document("createUser", MongoExecutable.SUPER_USER)
-              .append("pwd", MongoExecutable.SUPER_USER_PASSWORD)
-              .append("roles", listOf("root")))
-    }
-
     fun waitForStartUp() {
         Awaitility
               .await()
@@ -186,15 +154,6 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
             return true
         } catch(e: Throwable) {
             return false
-        }
-    }
-
-    fun runCommand(command: Document, readPreference: ReadPreference = ReadPreference.primary()): Document {
-        try {
-            return getClient().getDatabase("admin")
-                  .runCommand(command, readPreference)
-        } catch(e: Exception) {
-            throw RuntimeException("command failed", e)
         }
     }
 

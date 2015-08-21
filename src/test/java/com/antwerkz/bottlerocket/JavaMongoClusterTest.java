@@ -64,7 +64,7 @@ public class JavaMongoClusterTest {
             startCluster(cluster);
             testWrites(cluster);
 
-            MongoClient client = cluster.getClient();
+            MongoClient client = cluster.getAdminClient();
 
             final ArrayList<Document> list = client.getDatabase("config").getCollection("shards").find().into(new ArrayList<>());
             Assert.assertEquals(list.size(), 1, "Should find 1 shards");

@@ -18,8 +18,8 @@ open class BaseTest {
               arrayOf("3.1.6"),
               arrayOf("3.0.5"),
               arrayOf("2.6.10"),
-              arrayOf("2.4.14"),
-              arrayOf("2.2.7")
+              arrayOf("2.4.14")//,
+//              arrayOf("2.2.7")
         )
     }
 
@@ -39,7 +39,7 @@ open class BaseTest {
         val names = client?.listDatabaseNames()?.into(ArrayList<String>())
         Assert.assertFalse(names?.isEmpty() ?: true, names.toString())
 
-        val db = client?.getDatabase("bottlerocket")
+        val db = client?.getDatabase("rockettest")
         db?.drop()
         val collection = db?.getCollection("singlenode")
         val document = Document(hashMapOf("key" to "value"))
@@ -52,7 +52,9 @@ open class BaseTest {
         if (cluster != null && !cluster!!.isStarted() ) {
             cluster?.clean()
             if(enableAuth) {
-                cluster?.enableAuth()
+                cluster?.startWithAuth()
+                cluster?.addUser("rockettest", "rocket", "cluster",
+                      listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin")));
             } else {
                 cluster?.start()
             }
@@ -60,6 +62,7 @@ open class BaseTest {
             var allActive = false
             val start = LocalDateTime.now();
 
+            // TODO:  replace with awaitility
             val timeout = 30000
             while (!allActive && Duration.between(start, LocalDateTime.now()).toMillis() < timeout) {
                 try {
@@ -103,7 +106,7 @@ open class BaseTest {
     }
 
     fun validateShards() {
-        val list = cluster?.getClient()?.getDatabase("config")?.getCollection("shards")?.find()?.into(ArrayList<Document>())
+        val list = cluster?.getAdminClient()?.getDatabase("config")?.getCollection("shards")?.find()?.into(ArrayList<Document>())
         Assert.assertEquals(list?.size(), 1, "Should find 1 shards")
         for (document in list ?: listOf<Document>()) {
             when (document.getString("_id")) {

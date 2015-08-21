@@ -43,140 +43,13 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
                                    public val baseDir: File = DEFAULT_BASE_DIR) {
 
     val mongoManager: MongoManager = MongoManager.of(version)
-    private var client: MongoClient? = null;
     var adminAdded: Boolean = false
     val keyFile: String = File(baseDir, "rocket.key").getAbsolutePath()
     val pemFile: String = File(baseDir, "rocket.pem").getAbsolutePath()
 
-    companion object {
-        val DEFAULT_CONFIG: Configuration30 =
-              configuration {
-                  net {
-                      port = 27017
-                      bindIp = "127.0.0.1"
-                      maxIncomingConnections = 65536
-                      wireObjectCheck = true
-                      ipv6 = false
-                      http {
-                          enabled = false
-                          JSONPEnabled = false
-                          RESTInterfaceEnabled = false
-                      }
-                      ssl {
-                          @SuppressWarnings("deprecated")
-                          sslOnNormalPorts: Boolean = false
-                          mode: SslMode = SslMode.DISABLED
-                          allowConnectionsWithoutCertificates: Boolean = false
-                          allowInvalidCertificates: Boolean = false
-                          allowInvalidHostnames: Boolean = false
-                          FIPSMode: Boolean = false
-                      }
-                      unixDomainSocket {
-                          enabled = true
-                          pathPrefix = "/tmp"
-                          filePermissions = 700
-                      }
-                  }
-                  operationProfiling {
-                      slowOpThresholdMs = 100
-                      mode = ProfilingMode.OFF
-
-                  }
-                  processManagement {
-                      fork = false
-                      windowsService {
-                          serviceName = "MongoDB"
-                          displayName = "MongoDB"
-                          description = "MongoDB Server"
-                      }
-
-                  }
-                  replication {
-                      secondaryIndexPrefetch = IndexPrefetch.ALL
-                      localPingThresholdMs = 15
-                  }
-                  security {
-                      clusterAuthMode = ClusterAuthMode.KEY_FILE
-                      authorization = State.DISABLED
-                      javascriptEnabled = true
-                      sasl {
-                          serviceName = "mongodb"
-                      }
-                  }
-                  sharding {
-                      archiveMovedChunks = true
-                      autoSplit = true
-                      chunkSize = 64
-                  }
-                  snmp {
-                      subagent = true
-                      master = false
-                  }
-                  storage {
-                      dbPath = "/data/db"
-                      indexBuildRetry = true
-                      repairPath = dbPath + "_tmp"
-                      directoryPerDB = false
-                      syncPeriodSecs = 60
-                      engine: String = "mmapv1"
-                      journal {
-                          enabled = true
-                      }
-                      mmapv1 {
-                          preallocDataFiles = true
-                          nsSize = 16
-                          smallFiles = false
-                          journal {
-                              debugFlags = 0
-                              commitIntervalMs = 100
-                          }
-                          quota {
-                              enforced = false
-                              maxFilesPerDB = 8
-                          }
-                      }
-                      wiredTiger {
-                          collectionConfig {
-                              blockCompressor = Compressor.SNAPPY
-                          }
-                          engineConfig {
-                              statisticsLogDelaySecs = 0
-                              journalCompressor = Compressor.SNAPPY
-                              directoryForIndexes = false
-                          }
-                          indexConfig {
-                              prefixCompression = true
-                          }
-                      }
-                  }
-                  systemLog {
-                      verbosity = Verbosity.ZERO
-                      quiet = false
-                      traceAllExceptions = false
-                      syslogFacility = "user"
-                      logAppend = false
-                      logRotate = RotateBehavior.RENAME
-                      destination = Destination.STANDARD_OUT
-                      timeStampFormat = TimestampFormat.ISO8601_LOCAL
-                      component {
-                          accessControl { verbosity = Verbosity.ZERO }
-                          command { verbosity = Verbosity.ZERO }
-                          control { verbosity = Verbosity.ZERO }
-                          geo { verbosity = Verbosity.ZERO }
-                          index { verbosity = Verbosity.ZERO }
-                          network { verbosity = Verbosity.ZERO }
-                          query { verbosity = Verbosity.ZERO }
-                          replication { verbosity = Verbosity.ZERO }
-                          sharding { verbosity = Verbosity.ZERO }
-                          storage {
-                              verbosity = Verbosity.ZERO
-                              journal { verbosity = Verbosity.ZERO }
-                          }
-                          write { verbosity = Verbosity.ZERO }
-                      }
-                  }
-              }
-    }
+    private var adminClient: MongoClient? = null;
+    private var client: MongoClient? = null;
+    private var credentials = arrayListOf<MongoCredential>()
 
     init {
         baseDir.mkdirs()
@@ -191,11 +64,13 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
     abstract fun getServerAddressList(): List<ServerAddress>
 
     open fun shutdown() {
+        adminClient?.close()
+        adminClient = null;
         client?.close()
         client = null;
     }
 
-    open fun enableAuth() {
+    open fun startWithAuth() {
         generateKeyFile()
         generatePemFile()
     }
@@ -205,24 +80,29 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
         baseDir.deleteTree()
     }
 
+    fun getAdminClient(): MongoClient {
+        if (adminClient == null) {
+            val adminCredentials = arrayListOf<MongoCredential>()
+            if(isAuthEnabled()) {
+                adminCredentials.add(MongoCredential.createCredential(MongoExecutable.SUPER_USER, "admin",
+                      MongoExecutable.SUPER_USER_PASSWORD.toCharArray()))
+            }
+            val builder = MongoClientOptions.builder()
+                  .connectTimeout(3000)
+            adminClient = MongoClient(getServerAddressList(), adminCredentials, builder.build())
+        }
+
+        return adminClient!!;
+    }
+
     fun getClient(): MongoClient {
         if (client == null) {
             val builder = MongoClientOptions.builder()
                   .connectTimeout(3000)
-            client = MongoClient(getServerAddressList(), getCredentials(), builder.build())
+            client = MongoClient(getServerAddressList(), credentials, builder.build())
         }
 
         return client!!;
-    }
-
-    fun getCredentials(): List<MongoCredential> {
-        var credentials = if (isAuthEnabled()) {
-            arrayListOf(MongoCredential.createCredential(MongoExecutable.SUPER_USER, "admin",
-                  MongoExecutable.SUPER_USER_PASSWORD.toCharArray()))
-        } else {
-            listOf<MongoCredential>()
-        }
-        return credentials
     }
 
     fun generateKeyFile() {
@@ -274,6 +154,10 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
     abstract fun updateConfig(update: Configuration30)
 
     abstract fun allNodesActive()
+
+    open fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
+        credentials.add(MongoCredential.createCredential(userName, database, password.toCharArray()))
+    }
 }
 
 fun File.deleteTree() {

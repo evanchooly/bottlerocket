@@ -69,24 +69,24 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
     }
 
     override
-    fun enableAuth() {
-        super.enableAuth()
+    fun startWithAuth() {
+        super.startWithAuth()
         shutdown()
 
         start()
         val mongos = mongoses.first()
         if (!adminAdded) {
-            mongos.addRootUser()
+            mongoManager.addAdminUser(getAdminClient())
             adminAdded = true
         }
 
-        configServers.forEach { it.enableAuth(keyFile) }
+        configServers.forEach { mongoManager.enableAuth(it, keyFile) }
         shards.forEach { replSet ->
-            replSet.nodes.first().addRootUser()
-            replSet.nodes.forEach { it.enableAuth(keyFile) }
+            mongoManager.addAdminUser(replSet.getAdminClient())
+            replSet.nodes.forEach { mongoManager.enableAuth(it, keyFile) }
             replSet.adminAdded = true
         }
-        mongoses.forEach { it.enableAuth(keyFile) }
+        mongoses.forEach { mongoManager.enableAuth(it, keyFile) }
 
         shutdown()
         start()

@@ -79,10 +79,10 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
             if (nodes.isEmpty()) {
                 return null;
             }
-            nodes
-                  .filter({ it.isAlive() })
+            val client = getAdminClient()
+            nodes.filter({ it.isAlive() })
                   .forEach({ mongod ->
-                      val result = mongod.runCommand(Document("isMaster", null));
+                      val result = client.runCommand(Document("isMaster", null));
 
                       if (result.containsKey ("primary")) {
                           val host = result.getString("primary")
@@ -125,15 +125,15 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
     }
 
     override
-    fun enableAuth() {
-        super.enableAuth()
+    fun startWithAuth() {
+        super.startWithAuth()
         if (!isAuthEnabled()) {
             val mongod = nodes.first()
             mongod.start()
-            mongod.addRootUser()
+            mongoManager.addAdminUser(getAdminClient())
             mongod.shutdown()
 
-            nodes.forEach { it.enableAuth(keyFile) }
+            nodes.forEach { mongoManager.enableAuth(it, keyFile) }
             start()
         }
     }

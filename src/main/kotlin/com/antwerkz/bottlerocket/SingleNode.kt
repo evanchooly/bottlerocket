@@ -56,23 +56,28 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
     }
 
     override
-    fun enableAuth() {
-        super.enableAuth()
+    fun startWithAuth() {
         if (!isAuthEnabled()) {
             start()
             if (!adminAdded) {
-                mongod.addRootUser()
+                mongoManager.addAdminUser(getAdminClient())
                 adminAdded = true
             }
             shutdown()
             Thread.sleep(3000)
-            mongod.enableAuth()
-            start()
+            mongoManager.enableAuth(mongod);
+            super.startWithAuth()
         }
+        start()
     }
 
     override fun isAuthEnabled(): Boolean {
         return mongod.isAuthEnabled()
+    }
+
+    override fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
+        mongod.manager.addUser(getAdminClient(), database, userName, password, roles)
+        super.addUser(database, userName, password, roles)
     }
 
     override fun updateConfig(update: Configuration30) {
