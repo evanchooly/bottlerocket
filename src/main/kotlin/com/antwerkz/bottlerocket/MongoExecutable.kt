@@ -62,22 +62,12 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
     }
 
     fun shutdown() {
+        client?.close()
+        client = null
         shutdownWithShell()
     }
 
-    fun shutdownWithKill() {
-        client?.close()
-        client = null
-        if (isAlive()) {
-            LOG.info("Shutting down service on port ${port}")
-            process?.destroy(true)
-            File(baseDir, "mongod.lock").delete()
-        }
-    }
-
     fun shutdownWithShell() {
-        client?.close()
-        client = null
         if (isAlive()) {
             LOG.info("Shutting down service on port ${port}")
             runCommand("db.shutdownServer()")

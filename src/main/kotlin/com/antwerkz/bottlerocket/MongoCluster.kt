@@ -155,7 +155,9 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
 
     abstract fun allNodesActive()
 
-    open fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
+    abstract fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>)
+
+    open fun addCredential(database: String, userName: String, password: String) {
         credentials.add(MongoCredential.createCredential(userName, database, password.toCharArray()))
     }
 }

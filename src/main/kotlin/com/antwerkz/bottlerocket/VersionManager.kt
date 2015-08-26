@@ -42,7 +42,7 @@ abstract class BaseVersionManager(override val version: Version) : VersionManage
                 "3.0" -> VersionManager30(version);
                 "2.6" -> VersionManager26(version)
                 "2.4" -> VersionManager24(version)
-                "2.2" -> VersionManager22(version)
+//                "2.2" -> VersionManager22(version)
                 else -> throw RuntimeException(version.toString());
             }
         }
@@ -54,7 +54,7 @@ abstract class BaseVersionManager(override val version: Version) : VersionManage
 
     fun initiateReplicaSet(replicaSet: ReplicaSet) {
         val primary = replicaSet.nodes.first()
-        val results = replicaSet.getAdminClient()
+        val results = primary.getClient(replicaSet.isAuthEnabled())
               .runCommand(Document("replSetInitiate", Document("_id", replicaSet.name)
                     .append("members", listOf(Document("_id", 1)
                           .append("host", "localhost:${primary.port}"))
@@ -70,22 +70,22 @@ abstract class BaseVersionManager(override val version: Version) : VersionManage
         }
 
         initiateReplicaSet(replicaSet)
-        BaseVersionManager.LOG.info("replSet initiated.  waiting for primary.")
+        LOG.info("replSet initiated.  waiting for primary.")
         replicaSet.waitForPrimary()
-        BaseVersionManager.LOG.info("primary found.  adding other members.")
+        LOG.info("primary found.  adding other members.")
         addMembers(replicaSet)
 
         replicaSet.waitForPrimary()
         replicaSet.initialized = true;
 
-        BaseVersionManager.LOG.info("replica set ${replicaSet.name} started.")
+        LOG.info("replica set ${replicaSet.name} started.")
     }
 
     private fun addMembers(replicaSet: ReplicaSet) {
         val client = replicaSet.getAdminClient()
         val config = getReplicaSetConfig(client)
         config.set("version", config.getInteger("version") + 1)
-        val members: ArrayList<Document> = config.get("members") as ArrayList<Document>
+        val members = config.get("members") as ArrayList<Document>
         var id = members[0].getInteger("_id")
         replicaSet.nodes.asSequence().withIndex()
               .filter({ it.index > 0 })

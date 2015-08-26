@@ -50,17 +50,7 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
         for (node in nodes) {
             node.shutdown()
             mongoManager.setReplicaSetName(node, name);
-            val configuration = node.config
-            if (configuration is Configuration30) {
-                configuration.replication.replSetName = name
-            } else if (configuration is Configuration26) {
-                configuration.replication.replSetName = name
-            } else if (configuration is Configuration24) {
-                configuration.replSet = name
-            } else if (configuration is Configuration22) {
-                configuration.replSet = name
-            }
-            node.start()
+            node.start(name)
         }
 
         mongoManager.initialize(this)
@@ -76,13 +66,10 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
 
     fun getPrimary(): Mongod? {
         try {
-            if (nodes.isEmpty()) {
-                return null;
-            }
-            val client = getAdminClient()
             nodes.filter({ it.isAlive() })
                   .forEach({ mongod ->
-                      val result = client.runCommand(Document("isMaster", null));
+                      val mongoClient = mongod.getClient(isAuthEnabled())
+                      val result = mongoClient.runCommand(Document("isMaster", null));
 
                       if (result.containsKey ("primary")) {
                           val host = result.getString("primary")
@@ -126,16 +113,16 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
 
     override
     fun startWithAuth() {
-        super.startWithAuth()
         if (!isAuthEnabled()) {
-            val mongod = nodes.first()
-            mongod.start()
+            start()
             mongoManager.addAdminUser(getAdminClient())
-            mongod.shutdown()
+            shutdown()
+            Thread.sleep(3000)
 
             nodes.forEach { mongoManager.enableAuth(it, keyFile) }
-            start()
+            super.startWithAuth()
         }
+        start()
     }
 
     override fun updateConfig(update: Configuration30) {
@@ -160,6 +147,11 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
 
     override fun isAuthEnabled(): Boolean {
         return nodes.map { it.isAuthEnabled() }.fold(true) { r, t -> r && t }
+    }
+
+    override fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
+        mongoManager.addUser(getAdminClient(), database, userName, password, roles)
+        super.addCredential(database, userName, password)
     }
 
     fun replicaSetUrl(): String {

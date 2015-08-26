@@ -20,9 +20,4 @@ class ReplicaSetTest : BaseTest() {
         testClusterWrites()
         assertPrimary(30000)
     }
-
-    @DataProvider(name = "versions")
-    fun versions(): Array<Array<String>> {
-        return BaseTest.versions
-    };
 }

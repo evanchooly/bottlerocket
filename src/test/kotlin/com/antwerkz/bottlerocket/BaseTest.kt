@@ -6,6 +6,7 @@ import org.bson.Document
 import org.slf4j.LoggerFactory
 import org.testng.Assert
 import org.testng.annotations.AfterMethod
+import org.testng.annotations.DataProvider
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.ArrayList
@@ -31,6 +32,11 @@ open class BaseTest {
         LOG.info("Sleeping between tests")
         Thread.sleep(1000)
     }
+
+    @DataProvider(name = "versions")
+    fun versions(): Array<Array<String>> {
+        return BaseTest.versions
+    };
 
     fun testClusterWrites() {
         startCluster()

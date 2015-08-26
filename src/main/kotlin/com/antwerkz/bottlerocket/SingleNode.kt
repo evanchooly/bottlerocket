@@ -76,8 +76,8 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
     }
 
     override fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
-        mongod.manager.addUser(getAdminClient(), database, userName, password, roles)
-        super.addUser(database, userName, password, roles)
+        mongoManager.addUser(getAdminClient(), database, userName, password, roles)
+        super.addCredential(database, userName, password)
     }
 
     override fun updateConfig(update: Configuration30) {

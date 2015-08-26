@@ -26,7 +26,7 @@ class VersionManager26(version: Version) : BaseVersionManager(version) {
     override fun enableAuth(node: MongoExecutable, pemFile: String?) {
         node.config.merge(configuration {
             security {
-                authorization = if (pemFile == null) ENABLED else DISABLED
+                authorization = ENABLED
                 keyFile = pemFile
             }
         })

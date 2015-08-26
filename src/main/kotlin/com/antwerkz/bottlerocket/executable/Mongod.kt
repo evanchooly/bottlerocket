@@ -16,7 +16,7 @@ public class Mongod(manager: MongoManager, name: String,
 
     override val logger = LoggerFactory.getLogger("Mongod.${port}")
 
-    public fun start() {
+    public fun start(replicaSetName: String? = null) {
         if (process == null || !process?.isAlive()!!) {
             LOG.info("Starting mongod on port ${port}")
             baseDir.mkdirs()
@@ -25,6 +25,9 @@ public class Mongod(manager: MongoManager, name: String,
 
             val args = arrayListOf(manager.mongod,
                   "--config", configFile.getAbsolutePath())
+            if(replicaSetName != null) {
+                args.addAll(arrayOf("--replSet", replicaSetName))
+            }
             var processResult = ProcessExecutor()
                   .command(args)
                   .redirectOutput(FileOutputStream(File(baseDir, "mongod.out")))

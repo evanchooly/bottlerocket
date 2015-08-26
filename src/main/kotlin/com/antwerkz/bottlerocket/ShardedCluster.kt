@@ -206,6 +206,12 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
         return shards.map { it.isAuthEnabled() }.fold(true) { r, t -> r && t }
     }
 
+    override fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
+//        mongoManager.addUser(getAdminClient(), database, userName, password, roles)
+//        super.addCredential(database, userName, password, roles)
+        throw UnsupportedOperationException()
+    }
+
     override fun getServerAddressList(): List<ServerAddress> {
         return mongoses.map { it.getServerAddress() }
     }

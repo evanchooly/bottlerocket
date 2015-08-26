@@ -17,9 +17,4 @@ class SingleNodeTest : BaseTest() {
         testClusterAuth()
         testClusterWrites()
     }
-
-    @DataProvider(name = "versions")
-    fun versions(): Array<Array<String>> {
-        return BaseTest.versions
-    };
 }
