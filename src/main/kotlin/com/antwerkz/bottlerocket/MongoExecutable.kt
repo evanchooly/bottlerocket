@@ -1,15 +1,10 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.Configuration
-import com.antwerkz.bottlerocket.configuration.types.Destination
-import com.antwerkz.bottlerocket.configuration.types.State
 import com.jayway.awaitility.Awaitility
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
 import com.mongodb.MongoCredential
-import com.mongodb.MongoSocketReadException
-import com.mongodb.MongoSocketReadTimeoutException
 import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
 import org.bson.Document
@@ -20,11 +15,11 @@ import org.zeroturnaround.process.JavaProcess
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.util.concurrent.TimeUnit
-import com.antwerkz.bottlerocket.configuration.mongo24.Configuration24 as Config24
+import com.antwerkz.bottlerocket.configuration.mongo24.Configuration as Config24
 import com.antwerkz.bottlerocket.configuration.mongo24.configuration as config24
-import com.antwerkz.bottlerocket.configuration.mongo26.Configuration26 as Config26
+import com.antwerkz.bottlerocket.configuration.mongo26.Configuration as Config26
 import com.antwerkz.bottlerocket.configuration.mongo26.configuration as config26
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration30 as Config30
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration as Config30
 import com.antwerkz.bottlerocket.configuration.mongo30.configuration as config30
 
 public abstract class MongoExecutable(val manager: MongoManager, val name: String, val port: Int, val baseDir: File) {
@@ -62,15 +57,51 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
     }
 
     fun shutdown() {
+        shutdownWithDriver()
         client?.close()
         client = null
-        shutdownWithShell()
     }
 
     fun shutdownWithShell() {
         if (isAlive()) {
             LOG.info("Shutting down service on port ${port}")
-            runCommand("db.shutdownServer()")
+            try {
+                Awaitility
+                      .await()
+                      .atMost(10, TimeUnit.SECONDS)
+                      .until({ runCommand("db.shutdownServer()") })
+            } catch(e: Exception) {
+                e.printStackTrace()
+                LOG.warn("Timed out waiting for server to stop.  Forcibly killing instead.", e)
+            }
+
+            process?.destroy(true)
+            File(baseDir, "mongod.lock").delete()
+        }
+    }
+
+    fun shutdownWithDriver() {
+        if (isAlive()) {
+            LOG.info("Shutting down service on port ${port}")
+            try {
+                Awaitility
+                      .await()
+                      .atMost(10, TimeUnit.SECONDS)
+                      .until({ getClient(isAuthEnabled()).runCommand(Document("shutdown", 1)) })
+            } catch(e: Exception) {
+                LOG.warn("Timed out waiting for server to stop.  Forcibly killing instead.")
+            }
+
+            process?.destroy(true)
+            File(baseDir, "mongod.lock").delete()
+        }
+    }
+
+    fun shutdownWithKill() {
+        client?.close()
+        client = null
+        if (isAlive()) {
+            LOG.info("Shutting down service on port ${port}")
             process?.destroy(true)
             File(baseDir, "mongod.lock").delete()
         }

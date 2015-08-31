@@ -1,7 +1,7 @@
 package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.ShardedClusterBuilder
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration30
+import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.mongodb.ServerAddress
@@ -69,30 +69,18 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
     }
 
     override
-    fun startWithAuth() {
-        super.startWithAuth()
-        shutdown()
-
-        start()
-        val mongos = mongoses.first()
-        if (!adminAdded) {
-            mongoManager.addAdminUser(getAdminClient())
-            adminAdded = true
-        }
-
+    fun enableAuth() {
+        super.enableAuth()
         configServers.forEach { mongoManager.enableAuth(it, keyFile) }
         shards.forEach { replSet ->
-            mongoManager.addAdminUser(replSet.getAdminClient())
+//            mongoManager.addAdminUser(replSet.getAdminClient())
             replSet.nodes.forEach { mongoManager.enableAuth(it, keyFile) }
-            replSet.adminAdded = true
+//            replSet.adminAdded = true
         }
         mongoses.forEach { mongoManager.enableAuth(it, keyFile) }
-
-        shutdown()
-        start()
     }
 
-    override fun updateConfig(update: Configuration30) {
+    override fun updateConfig(update: Configuration) {
         shards.forEach {
             it.updateConfig(update)
         }
@@ -204,12 +192,6 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
 
     override fun isAuthEnabled(): Boolean {
         return shards.map { it.isAuthEnabled() }.fold(true) { r, t -> r && t }
-    }
-
-    override fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
-//        mongoManager.addUser(getAdminClient(), database, userName, password, roles)
-//        super.addCredential(database, userName, password, roles)
-        throw UnsupportedOperationException()
     }
 
     override fun getServerAddressList(): List<ServerAddress> {

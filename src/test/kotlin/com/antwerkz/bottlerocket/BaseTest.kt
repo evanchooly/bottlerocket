@@ -5,6 +5,7 @@ import com.jayway.awaitility.Awaitility
 import org.bson.Document
 import org.slf4j.LoggerFactory
 import org.testng.Assert
+import org.testng.SkipException
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.DataProvider
 import java.time.Duration
@@ -16,11 +17,9 @@ open class BaseTest {
     companion object {
         private val LOG = LoggerFactory.getLogger(javaClass<BaseTest>())
         val versions = arrayOf(
-              arrayOf("3.1.6"),
+//              arrayOf("3.1.6"),
               arrayOf("3.0.5"),
-              arrayOf("2.6.10"),
-              arrayOf("2.4.14")//,
-//              arrayOf("2.2.7")
+              arrayOf("2.6.10")
         )
     }
 
@@ -57,12 +56,12 @@ open class BaseTest {
     private fun startCluster(enableAuth: Boolean = false) {
         if (cluster != null && !cluster!!.isStarted() ) {
             cluster?.clean()
+            cluster?.start()
             if(enableAuth) {
-                cluster?.startWithAuth()
+                cluster?.enableAuth()
                 cluster?.addUser("rockettest", "rocket", "cluster",
                       listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin")));
-            } else {
-                cluster?.start()
+                cluster?.restart()
             }
 
             var allActive = false
@@ -122,4 +121,9 @@ open class BaseTest {
         }
     }
 
+    fun assume(condition: Boolean, message: String) {
+        if(!condition) {
+            throw SkipException(message);
+        }
+    }
 }

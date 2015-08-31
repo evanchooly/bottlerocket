@@ -1,12 +1,10 @@
-package com.antwerkz.bottlerocket.configuration.mongo30
+package com.antwerkz.bottlerocket.configuration.mongo32
 
 import com.antwerkz.bottlerocket.BaseVersionManager
 import com.antwerkz.bottlerocket.DatabaseRole
 import com.antwerkz.bottlerocket.MongoExecutable
 import com.antwerkz.bottlerocket.configuration.Configuration as BaseConfiguration
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration
 import com.antwerkz.bottlerocket.configuration.types.Destination.FILE
-import com.antwerkz.bottlerocket.configuration.types.State.DISABLED
 import com.antwerkz.bottlerocket.configuration.types.State.ENABLED
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.runCommand
@@ -15,7 +13,7 @@ import com.mongodb.MongoClient
 import org.bson.Document
 import java.io.File
 
-class VersionManager30(version: Version) : BaseVersionManager(version) {
+class VersionManager32(version: Version) : BaseVersionManager(version) {
     override fun setReplicaSetName(node: Mongod, name: String) {
         val configuration = node.config as Configuration
         configuration.replication.replSetName = name

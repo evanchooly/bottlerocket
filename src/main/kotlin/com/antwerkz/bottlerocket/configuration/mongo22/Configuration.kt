@@ -2,7 +2,8 @@ package com.antwerkz.bottlerocket.configuration.mongo22
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.ConfigMode
-import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.configuration.ConfigMode.MONGOD
+import com.antwerkz.bottlerocket.configuration.Mode
 import com.antwerkz.bottlerocket.configuration.mongo24.Profile
 import com.antwerkz.bottlerocket.configuration.types.DiagnosticLog
 import com.antwerkz.bottlerocket.configuration.types.IndexPrefetch
@@ -12,12 +13,13 @@ import com.github.zafarkhaja.semver.Version
  * @see http://docs.mongodb.org/v2.2/reference/configuration-options/
  */
 suppress("UNUSED_PARAMETER")
-class Configuration22(
+class Configuration(
       var bind_ip: String? = "127.0.0.1",
       var port: Int? = 27017,
 
       var auth: Boolean? = null,
       var cpu: Boolean? = null,
+      @Mode(MONGOD)
       var dbpath: String? = null,
       var diaglog: DiagnosticLog? = null,
       var directoryperdb: Boolean? = null,
@@ -34,6 +36,7 @@ class Configuration22(
       var nohttpinterface: Boolean? = null,
       var nojournal: Boolean? = null,
       var noMoveParanoia: Boolean? = null,
+      @Mode(MONGOD)
       var noprealloc: Boolean? = true,
       var noscripting: Boolean? = true,
       var notablescan: Boolean? = null,
@@ -49,6 +52,7 @@ class Configuration22(
       var repairpath: String? = null,
       var rest: Boolean? = null,
       var slowms: Int? = null,
+      @Mode(MONGOD)
       var smallfiles: Boolean? = true,
       var syncdelay: Int? = null,
       var sysinfo: Boolean? = null,
@@ -86,14 +90,14 @@ class Configuration22(
       var shardsvr: Boolean? = null,
       var test: Boolean? = null
 
-) : Configuration {
+) : com.antwerkz.bottlerocket.configuration.Configuration {
       override fun isAuthEnabled(): Boolean {
         return auth ?: false || keyFile != null
     }
 }
 
-fun configuration(init: Configuration22.() -> Unit): Configuration22 {
-    val configuration = Configuration22()
+fun configuration(init: Configuration.() -> Unit): Configuration {
+    val configuration = com.antwerkz.bottlerocket.configuration.mongo22.Configuration()
     configuration.init()
     return configuration
 }

@@ -1,10 +1,7 @@
 package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.ReplicaSetBuilder
-import com.antwerkz.bottlerocket.configuration.mongo22.Configuration22
-import com.antwerkz.bottlerocket.configuration.mongo24.Configuration24
-import com.antwerkz.bottlerocket.configuration.mongo26.Configuration26
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration30
+import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.jayway.awaitility.Awaitility
 import com.mongodb.ServerAddress
@@ -105,27 +102,19 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
 
     override
     fun shutdown() {
-        super.shutdown()
         val primary = getPrimary()
         nodes.filter { it != primary }.forEach { it.shutdown() }
         primary?.shutdown()
+        super.shutdown()
     }
 
     override
-    fun startWithAuth() {
-        if (!isAuthEnabled()) {
-            start()
-            mongoManager.addAdminUser(getAdminClient())
-            shutdown()
-            Thread.sleep(3000)
-
-            nodes.forEach { mongoManager.enableAuth(it, keyFile) }
-            super.startWithAuth()
-        }
-        start()
+    fun enableAuth() {
+        super.enableAuth()
+        nodes.forEach { mongoManager.enableAuth(it, keyFile) }
     }
 
-    override fun updateConfig(update: Configuration30) {
+    override fun updateConfig(update: Configuration) {
         nodes.forEach {
             it.config.merge(update)
         }
@@ -147,11 +136,6 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
 
     override fun isAuthEnabled(): Boolean {
         return nodes.map { it.isAuthEnabled() }.fold(true) { r, t -> r && t }
-    }
-
-    override fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
-        mongoManager.addUser(getAdminClient(), database, userName, password, roles)
-        super.addCredential(database, userName, password)
     }
 
     fun replicaSetUrl(): String {

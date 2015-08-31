@@ -1,17 +1,12 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.clusters.MongoClusterBuilder
 import com.antwerkz.bottlerocket.clusters.SingleNodeBuilder
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration30
+import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.Mongod
-import com.mongodb.MongoClient
-import com.mongodb.MongoClientOptions
 import com.mongodb.ServerAddress
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import kotlin.platform.platformStatic
 
 open
@@ -43,8 +38,8 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
 
     override
     fun shutdown() {
-        super.shutdown()
         mongod.shutdown()
+        super.shutdown()
     }
 
     override fun isStarted(): Boolean {
@@ -56,36 +51,21 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
     }
 
     override
-    fun startWithAuth() {
-        if (!isAuthEnabled()) {
-            start()
-            if (!adminAdded) {
-                mongoManager.addAdminUser(getAdminClient())
-                adminAdded = true
-            }
-            shutdown()
-            Thread.sleep(3000)
-            mongoManager.enableAuth(mongod);
-            super.startWithAuth()
-        }
-        start()
+    fun enableAuth() {
+        super.enableAuth()
+        mongoManager.enableAuth(mongod);
     }
 
     override fun isAuthEnabled(): Boolean {
         return mongod.isAuthEnabled()
     }
 
-    override fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
-        mongoManager.addUser(getAdminClient(), database, userName, password, roles)
-        super.addCredential(database, userName, password)
-    }
-
-    override fun updateConfig(update: Configuration30) {
+    override fun updateConfig(update: Configuration) {
         mongod.config.merge(update)
     }
 
     override fun allNodesActive() {
-        if(!mongod.tryConnect()) {
+        if (!mongod.tryConnect()) {
             throw IllegalStateException("mongod:${port} is not active");
         }
     }

@@ -1,25 +1,23 @@
-package com.antwerkz.bottlerocket.configuration.mongo30
+package com.antwerkz.bottlerocket.configuration.mongo26
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.ConfigMode
-import com.antwerkz.bottlerocket.configuration.Configuration
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.AuditLog
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Net
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.OperationProfiling
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.ProcessManagement
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Replication
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Security
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Sharding
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Snmp
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Storage
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.SystemLog
+import com.antwerkz.bottlerocket.configuration.mongo26.blocks.AuditLog
+import com.antwerkz.bottlerocket.configuration.mongo26.blocks.Net
+import com.antwerkz.bottlerocket.configuration.mongo26.blocks.OperationProfiling
+import com.antwerkz.bottlerocket.configuration.mongo26.blocks.ProcessManagement
+import com.antwerkz.bottlerocket.configuration.mongo26.blocks.Replication
+import com.antwerkz.bottlerocket.configuration.mongo26.blocks.Security
+import com.antwerkz.bottlerocket.configuration.mongo26.blocks.Sharding
+import com.antwerkz.bottlerocket.configuration.mongo26.blocks.Snmp
+import com.antwerkz.bottlerocket.configuration.mongo26.blocks.Storage
+import com.antwerkz.bottlerocket.configuration.mongo26.blocks.SystemLog
 import com.antwerkz.bottlerocket.configuration.types.State
-import com.github.zafarkhaja.semver.Version
 
 /**
- * @see http://docs.mongodb.org/v3.0/reference/configuration-options/
+ * @see http://docs.mongodb.org/v2.6/reference/configuration-options/
  */
-class Configuration30(
+class Configuration(
       var auditLog: AuditLog = AuditLog(),
       var net: Net = Net(),
       var operationProfiling: OperationProfiling = OperationProfiling(),
@@ -30,7 +28,7 @@ class Configuration30(
       var snmp: Snmp = Snmp(),
       var storage: Storage = Storage(),
       var systemLog: SystemLog = SystemLog()
-) : Configuration {
+) : com.antwerkz.bottlerocket.configuration.Configuration {
     override fun isAuthEnabled(): Boolean {
         return security.authorization == State.ENABLED || security.keyFile != null
     }
@@ -76,8 +74,8 @@ class Configuration30(
     }
 }
 
-fun configuration(init: Configuration30.() -> Unit): Configuration30 {
-    val configuration = Configuration30()
+fun configuration(init: Configuration.() -> Unit): Configuration {
+    val configuration = Configuration()
     configuration.init()
     return configuration
 }

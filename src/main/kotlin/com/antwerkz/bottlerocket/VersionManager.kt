@@ -6,6 +6,7 @@ import com.antwerkz.bottlerocket.configuration.mongo22.VersionManager22
 import com.antwerkz.bottlerocket.configuration.mongo24.VersionManager24
 import com.antwerkz.bottlerocket.configuration.mongo26.VersionManager26
 import com.antwerkz.bottlerocket.configuration.mongo30.VersionManager30
+import com.antwerkz.bottlerocket.configuration.mongo32.VersionManager32
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.github.zafarkhaja.semver.Version
 import com.mongodb.MongoClient
@@ -38,10 +39,11 @@ abstract class BaseVersionManager(override val version: Version) : VersionManage
         fun of(version: Version): VersionManager {
             val s = version.getNormalVersion()
             return when (s.substring(0, s.lastIndexOf('.'))) {
-                "3.1" -> VersionManager30(version);
+                "3.2" -> VersionManager32(version);
+                "3.1" -> VersionManager32(version);
                 "3.0" -> VersionManager30(version);
                 "2.6" -> VersionManager26(version)
-                "2.4" -> VersionManager24(version)
+//                "2.4" -> VersionManager24(version)
 //                "2.2" -> VersionManager22(version)
                 else -> throw RuntimeException(version.toString());
             }

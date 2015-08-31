@@ -1,9 +1,9 @@
 package com.antwerkz.bottlerocket.configuration
 
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration30 as Config30
-import com.antwerkz.bottlerocket.configuration.mongo26.Configuration26 as Config26
-import com.antwerkz.bottlerocket.configuration.mongo24.Configuration24 as Config24
-import com.antwerkz.bottlerocket.configuration.mongo22.Configuration22 as Config22
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration as Config30
+import com.antwerkz.bottlerocket.configuration.mongo26.Configuration as Config26
+import com.antwerkz.bottlerocket.configuration.mongo24.Configuration as Config24
+import com.antwerkz.bottlerocket.configuration.mongo22.Configuration as Config22
 import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Component
 import com.antwerkz.bottlerocket.configuration.mongo30.blocks.SystemLog
 import com.github.zafarkhaja.semver.Version

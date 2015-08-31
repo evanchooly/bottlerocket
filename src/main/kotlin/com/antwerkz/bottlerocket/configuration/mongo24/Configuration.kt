@@ -2,19 +2,21 @@ package com.antwerkz.bottlerocket.configuration.mongo24
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.ConfigMode
-import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.configuration.ConfigMode.MONGOD
+import com.antwerkz.bottlerocket.configuration.Mode
 import com.antwerkz.bottlerocket.configuration.types.DiagnosticLog
 import com.antwerkz.bottlerocket.configuration.types.IndexPrefetch
 
 /**
  * @see http://docs.mongodb.org/v2.4/reference/configuration-options/
  */
-class Configuration24(
+class Configuration(
       var bind_ip: String? = "127.0.0.1",
       var port: Int? = 27017,
 
       var auth: Boolean? = null,
       var cpu: Boolean? = null,
+      @Mode(MONGOD)
       var dbpath: String? = null,
       var diaglog: DiagnosticLog? = null,
       var directoryperdb: Boolean? = null,
@@ -31,6 +33,7 @@ class Configuration24(
       var nohttpinterface: Boolean? = null,
       var nojournal: Boolean? = null,
       var noobjcheck: Boolean? = null,
+      @Mode(MONGOD)
       var noprealloc: Boolean? = true,
       var noscripting: Boolean? = true,
       var notablescan: Boolean? = null,
@@ -47,6 +50,7 @@ class Configuration24(
       var rest: Boolean? = null,
       var saslServiceName: String? = null,
       var slowms: Int? = null,
+      @Mode(MONGOD)
       var smallfiles: Boolean? = true,
       var syncdelay: Int? = null,
       var sysinfo: Boolean? = null,
@@ -85,7 +89,7 @@ class Configuration24(
       var shardsvr: Boolean? = null,
       var test: Boolean? = null
 
-) : Configuration {
+) : com.antwerkz.bottlerocket.configuration.Configuration {
     override fun isAuthEnabled(): Boolean {
         return auth ?: false || keyFile != null
     }
@@ -101,8 +105,8 @@ enum class Profile {
     }
 }
 
-fun configuration(init: Configuration24.() -> Unit): Configuration24 {
-    val configuration = Configuration24()
+fun configuration(init: Configuration.() -> Unit): Configuration {
+    val configuration = Configuration()
     configuration.init()
     return configuration
 }

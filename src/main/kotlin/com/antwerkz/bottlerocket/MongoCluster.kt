@@ -1,6 +1,6 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration30
+import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.mongo30.configuration
 import com.antwerkz.bottlerocket.configuration.types.ClusterAuthMode
 import com.antwerkz.bottlerocket.configuration.types.Compressor
@@ -12,6 +12,7 @@ import com.antwerkz.bottlerocket.configuration.types.SslMode
 import com.antwerkz.bottlerocket.configuration.types.State
 import com.antwerkz.bottlerocket.configuration.types.TimestampFormat
 import com.antwerkz.bottlerocket.configuration.types.Verbosity
+import com.github.zafarkhaja.semver.Version
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
 import com.mongodb.MongoCredential
@@ -55,13 +56,16 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
         baseDir.mkdirs()
     }
 
-    abstract fun start();
-
-    abstract fun isAuthEnabled(): Boolean;
+    abstract fun getServerAddressList(): List<ServerAddress>
 
     abstract fun isStarted(): Boolean
 
-    abstract fun getServerAddressList(): List<ServerAddress>
+    fun restart() {
+        shutdown()
+        start()
+    }
+
+    abstract fun start();
 
     open fun shutdown() {
         adminClient?.close()
@@ -70,9 +74,18 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
         client = null;
     }
 
-    open fun startWithAuth() {
-        generateKeyFile()
-        generatePemFile()
+    abstract fun isAuthEnabled(): Boolean;
+
+    open fun enableAuth() {
+        if (!isAuthEnabled()) {
+            if (!adminAdded) {
+                mongoManager.addAdminUser(getAdminClient())
+                adminAdded = true
+            }
+
+            generateKeyFile()
+            generatePemFile()
+        }
     }
 
     open fun clean() {
@@ -151,14 +164,17 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
         Files.setPosixFilePermissions(crt.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
     }
 
-    abstract fun updateConfig(update: Configuration30)
+    abstract fun updateConfig(update: Configuration)
 
     abstract fun allNodesActive()
 
-    abstract fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>)
-
-    open fun addCredential(database: String, userName: String, password: String) {
+    fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
+        mongoManager.addUser(getAdminClient(), database, userName, password, roles)
         credentials.add(MongoCredential.createCredential(userName, database, password.toCharArray()))
+    }
+
+    fun versionAtLeast(minVersion: Version): Boolean {
+        return Version.valueOf(version).greaterThanOrEqualTo(minVersion);
     }
 }
 

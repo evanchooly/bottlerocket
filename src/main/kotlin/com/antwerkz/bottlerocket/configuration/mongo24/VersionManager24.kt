@@ -1,10 +1,11 @@
 package com.antwerkz.bottlerocket.configuration.mongo24
 
+import com.antwerkz.bottlerocket.configuration.Configuration as BaseConfiguration
 import com.antwerkz.bottlerocket.BaseVersionManager
 import com.antwerkz.bottlerocket.DatabaseRole
 import com.antwerkz.bottlerocket.MongoExecutable
 import com.antwerkz.bottlerocket.configuration.ConfigMode
-import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo24.Configuration
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.github.zafarkhaja.semver.Version
 import com.mongodb.MongoClient
@@ -26,10 +27,13 @@ class VersionManager24(version: Version) : BaseVersionManager(version) {
     }
 
     override fun enableAuth(node: MongoExecutable, pemFile: String?) {
+        throw UnsupportedOperationException("Version ${version} authentication is not supported at this time");
+/*
         node.config.merge(configuration {
             auth = true
             keyFile = pemFile
         })
+*/
     }
 
     override fun addAdminUser(client: MongoClient) {
@@ -64,11 +68,11 @@ class VersionManager24(version: Version) : BaseVersionManager(version) {
           .first()
 
     override fun setReplicaSetName(node: Mongod, name: String) {
-        val configuration = node.config as Configuration24
+        val configuration = node.config as Configuration
         configuration.replSet = name
     }
 
-    override fun writeConfig(configFile: File, config: Configuration, mode: ConfigMode) {
+    override fun writeConfig(configFile: File, config: BaseConfiguration, mode: ConfigMode) {
         val fileWriter = configFile.writer()
         config.toProperties(mode).entrySet().forEach {
             fileWriter.write("${it.key} = ${it.value}\n")
