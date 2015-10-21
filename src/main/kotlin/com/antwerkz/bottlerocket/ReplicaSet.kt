@@ -9,23 +9,22 @@ import org.bson.Document
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.concurrent.TimeUnit
-import kotlin.platform.platformStatic
 
-class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version: String = DEFAULT_VERSION, baseDir: File = DEFAULT_BASE_DIR,
-                 val size: Int = 3) : MongoCluster(name, port, version, baseDir) {
+class ReplicaSet public @JvmOverloads constructor(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version: String = DEFAULT_VERSION,
+                 baseDir: File = DEFAULT_BASE_DIR, val size: Int = 3) : MongoCluster(name, port, version, baseDir) {
 
     public val nodes: MutableList<Mongod> = arrayListOf()
-    private var nodeMap: Map<Int, Mongod> = hashMapOf()
+    private var nodeMap = hashMapOf<Int, Mongod>()
     public var initialized: Boolean = false;
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(javaClass<ReplicaSet>())
+        private val LOG = LoggerFactory.getLogger(ReplicaSet::class.java)
 
-        platformStatic fun builder(): ReplicaSetBuilder {
+        @JvmStatic fun builder(): ReplicaSetBuilder {
             return ReplicaSetBuilder()
         }
 
-        platformStatic fun build(init: ReplicaSetBuilder.() -> Unit = {}): ReplicaSet {
+        @JvmStatic fun build(init: ReplicaSetBuilder.() -> Unit = {}): ReplicaSet {
             val builder = ReplicaSetBuilder()
             builder.init()
             return builder.build()
@@ -34,12 +33,12 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
 
     init {
         var basePort = this.port
-        for ( i in 0..size - 1) {
+        for (i in 0..size - 1 /*step 3*/) {
             val nodeName = "${name}-${basePort}"
             nodes.add(mongoManager.mongod(nodeName, basePort, File(baseDir, nodeName)))
             basePort += 1;
         }
-        nodeMap = nodes.toMap { it.port }
+        nodeMap.putAll(nodes.toMap { it.port })
     }
 
     override
@@ -59,6 +58,7 @@ class ReplicaSet(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version:
 
     fun addNode(node: Mongod) {
         nodes.add(node);
+        nodeMap.put(node.port, node)
     }
 
     fun getPrimary(): Mongod? {

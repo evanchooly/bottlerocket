@@ -1,17 +1,6 @@
 package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.configuration.Configuration
-import com.antwerkz.bottlerocket.configuration.mongo30.configuration
-import com.antwerkz.bottlerocket.configuration.types.ClusterAuthMode
-import com.antwerkz.bottlerocket.configuration.types.Compressor
-import com.antwerkz.bottlerocket.configuration.types.Destination
-import com.antwerkz.bottlerocket.configuration.types.IndexPrefetch
-import com.antwerkz.bottlerocket.configuration.types.ProfilingMode
-import com.antwerkz.bottlerocket.configuration.types.RotateBehavior
-import com.antwerkz.bottlerocket.configuration.types.SslMode
-import com.antwerkz.bottlerocket.configuration.types.State
-import com.antwerkz.bottlerocket.configuration.types.TimestampFormat
-import com.antwerkz.bottlerocket.configuration.types.Verbosity
 import com.github.zafarkhaja.semver.Version
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
@@ -31,13 +20,6 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.PosixFilePermission
 import java.util.EnumSet
 
-val TEMP_DIR = if (File("/tmp").exists()) "/tmp" else System.getProperty("java.io.tmpdir")
-
-val DEFAULT_NAME = "rocket"
-val DEFAULT_PORT = 30000
-val DEFAULT_VERSION = "3.0.5"
-val DEFAULT_BASE_DIR = File("${TEMP_DIR}/${DEFAULT_NAME}")
-
 public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
                                    public val port: Int = DEFAULT_PORT,
                                    val version: String = DEFAULT_VERSION,
@@ -45,8 +27,8 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
 
     val mongoManager: MongoManager = MongoManager.of(version)
     var adminAdded: Boolean = false
-    val keyFile: String = File(baseDir, "rocket.key").getAbsolutePath()
-    val pemFile: String = File(baseDir, "rocket.pem").getAbsolutePath()
+    val keyFile: String = File(baseDir, "rocket.key").absolutePath
+    val pemFile: String = File(baseDir, "rocket.pem").absolutePath
 
     private var adminClient: MongoClient? = null;
     private var client: MongoClient? = null;
@@ -121,7 +103,7 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
     fun generateKeyFile() {
         val key = File(keyFile)
         if (!key.exists()) {
-            key.getParentFile().mkdirs()
+            key.parentFile.mkdirs()
             val stream = FileOutputStream(key)
             try {
                 ProcessExecutor()
@@ -141,20 +123,20 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
         val key = File(baseDir, "rocket-pem.key")
         val crt = File(baseDir, "rocket-pem.crt")
         if (!pem.exists()) {
-            var openssl = "openssl req -batch -newkey rsa:2048 -new -x509 -days 365 -nodes -out ${crt.getAbsolutePath()} -keyout ${key
-                  .getAbsolutePath()}";
-            var cat = "cat ${key.getAbsolutePath()} ${crt.getAbsolutePath()}"
-            pem.getParentFile().mkdirs()
-            val stream = FileOutputStream(pem.getAbsolutePath())
+            var openssl = "openssl req -batch -newkey rsa:2048 -new -x509 -days 365 -nodes -out ${crt.absolutePath} -keyout ${key
+                  .absolutePath}";
+            var cat = "cat ${key.absolutePath} ${crt.absolutePath}"
+            pem.parentFile.mkdirs()
+            val stream = FileOutputStream(pem.absolutePath)
             ProcessExecutor()
                   .directory(baseDir)
-                  .command(openssl.splitBy(" "))
-                  .redirectOutputAsDebug()
+                  .command(openssl.split(" "))
+                  .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asDebug())
                   .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
                   .execute()
             ProcessExecutor()
                   .directory(baseDir)
-                  .command(cat.splitBy(" "))
+                  .command(cat.split(" "))
                   .redirectOutput(stream)
                   .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
                   .execute()
@@ -180,7 +162,7 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
 
 fun File.deleteTree() {
     if (exists()) {
-        if (isDirectory()) {
+        if (isDirectory) {
             Files.walkFileTree(toPath(), object : SimpleFileVisitor<Path>() {
                 override public fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
                     Files.delete(file);

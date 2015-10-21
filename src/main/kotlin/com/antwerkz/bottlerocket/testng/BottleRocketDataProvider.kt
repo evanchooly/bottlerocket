@@ -13,7 +13,7 @@ public class BottleRocketDataProvider {
         val CLUSTER_TYPES = "rocket.cluster.types"
     }
 
-    DataProvider(name = "bottlerocket")
+    @DataProvider(name = "bottlerocket")
     fun cluster(): Array<Array<MongoCluster>> {
         val clusterVersion = System.getProperty(CLUSTER_VERSIONS, DEFAULT_VERSION)
         val type = System.getProperty(CLUSTER_TYPES, "single")

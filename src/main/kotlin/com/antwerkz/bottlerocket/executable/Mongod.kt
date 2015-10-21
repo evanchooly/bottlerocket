@@ -11,20 +11,20 @@ import java.io.FileOutputStream
 public class Mongod(manager: MongoManager, name: String,
                     port: Int, baseDir: File) : MongoExecutable(manager, name, port, baseDir) {
     companion object {
-        private val LOG = LoggerFactory.getLogger(javaClass<Mongod>())
+        private val LOG = LoggerFactory.getLogger(Mongod::class.java)
     }
 
     override val logger = LoggerFactory.getLogger("Mongod.${port}")
 
     public fun start(replicaSetName: String? = null) {
-        if (process == null || !process?.isAlive()!!) {
+        if (process == null || !process?.isAlive!!) {
             LOG.info("Starting mongod on port ${port}")
             baseDir.mkdirs()
             val configFile = File(baseDir, "mongod.conf")
             manager.writeConfig(configFile, config)
 
             val args = arrayListOf(manager.mongod,
-                  "--config", configFile.getAbsolutePath())
+                  "--config", configFile.absolutePath)
             if(replicaSetName != null) {
                 args.addAll(arrayOf("--replSet", replicaSetName))
             }
@@ -34,7 +34,7 @@ public class Mongod(manager: MongoManager, name: String,
                   .redirectError(FileOutputStream(File(baseDir, "mongod.err")))
                   .destroyOnExit()
                   .start()
-            process = Processes.newJavaProcess(processResult?.process())
+            process = Processes.newJavaProcess(processResult?.process)
 
             waitForStartUp()
         }

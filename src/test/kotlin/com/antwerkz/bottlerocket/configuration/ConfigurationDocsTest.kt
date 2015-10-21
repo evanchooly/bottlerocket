@@ -1,23 +1,16 @@
 package com.antwerkz.bottlerocket.configuration
 
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration as Config30
-import com.antwerkz.bottlerocket.configuration.mongo26.Configuration as Config26
-import com.antwerkz.bottlerocket.configuration.mongo24.Configuration as Config24
-import com.antwerkz.bottlerocket.configuration.mongo22.Configuration as Config22
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Component
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.SystemLog
-import com.github.zafarkhaja.semver.Version
 import org.apache.http.client.fluent.Request
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import org.slf4j.LoggerFactory
 import org.testng.Assert
-import org.testng.annotations.BeforeTest
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.io.File
 import java.net.URI
-import java.util.*
+import com.antwerkz.bottlerocket.configuration.mongo22.Configuration as Config22
+import com.antwerkz.bottlerocket.configuration.mongo24.Configuration as Config24
+import com.antwerkz.bottlerocket.configuration.mongo26.Configuration as Config26
+import com.antwerkz.bottlerocket.configuration.mongo30.Configuration as Config30
 
 public class ConfigurationDocsTest {
     private var elements: MutableList<String> = arrayListOf()

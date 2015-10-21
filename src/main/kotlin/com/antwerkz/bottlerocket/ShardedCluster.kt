@@ -15,27 +15,26 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
-import kotlin.platform.platformStatic
 
 class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
                      version: String = DEFAULT_VERSION, baseDir: File = DEFAULT_BASE_DIR,
                      var shardCount: Int = 1, var mongosCount: Int = 1, var configSvrCount: Int = 1) :
       MongoCluster(name, port, version, baseDir) {
 
-    var shards: MutableList<ReplicaSet> = arrayListOf()
-    var mongoses: MutableList<Mongos> = arrayListOf()
-    var configServers: MutableList<ConfigServer> = arrayListOf()
+    var shards = arrayListOf<ReplicaSet>()
+    var mongoses = arrayListOf<Mongos>()
+    var configServers = arrayListOf<ConfigServer>()
     var nextPort = port
     var initialized = false
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(javaClass<MongoExecutable>())
+        private val LOG = LoggerFactory.getLogger(MongoExecutable::class.java)
 
-        platformStatic fun builder(): ShardedClusterBuilder {
+        @JvmStatic fun builder(): ShardedClusterBuilder {
             return ShardedClusterBuilder()
         }
 
-        platformStatic fun build(init: ShardedClusterBuilder.() -> Unit = {}): ShardedCluster {
+        @JvmStatic fun build(init: ShardedClusterBuilder.() -> Unit = {}): ShardedCluster {
             val builder = ShardedClusterBuilder()
             builder.init()
             return builder.build()
@@ -116,7 +115,7 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
 
         val results = runCommand(mongoses.first(), "sh.addShard(\"${replSetUrl}\");")
 
-        if ( results.getInt32("ok").getValue() != 1) {
+        if ( results.getInt32("ok").value != 1) {
             throw RuntimeException("Failed to add ${replicaSet.name} to cluster:  ${results}")
         }
     }

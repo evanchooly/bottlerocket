@@ -7,7 +7,7 @@ import com.antwerkz.bottlerocket.configuration.types.Verbosity;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import static com.antwerkz.bottlerocket.configuration.mongo30.Mongo30Package.configuration;
+import static com.antwerkz.bottlerocket.configuration.mongo30.ConfigurationKt.configuration;
 import static com.antwerkz.bottlerocket.configuration.ConfigurationTest.COMPLEX_CONFIG;
 
 public class JavaConfigurationTest {

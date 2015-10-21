@@ -16,6 +16,7 @@ class ShardedTest : BaseTest() {
 
     @Test(dataProvider = "versions")
     fun shardedAuth(clusterVersion: String) {
+
         cluster = ShardedCluster(baseDir = File("build/rocket/shardedAuth"), version = clusterVersion)
         assume(cluster!!.versionAtLeast(Version.valueOf("2.6.0")), "Authentication not currently supported prior to version 2.6")
         testClusterAuth()

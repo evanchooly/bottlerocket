@@ -2,7 +2,6 @@ package com.antwerkz.bottlerocket.executable
 
 import com.antwerkz.bottlerocket.MongoExecutable
 import com.antwerkz.bottlerocket.MongoManager
-import com.antwerkz.bottlerocket.configuration.ConfigMode.MONGOS
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.process.Processes
@@ -12,13 +11,13 @@ import java.io.FileOutputStream
 public class ConfigServer(manager: MongoManager, name: String,
                           port: Int, baseDir: File) : MongoExecutable(manager, name, port, baseDir) {
     companion object {
-        private val LOG = LoggerFactory.getLogger(javaClass<ConfigServer>())
+        private val LOG = LoggerFactory.getLogger(ConfigServer::class.java)
     }
 
     override val logger = LoggerFactory.getLogger("ConfigSvr.${port}")
 
     fun start() {
-        if (process == null || !process?.isAlive()!!) {
+        if (process == null || !process?.isAlive!!) {
             baseDir.mkdirs()
             val file = File(baseDir, "configsvr.conf")
 
@@ -28,14 +27,14 @@ public class ConfigServer(manager: MongoManager, name: String,
             var processResult = ProcessExecutor()
                   .command(manager.mongod,
                         "--configsvr",
-                        "--config", file.getAbsolutePath())
+                        "--config", file.absolutePath)
                   .redirectOutput(FileOutputStream(File(baseDir, "configsvr.out")))
                   .redirectError(FileOutputStream(File(baseDir, "configsvr.err")))
                   //   .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
                   //   .redirectError(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
                   .destroyOnExit()
                   .start()
-            process = Processes.newJavaProcess(processResult?.process())
+            process = Processes.newJavaProcess(processResult?.process)
 
             waitForStartUp()
         }

@@ -1,7 +1,5 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.mongo30.configuration
-import com.jayway.awaitility.Awaitility
 import org.bson.Document
 import org.slf4j.LoggerFactory
 import org.testng.Assert
@@ -11,11 +9,10 @@ import org.testng.annotations.DataProvider
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.ArrayList
-import java.util.concurrent.TimeUnit
 
 open class BaseTest {
     companion object {
-        private val LOG = LoggerFactory.getLogger(javaClass<BaseTest>())
+        private val LOG = LoggerFactory.getLogger(BaseTest::class.java)
         val versions = arrayOf(
 //              arrayOf("3.1.6"),
               arrayOf("3.0.5"),
@@ -25,7 +22,7 @@ open class BaseTest {
 
     var cluster: MongoCluster? = null
 
-    AfterMethod
+    @AfterMethod
     fun sleep() {
         cluster?.shutdown()
         LOG.info("Sleeping between tests")
@@ -37,6 +34,7 @@ open class BaseTest {
         return BaseTest.versions
     };
 
+    @Suppress("UNCHECKED")
     fun testClusterWrites() {
         startCluster()
 
@@ -47,7 +45,7 @@ open class BaseTest {
         val db = client?.getDatabase("rockettest")
         db?.drop()
         val collection = db?.getCollection("singlenode")
-        val document = Document(hashMapOf("key" to "value"))
+        val document = Document(hashMapOf<String, Any>("key" to "value"))
         collection?.insertOne(document)
 
         Assert.assertEquals(collection?.find()?.first(), document)

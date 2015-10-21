@@ -1,8 +1,5 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.Configuration
-import com.antwerkz.bottlerocket.configuration.mongo30.configuration
-import com.antwerkz.bottlerocket.configuration.types.Destination.FILE
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.executable.Mongos
@@ -22,19 +19,17 @@ import java.io.IOException
 import java.lang.String.format
 import java.net.URL
 import java.nio.file.Files
-import java.util.stream.Stream
 import java.util.zip.GZIPInputStream
-import kotlin.platform.platformStatic
 
 public class MongoManager(val versionManager: VersionManager) : VersionManager by versionManager {
-    private val LOG = LoggerFactory.getLogger(javaClass<MongoManager>())
+    private val LOG = LoggerFactory.getLogger(MongoManager::class.java)
 
     public companion object {
         public var macDownload: String = "https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-%s.tgz"
         public var linuxDownload: String = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-%s.tgz"
         public var windowsDownload: String = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-%s.zip"
 
-        platformStatic fun of(versionString: String): MongoManager {
+        @JvmStatic fun of(versionString: String): MongoManager {
             val version = Version.valueOf(versionString)
             return MongoManager(BaseVersionManager.of(version));
         }
@@ -87,12 +82,12 @@ public class MongoManager(val versionManager: VersionManager) : VersionManager b
     }
 
     public fun extract(download: File): File {
-        if (GzipUtils.isCompressedFilename(download.getName())) {
+        if (GzipUtils.isCompressedFilename(download.name)) {
             TarArchiveInputStream(GZIPInputStream(FileInputStream(download))).use { inputStream ->
                 extract(inputStream)
             }
-            return File(downloadPath, download.getName().substring(0, download.getName().length() - 4))
-        } else if (download.getName().endsWith(".zip")) {
+            return File(downloadPath, download.name.substring(0, download.name.length() - 4))
+        } else if (download.name.endsWith(".zip")) {
             try {
                 ZipArchiveInputStream(FileInputStream(download)).use { inputStream ->
                     extract(inputStream)
@@ -102,20 +97,20 @@ public class MongoManager(val versionManager: VersionManager) : VersionManager b
             }
 
 
-            return File(downloadPath, download.getName().substring(0, download.getName().length() - 4))
+            return File(downloadPath, download.name.substring(0, download.name.length() - 4))
         }
         throw RuntimeException("Unsupported file type: ${download}")
     }
 
     private fun extract(inputStream: ArchiveInputStream) {
-        var entry: ArchiveEntry? = inputStream.getNextEntry()
+        var entry: ArchiveEntry? = inputStream.nextEntry
         while (entry != null) {
-            val file = File(downloadPath, entry.getName())
-            file.getParentFile().mkdirs()
+            val file = File(downloadPath, entry.name)
+            file.parentFile.mkdirs()
             val out = FileOutputStream(file)
             IOUtils.copy(inputStream, out)
             out.close()
-            entry = inputStream.getNextEntry()
+            entry = inputStream.nextEntry
         }
     }
 
@@ -144,13 +139,13 @@ public class MongoManager(val versionManager: VersionManager) : VersionManager b
     fun downloadArchive(path: String): File {
         try {
             val url = URL(path)
-            var downloadName = url.getPath()
+            var downloadName = url.path
             downloadName = downloadName.substring(downloadName.lastIndexOf('/') + 1)
             val download = File(downloadPath, downloadName)
             if (!download.exists()) {
                 LOG.info("${download    } does not exist.  Downloading binaries from mongodb.org")
-                download.getParentFile().mkdirs()
-                url.openConnection().getInputStream().use { stream -> Files.copy(stream, download.toPath()) }
+                download.parentFile.mkdirs()
+                url.openConnection().inputStream.use { stream -> Files.copy(stream, download.toPath()) }
             }
             return download
 

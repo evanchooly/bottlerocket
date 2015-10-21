@@ -12,7 +12,7 @@ import com.github.zafarkhaja.semver.Version
 /**
  * @see http://docs.mongodb.org/v2.2/reference/configuration-options/
  */
-suppress("UNUSED_PARAMETER")
+@Suppress("UNUSED_PARAMETER")
 class Configuration(
       var bind_ip: String? = "127.0.0.1",
       var port: Int? = 27017,

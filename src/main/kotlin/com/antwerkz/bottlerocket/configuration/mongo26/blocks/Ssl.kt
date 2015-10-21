@@ -4,7 +4,7 @@ import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.types.SslMode
 
 class Ssl(
-      deprecated("Deprecated since version 2.6.")
+      @Deprecated("Deprecated since version 2.6.")
       var sslOnNormalPorts: Boolean? = null,
       var mode: SslMode? = null,
       var PEMKeyFile: String? = null,

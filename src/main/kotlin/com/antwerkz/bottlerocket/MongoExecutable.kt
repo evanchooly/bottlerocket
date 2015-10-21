@@ -32,7 +32,7 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
     companion object {
         val SUPER_USER = "superuser"
         val SUPER_USER_PASSWORD = "rocketman"
-        private val LOG = LoggerFactory.getLogger(javaClass<MongoExecutable>())
+        private val LOG = LoggerFactory.getLogger(MongoExecutable::class.java)
     }
 
     init {

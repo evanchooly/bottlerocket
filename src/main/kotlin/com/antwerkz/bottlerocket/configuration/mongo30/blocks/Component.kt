@@ -1,22 +1,19 @@
 package com.antwerkz.bottlerocket.configuration.mongo30.blocks
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
-import com.antwerkz.bottlerocket.configuration.ConfigMode
-import com.github.zafarkhaja.semver.Version
 
-class Component(
-      var accessControl: LogComponent.AccessControl = LogComponent.AccessControl(),
-      var command: LogComponent.Command = LogComponent.Command(),
-      var control: LogComponent.Control = LogComponent.Control(),
-      var geo: LogComponent.Geo = LogComponent.Geo(),
-      var index: LogComponent.Index = LogComponent.Index(),
-      var network: LogComponent.Network = LogComponent.Network(),
-      var query: LogComponent.Query = LogComponent.Query(),
-      var replication: LogComponent.Replication = LogComponent.Replication(),
-      var sharding: LogComponent.Sharding = LogComponent.Sharding(),
-      var storage: LogComponent.Storage = LogComponent.Storage(),
-      var write: LogComponent.Write = LogComponent.Write()
-) : ConfigBlock {
+class Component() : ConfigBlock {
+    var accessControl: LogComponent.AccessControl = LogComponent.AccessControl()
+    var command: LogComponent.Command = LogComponent.Command()
+    var control: LogComponent.Control = LogComponent.Control()
+    var geo: LogComponent.Geo = LogComponent.Geo()
+    var index: LogComponent.Index = LogComponent.Index()
+    var network: LogComponent.Network = LogComponent.Network()
+    var query: LogComponent.Query = LogComponent.Query()
+    var replication: LogComponent.Replication = LogComponent.Replication()
+    var sharding: LogComponent.Sharding = LogComponent.Sharding()
+    var storage: LogComponent.Storage = LogComponent.Storage()
+    var write: LogComponent.Write = LogComponent.Write()
     fun accessControl(init: LogComponent.AccessControl.() -> Unit) {
         accessControl = initConfigBlock(LogComponent.AccessControl(), init)
     }

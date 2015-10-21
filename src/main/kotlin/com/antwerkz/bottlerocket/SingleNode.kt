@@ -7,20 +7,19 @@ import com.mongodb.ServerAddress
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
-import kotlin.platform.platformStatic
 
 open
 public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version: String = DEFAULT_VERSION,
                         baseDir: File = DEFAULT_BASE_DIR) : MongoCluster(name, port, version, baseDir) {
 
     companion object {
-        private val LOG: Logger = LoggerFactory.getLogger(javaClass<SingleNode>())
+        private val LOG: Logger = LoggerFactory.getLogger(SingleNode::class.java)
 
-        platformStatic public fun builder(): SingleNodeBuilder {
+        @JvmStatic public fun builder(): SingleNodeBuilder {
             return SingleNodeBuilder()
         }
 
-        platformStatic fun build(init: SingleNodeBuilder.() -> Unit): SingleNode {
+        @JvmStatic fun build(init: SingleNodeBuilder.() -> Unit): SingleNode {
             val builder = SingleNodeBuilder()
             builder.init()
             return builder().build()

@@ -9,7 +9,7 @@ import org.testng.annotations.Test
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.kotlin
 
-Test
+@Test
 class BottleRocketDataProviderTest {
     fun clusterTypes() {
         val provider = BottleRocketDataProvider()

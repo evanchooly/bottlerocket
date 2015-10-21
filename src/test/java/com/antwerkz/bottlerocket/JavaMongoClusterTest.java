@@ -14,7 +14,11 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.antwerkz.bottlerocket.configuration.mongo30.Mongo30Package.configuration;
+import static com.antwerkz.bottlerocket.BottleRocketKt.DEFAULT_BASE_DIR;
+import static com.antwerkz.bottlerocket.BottleRocketKt.DEFAULT_NAME;
+import static com.antwerkz.bottlerocket.BottleRocketKt.DEFAULT_PORT;
+import static com.antwerkz.bottlerocket.BottleRocketKt.DEFAULT_VERSION;
+import static com.antwerkz.bottlerocket.configuration.mongo30.ConfigurationKt.configuration;
 
 public class JavaMongoClusterTest {
     @AfterMethod
@@ -40,6 +44,13 @@ public class JavaMongoClusterTest {
         final ReplicaSet cluster = ReplicaSet.builder()
                                                 .baseDir(new File("build/rocket-java/replicaSet"))
                                                 .build();
+
+        new ReplicaSet();
+        new ReplicaSet("name");
+        new ReplicaSet("name", 12345);
+        new ReplicaSet("name", 12345, "3.0.0");
+        new ReplicaSet("name", 12345, "3.0.0", new File("/tmp"), 3);
+        new ReplicaSet(DEFAULT_NAME, DEFAULT_PORT, DEFAULT_VERSION, DEFAULT_BASE_DIR, 3);
         try {
             startCluster(cluster);
 
@@ -64,7 +75,7 @@ public class JavaMongoClusterTest {
             startCluster(cluster);
             testWrites(cluster);
 
-            MongoClient client = cluster.getAdminClient();
+            final MongoClient client = cluster.getAdminClient();
 
             final ArrayList<Document> list = client.getDatabase("config").getCollection("shards").find().into(new ArrayList<>());
             Assert.assertEquals(list.size(), 1, "Should find 1 shards");
