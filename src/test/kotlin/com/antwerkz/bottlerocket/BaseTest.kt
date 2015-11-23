@@ -6,27 +6,25 @@ import org.testng.Assert
 import org.testng.SkipException
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.DataProvider
-import java.time.Duration
-import java.time.LocalDateTime
 import java.util.ArrayList
 
 open class BaseTest {
     companion object {
         private val LOG = LoggerFactory.getLogger(BaseTest::class.java)
         val versions = arrayOf(
-//              arrayOf("3.1.6"),
-              arrayOf("3.0.5"),
-              arrayOf("2.6.10")
+                arrayOf("2.6.10") //,
+                //                arrayOf("3.0.5")
+                //              arrayOf("3.1.6"),
         )
     }
 
-    var cluster: MongoCluster? = null
+    lateinit var cluster: MongoCluster
 
     @AfterMethod
     fun sleep() {
-        cluster?.shutdown()
+        cluster.shutdown()
         LOG.info("Sleeping between tests")
-        Thread.sleep(1000)
+        Thread.sleep(3000)
     }
 
     @DataProvider(name = "versions")
@@ -38,11 +36,11 @@ open class BaseTest {
     fun testClusterWrites() {
         startCluster()
 
-        val client = cluster?.getClient()
-        val names = client?.listDatabaseNames()?.into(ArrayList<String>())
+        val client = cluster.getClient()
+        val names = client.listDatabaseNames()?.into(ArrayList<String>())
         Assert.assertFalse(names?.isEmpty() ?: true, names.toString())
 
-        val db = client?.getDatabase("rockettest")
+        val db = client.getDatabase("rockettest")
         db?.drop()
         val collection = db?.getCollection("singlenode")
         val document = Document(hashMapOf<String, Any>("key" to "value"))
@@ -52,35 +50,15 @@ open class BaseTest {
     }
 
     private fun startCluster(enableAuth: Boolean = false) {
-        if (cluster != null && !cluster!!.isStarted() ) {
-            cluster?.clean()
-            cluster?.start()
-            if(enableAuth) {
-                cluster?.enableAuth()
-                cluster?.addUser("rockettest", "rocket", "cluster",
-                      listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin")));
-                cluster?.restart()
-            }
+        if (!cluster.isStarted() ) {
+            cluster.clean()
+            cluster.start()
+            if (enableAuth) {
+                cluster.addUser("rockettest", "rocket", "cluster",
+                        listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin")));
 
-            var allActive = false
-            val start = LocalDateTime.now();
-
-            // TODO:  replace with awaitility
-            val timeout = 30000
-            while (!allActive && Duration.between(start, LocalDateTime.now()).toMillis() < timeout) {
-                try {
-                    cluster?.allNodesActive()
-                    allActive = true
-                } catch(e: IllegalStateException) {
-                    if (Duration.between(start, LocalDateTime.now()).toMillis() > timeout) {
-                        throw e
-                    }
-                }
-                Thread.sleep(1000)
-            }
-
-            if(!allActive) {
-                throw IllegalStateException("Not all cluster members are active");
+                cluster.enableAuth()
+                cluster.restart()
             }
         }
     }
@@ -88,11 +66,11 @@ open class BaseTest {
     fun testClusterAuth() {
         startCluster(true)
 
-        Assert.assertTrue(cluster?.isAuthEnabled() ?: false)
+        Assert.assertTrue(cluster.isAuthEnabled())
 
-        var client = cluster?.getClient()
+        var client = cluster.getClient()
 
-        val names = client?.listDatabaseNames()?.into(ArrayList<String>())
+        val names = client.listDatabaseNames()?.into(ArrayList<String>())
         Assert.assertFalse(names?.isEmpty() ?: true, names.toString())
     }
 
@@ -109,8 +87,8 @@ open class BaseTest {
     }
 
     fun validateShards() {
-        val list = cluster?.getAdminClient()?.getDatabase("config")?.getCollection("shards")?.find()?.into(ArrayList<Document>())
-        Assert.assertEquals(list?.size(), 1, "Should find 1 shards")
+        val list = cluster.getAdminClient().getDatabase("config")?.getCollection("shards")?.find()?.into(ArrayList<Document>())
+        Assert.assertEquals(list?.size, 1, "Should find 1 shards")
         for (document in list ?: listOf<Document>()) {
             when (document.getString("_id")) {
                 "rocket0" -> Assert.assertEquals(document["host"], "rocket0/localhost:30001,localhost:30002,localhost:30003")
@@ -120,7 +98,7 @@ open class BaseTest {
     }
 
     fun assume(condition: Boolean, message: String) {
-        if(!condition) {
+        if (!condition) {
             throw SkipException(message);
         }
     }

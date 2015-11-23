@@ -1,7 +1,7 @@
-ext.kotlinVersion = '0.14.451'
+ext.kotlinVersion = '1.0.0-beta-2422'
 
 buildscript {
-    ext.kotlin_version = '0.14.451'
+    ext.kotlin_version = '1.0.0-beta-2422'
     repositories {
         mavenLocal()
         mavenCentral()

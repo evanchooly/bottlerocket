@@ -29,7 +29,7 @@ public interface ConfigBlock {
     fun merge(update: ConfigBlock) {
         val c = this.javaClass.kotlin
 
-        val comparison: ConfigBlock = c.primaryConstructor?.call()!!
+        val comparison: ConfigBlock = c.primaryConstructor?.callBy(mapOf())!!
         val target = this
         c.memberProperties.forEach { p: KProperty1<ConfigBlock, *> ->
             val fieldValue = p.get(update)
@@ -46,7 +46,7 @@ public interface ConfigBlock {
 
     }
 
-    protected fun isSupportedMode(configMode: ConfigMode, property: KProperty1<ConfigBlock, *>): Boolean {
+    fun isSupportedMode(configMode: ConfigMode, property: KProperty1<ConfigBlock, *>): Boolean {
         try {
             val mode = getAnnotation<Mode>(property)
             val supportedMode = mode == null || mode.value == configMode || configMode == ConfigMode.ALL
@@ -85,7 +85,7 @@ public interface ConfigBlock {
 fun Map<*, *>.flatten(prefix: String = ""): Map<String, String> {
     val map = linkedMapOf<String, String>()
 
-    entrySet().forEach {
+    entries.forEach {
         if (it.value is Map<*, *>) {
             var subPrefix = if(prefix != "") prefix + "." + it.key else it.key.toString()
             map.putAll(((it.value as Map<*, *>).flatten(subPrefix)));
@@ -100,7 +100,7 @@ fun Map<*, *>.flatten(prefix: String = ""): Map<String, String> {
 fun Map<*, *>.toYaml(indent: String = ""): String {
     val builder = StringBuilder()
 
-    entrySet().forEach {
+    entries.forEach {
         if (it.value is Map<*, *>) {
             val yaml = (it.value as Map<*, *>).toYaml(indent + "  ")
             if (yaml != "") {
@@ -119,6 +119,6 @@ fun Map<*, *>.toYaml(indent: String = ""): String {
 }
 
 fun String.toCamelCase(): String {
-    return if (length() > 1) charAt(0).toLowerCase() + substring(1) else toLowerCase()
+    return if (length > 1) this[0].toLowerCase() + substring(1) else toLowerCase()
 }
 

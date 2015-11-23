@@ -1,5 +1,7 @@
 package com.antwerkz.bottlerocket.configuration.mongo26
 
+import com.antwerkz.bottlerocket.configuration.ConfigBlock
+import com.antwerkz.bottlerocket.configuration.ConfigMode
 import com.antwerkz.bottlerocket.configuration.mongo26.blocks.AuditLog
 import com.antwerkz.bottlerocket.configuration.mongo26.blocks.Net
 import com.antwerkz.bottlerocket.configuration.mongo26.blocks.OperationProfiling
@@ -15,18 +17,18 @@ import com.antwerkz.bottlerocket.configuration.types.State
 /**
  * @see http://docs.mongodb.org/v2.6/reference/configuration-options/
  */
-class Configuration() : com.antwerkz.bottlerocket.configuration.Configuration {
-    var auditLog: AuditLog = AuditLog()
-    var net: Net = Net()
-    var operationProfiling: OperationProfiling = OperationProfiling()
-    var processManagement: ProcessManagement = ProcessManagement()
-    var replication: Replication = Replication()
-    var security: Security = Security()
-    var sharding: Sharding = Sharding()
-    var snmp: Snmp = Snmp()
-    var storage: Storage = Storage()
-    var systemLog: SystemLog = SystemLog()
-
+class Configuration(
+      var auditLog: AuditLog = AuditLog(),
+      var net: Net = Net(),
+      var operationProfiling: OperationProfiling = OperationProfiling(),
+      var processManagement: ProcessManagement = ProcessManagement(),
+      var replication: Replication = Replication(),
+      var security: Security = Security(),
+      var sharding: Sharding = Sharding(),
+      var snmp: Snmp = Snmp(),
+      var storage: Storage = Storage(),
+      var systemLog: SystemLog = SystemLog()
+) : com.antwerkz.bottlerocket.configuration.Configuration {
     override fun isAuthEnabled(): Boolean {
         return security.authorization == State.ENABLED || security.keyFile != null
     }

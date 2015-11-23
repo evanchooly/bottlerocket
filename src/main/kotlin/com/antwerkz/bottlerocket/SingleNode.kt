@@ -9,8 +9,11 @@ import org.slf4j.LoggerFactory
 import java.io.File
 
 open
-public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, version: String = DEFAULT_VERSION,
-                        baseDir: File = DEFAULT_BASE_DIR) : MongoCluster(name, port, version, baseDir) {
+public class SingleNode(name: String = BottleRocket.DEFAULT_NAME,
+                        port: Int = BottleRocket.DEFAULT_PORT,
+                        version: String = BottleRocket.DEFAULT_VERSION,
+                        baseDir: File = BottleRocket.DEFAULT_BASE_DIR) :
+        MongoCluster(name, port, version, baseDir) {
 
     companion object {
         private val LOG: Logger = LoggerFactory.getLogger(SingleNode::class.java)
@@ -32,6 +35,7 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
     fun start() {
         if (!mongod.isAlive()) {
             mongod.start()
+//            Thread.sleep(3000)
         }
     }
 
@@ -61,12 +65,6 @@ public class SingleNode(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT, v
 
     override fun updateConfig(update: Configuration) {
         mongod.config.merge(update)
-    }
-
-    override fun allNodesActive() {
-        if (!mongod.tryConnect()) {
-            throw IllegalStateException("mongod:${port} is not active");
-        }
     }
 
     override fun toString(): String {

@@ -5,7 +5,7 @@ import com.antwerkz.bottlerocket.configuration.ConfigMode
 import com.antwerkz.bottlerocket.configuration.Mode
 import com.antwerkz.bottlerocket.configuration.types.ProfilingMode
 
-class OperationProfiling() : ConfigBlock {
-    @Mode(ConfigMode.MONGOD) var slowOpThresholdMs: Int? = null
-    @Mode(ConfigMode.MONGOD) var mode: ProfilingMode? = null
-}
+class OperationProfiling(
+      @Mode(ConfigMode.MONGOD) var slowOpThresholdMs: Int? = null,
+      @Mode(ConfigMode.MONGOD) var mode: ProfilingMode? = null
+) : ConfigBlock

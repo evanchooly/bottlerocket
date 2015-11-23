@@ -20,10 +20,10 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.PosixFilePermission
 import java.util.EnumSet
 
-public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
-                                   public val port: Int = DEFAULT_PORT,
-                                   val version: String = DEFAULT_VERSION,
-                                   public val baseDir: File = DEFAULT_BASE_DIR) {
+public abstract class MongoCluster(public val name: String = BottleRocket.DEFAULT_NAME,
+                                   public val port: Int = BottleRocket.DEFAULT_PORT,
+                                   val version: String = BottleRocket.DEFAULT_VERSION,
+                                   public val baseDir: File = BottleRocket.DEFAULT_BASE_DIR) {
 
     val mongoManager: MongoManager = MongoManager.of(version)
     var adminAdded: Boolean = false
@@ -70,8 +70,7 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
         }
     }
 
-    open fun clean() {
-        shutdown();
+    fun clean() {
         baseDir.deleteTree()
     }
 
@@ -147,8 +146,6 @@ public abstract class MongoCluster(public val name: String = DEFAULT_NAME,
     }
 
     abstract fun updateConfig(update: Configuration)
-
-    abstract fun allNodesActive()
 
     fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
         mongoManager.addUser(getAdminClient(), database, userName, password, roles)

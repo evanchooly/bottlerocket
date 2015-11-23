@@ -4,19 +4,19 @@ import com.antwerkz.bottlerocket.*
 import java.io.File
 
 abstract class MongoClusterBuilder<out T>() {
-    var name: String = DEFAULT_NAME
+    var name: String = BottleRocket.DEFAULT_NAME
         private set
-    var port: Int = DEFAULT_PORT
+    var port: Int = BottleRocket.DEFAULT_PORT
         private set
-    var version: String = DEFAULT_VERSION
+    var version: String = BottleRocket.DEFAULT_VERSION
         private set
-    var baseDir: File = DEFAULT_BASE_DIR
+    var baseDir: File = BottleRocket.DEFAULT_BASE_DIR
         private set
 
     open fun name(value: String): T {
         name = value
-        baseDir = if (baseDir == DEFAULT_BASE_DIR) File(
-              "${TEMP_DIR}/${name}") else baseDir
+        baseDir = if (baseDir == BottleRocket.DEFAULT_BASE_DIR) File(
+              "${BottleRocket.TEMP_DIR}/${name}") else baseDir
         return this as T
     }
 

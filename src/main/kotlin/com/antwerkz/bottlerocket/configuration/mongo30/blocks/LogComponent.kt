@@ -1,59 +1,38 @@
 package com.antwerkz.bottlerocket.configuration.mongo30.blocks
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
+import com.antwerkz.bottlerocket.configuration.ConfigMode
 import com.antwerkz.bottlerocket.configuration.types.Verbosity
+import com.github.zafarkhaja.semver.Version
 
 class LogComponent {
-    class AccessControl() : ConfigBlock {
-        var verbosity: Verbosity? = null
-    }
+    class AccessControl(var verbosity: Verbosity? = null) : ConfigBlock
 
-    class Command() : ConfigBlock {
-        var verbosity: Verbosity? = null
-    }
+    class Command(var verbosity: Verbosity? = null) : ConfigBlock
 
-    class Control() : ConfigBlock {
-        var verbosity: Verbosity? = null
-    }
+    class Control(var verbosity: Verbosity? = null) : ConfigBlock
 
-    class Geo() : ConfigBlock {
-        var verbosity: Verbosity? = null
-    }
+    class Geo(var verbosity: Verbosity? = null) : ConfigBlock
 
-    class Index() : ConfigBlock {
-        var verbosity: Verbosity? = null
-    }
+    class Index(var verbosity: Verbosity? = null) : ConfigBlock
 
-    class Network() : ConfigBlock {
-        var verbosity: Verbosity? = null
-    }
+    class Network(var verbosity: Verbosity? = null) : ConfigBlock
 
-    class Query() : ConfigBlock {
-        var verbosity: Verbosity? = null
-    }
+    class Query(var verbosity: Verbosity? = null) : ConfigBlock
 
-    class Replication() : ConfigBlock {
-        var verbosity: Verbosity? = null
-    }
+    class Replication(var verbosity: Verbosity? = null) : ConfigBlock
 
-    class Sharding() : ConfigBlock {
-        var verbosity: Verbosity? = null
-    }
+    class Sharding(var verbosity: Verbosity? = null) : ConfigBlock
 
-    class Storage() : ConfigBlock {
-        var verbosity: Verbosity? = null
-        var journal: Journal = Journal()
+    class Storage(var verbosity: Verbosity? = null,
+                  var journal: Journal = Journal()) : ConfigBlock {
         fun journal(init: Journal.() -> Unit) {
             journal = initConfigBlock(Journal(), init)
         }
 
     }
 
-    class Journal() : ConfigBlock {
-        var verbosity: Verbosity? = null
-    }
+    class Journal(var verbosity: Verbosity? = null) : ConfigBlock
 
-    class Write() : ConfigBlock {
-        var verbosity: Verbosity? = null
-    }
+    class Write(var verbosity: Verbosity? = null) : ConfigBlock
 }

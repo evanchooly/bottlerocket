@@ -16,9 +16,13 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
-                     version: String = DEFAULT_VERSION, baseDir: File = DEFAULT_BASE_DIR,
-                     var shardCount: Int = 1, var mongosCount: Int = 1, var configSvrCount: Int = 1) :
+class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
+                     port: Int = BottleRocket.DEFAULT_PORT,
+                     version: String = BottleRocket.DEFAULT_VERSION,
+                     baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
+                     var shardCount: Int = 1,
+                     var mongosCount: Int = 1,
+                     var configSvrCount: Int = 1) :
       MongoCluster(name, port, version, baseDir) {
 
     var shards = arrayListOf<ReplicaSet>()
@@ -28,7 +32,7 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
     var initialized = false
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(MongoExecutable::class.java)
+        private val LOG = LoggerFactory.getLogger(ShardedCluster::class.java)
 
         @JvmStatic fun builder(): ShardedClusterBuilder {
             return ShardedClusterBuilder()
@@ -88,25 +92,6 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
         }
         mongoses.forEach {
             it.config.merge(update)
-        }
-    }
-
-    override fun allNodesActive() {
-        var list = shards.flatMap { it.nodes }
-              .filter { !it.tryConnect() }
-              .map({ "mongod:${it.port} is not active" })
-              .toArrayList()
-
-        configServers.filter { !it.tryConnect() }
-              .map({ "configSvr:${it.port} is not active" })
-              .toCollection(list)
-
-        var message = mongoses.filter { !it.tryConnect() }
-              .map({ "mongos:${it.port} is not active" })
-              .toCollection(list)
-              .join()
-        if (!message.isEmpty()) {
-            throw IllegalStateException(message)
         }
     }
 
@@ -179,14 +164,6 @@ class ShardedCluster(name: String = DEFAULT_NAME, port: Int = DEFAULT_PORT,
         mongoses.forEach { it.shutdown() }
         configServers.forEach { it.shutdown() }
         shards.forEach { it.shutdown() }
-    }
-
-    override
-    fun clean() {
-        shards.forEach { it.clean() }
-        configServers.forEach { it.clean() }
-        mongoses.forEach { it.clean() }
-        baseDir.deleteTree()
     }
 
     override fun isAuthEnabled(): Boolean {

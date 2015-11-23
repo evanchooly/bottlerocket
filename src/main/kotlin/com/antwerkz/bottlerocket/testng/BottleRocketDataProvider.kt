@@ -1,7 +1,7 @@
 package com.antwerkz.bottlerocket.testng
 
 import com.antwerkz.bottlerocket.MongoCluster
-import com.antwerkz.bottlerocket.DEFAULT_VERSION
+import com.antwerkz.bottlerocket.BottleRocket.DEFAULT_VERSION
 import com.antwerkz.bottlerocket.ReplicaSet
 import com.antwerkz.bottlerocket.ShardedCluster
 import com.antwerkz.bottlerocket.SingleNode

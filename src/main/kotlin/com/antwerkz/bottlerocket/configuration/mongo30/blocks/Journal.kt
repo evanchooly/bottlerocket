@@ -4,6 +4,6 @@ import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.ConfigMode
 import com.antwerkz.bottlerocket.configuration.Mode
 
-class Journal() : ConfigBlock {
-    @Mode(ConfigMode.MONGOD) var enabled: Boolean? = null
-}
+class Journal(
+      @Mode(ConfigMode.MONGOD) var enabled: Boolean? = null
+) : ConfigBlock

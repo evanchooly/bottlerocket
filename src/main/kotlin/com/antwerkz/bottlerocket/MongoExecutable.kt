@@ -4,7 +4,9 @@ import com.antwerkz.bottlerocket.configuration.Configuration
 import com.jayway.awaitility.Awaitility
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
+import com.mongodb.MongoCommandException
 import com.mongodb.MongoCredential
+import com.mongodb.MongoSocketReadException
 import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
 import org.bson.Document
@@ -52,12 +54,12 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
     }
 
     fun clean() {
-        shutdown()
         baseDir.deleteTree()
     }
 
     fun shutdown() {
         shutdownWithDriver()
+        Thread.sleep(3000)
         client?.close()
         client = null
     }
@@ -89,10 +91,15 @@ public abstract class MongoExecutable(val manager: MongoManager, val name: Strin
                       .atMost(10, TimeUnit.SECONDS)
                       .until({ getClient(isAuthEnabled()).runCommand(Document("shutdown", 1)) })
             } catch(e: Exception) {
-                LOG.warn("Timed out waiting for server to stop.  Forcibly killing instead.")
+                if ( e.cause !is MongoSocketReadException) {
+                    LOG.warn("Failed to shutdown server.  Forcibly killing instead.", e)
+                    process?.destroy(true)
+                } else if ( e.cause is MongoCommandException) {
+                    throw e
+                }
             }
 
-            process?.destroy(true)
+            process?.destroy(false)
             File(baseDir, "mongod.lock").delete()
         }
     }

@@ -42,7 +42,7 @@ public class MongoManager(val versionManager: VersionManager) : VersionManager b
     public val mongos: String
 
     init {
-        downloadPath = File(TEMP_DIR, "mongo-downloads")
+        downloadPath = File(BottleRocket.TEMP_DIR, "mongo-downloads")
         binDir = "${download()}/bin"
         if (SystemUtils.IS_OS_WINDOWS) {
             mongo = "${binDir}/mongo.exe"
@@ -86,18 +86,18 @@ public class MongoManager(val versionManager: VersionManager) : VersionManager b
             TarArchiveInputStream(GZIPInputStream(FileInputStream(download))).use { inputStream ->
                 extract(inputStream)
             }
-            return File(downloadPath, download.name.substring(0, download.name.length() - 4))
+            return File(downloadPath, download.name.substring(0, download.name.length - 4))
         } else if (download.name.endsWith(".zip")) {
             try {
                 ZipArchiveInputStream(FileInputStream(download)).use { inputStream ->
                     extract(inputStream)
                 }
             } catch (e: IOException) {
-                throw RuntimeException(e.getMessage(), e)
+                throw RuntimeException(e.message, e)
             }
 
 
-            return File(downloadPath, download.name.substring(0, download.name.length() - 4))
+            return File(downloadPath, download.name.substring(0, download.name.length - 4))
         }
         throw RuntimeException("Unsupported file type: ${download}")
     }
@@ -129,7 +129,7 @@ public class MongoManager(val versionManager: VersionManager) : VersionManager b
                 download.delete()
                 retry++
                 if (retry > 5) {
-                    throw RuntimeException("Failed to extract file: ${e.getMessage()}")
+                    throw RuntimeException("Failed to extract file: ${e.message}")
                 }
             }
 
@@ -150,7 +150,7 @@ public class MongoManager(val versionManager: VersionManager) : VersionManager b
             return download
 
         } catch (e: IOException) {
-            throw RuntimeException(e.getMessage(), e)
+            throw RuntimeException(e.message, e)
         }
 
     }

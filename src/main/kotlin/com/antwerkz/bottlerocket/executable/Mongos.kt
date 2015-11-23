@@ -26,13 +26,13 @@ public class Mongos(manager: MongoManager, name: String, port: Int, baseDir: Fil
 
             LOG.info("Starting mongos on port ${port}")
             var processResult = ProcessExecutor()
-                  .command(manager.mongos,
-                        "--configdb", configServers.map { "localhost:${it.port}" }.join(","),
-                        "--config", file.absolutePath)
-                  .redirectOutput(FileOutputStream(File(baseDir, "${name}.out")))
-                  .redirectError(FileOutputStream(File(baseDir, "${name}.err")))
-                  .destroyOnExit()
-                  .start()
+                    .command(manager.mongos,
+                            "--configdb", configServers.map { "localhost:${it.port}" }.joinToString(","),
+                            "--config", file.absolutePath)
+                    .redirectOutput(FileOutputStream(File(baseDir, "${name}.out")))
+                    .redirectError(FileOutputStream(File(baseDir, "${name}.err")))
+                    .destroyOnExit()
+                    .start()
             process = Processes.newJavaProcess(processResult.process);
 
             waitForStartUp()

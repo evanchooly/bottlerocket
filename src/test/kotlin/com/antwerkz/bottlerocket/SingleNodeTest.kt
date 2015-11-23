@@ -8,14 +8,15 @@ import java.io.File
 class SingleNodeTest : BaseTest() {
     @Test(dataProvider = "versions")
     public fun singleNode(clusterVersion: String) {
-        cluster = SingleNode(baseDir = File("build/rocket/singleNode").getAbsoluteFile(), version = clusterVersion)
+        cluster = SingleNode(baseDir = File("build/rocket/singleNode").absoluteFile,
+                version = clusterVersion)
         testClusterWrites()
     }
 
     @Test(dataProvider = "versions")
     fun singleNodeAuth(clusterVersion: String) {
-        cluster = SingleNode(baseDir = File("build/rocket/singleNodeAuth").getAbsoluteFile(), version = clusterVersion)
-        assume(cluster!!.versionAtLeast(Version.valueOf("2.6.0")), "Authentication not currently supported prior to version 2.6")
+        cluster = SingleNode(baseDir = File("build/rocket/singleNodeAuth").absoluteFile,
+                version = clusterVersion)
         testClusterAuth()
         testClusterWrites()
     }

@@ -7,8 +7,6 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.io.File
 import java.net.URI
-import com.antwerkz.bottlerocket.configuration.mongo22.Configuration as Config22
-import com.antwerkz.bottlerocket.configuration.mongo24.Configuration as Config24
 import com.antwerkz.bottlerocket.configuration.mongo26.Configuration as Config26
 import com.antwerkz.bottlerocket.configuration.mongo30.Configuration as Config30
 
@@ -57,7 +55,7 @@ public class ConfigurationDocsTest {
     fun checkDocs(version: String, url: String, configuration: ConfigBlock) {
         loadLinks(url, version)
         check(configuration.toProperties(mode = ConfigMode.ALL, includeAll = true))
-        Assert.assertTrue(elements.isEmpty(), "elements should be empty now but has ${elements.size()} items left: \n${elements}")
+        Assert.assertTrue(elements.isEmpty(), "elements should be empty now but has ${elements.size} items left: \n${elements}")
     }
 
     private fun check(map: Map<String, String>) {
@@ -70,9 +68,7 @@ public class ConfigurationDocsTest {
     fun urls(): Array<Array<Any>> {
         return arrayOf(
               arrayOf("3.0.0", "http://docs.mongodb.org/v3.0/reference/configuration-options/", Config30()),
-              arrayOf("2.6.0", "http://docs.mongodb.org/v2.6/reference/configuration-options/", Config26()),
-              arrayOf("2.4.0", "http://docs.mongodb.org/v2.4/reference/configuration-options/", Config24()),
-              arrayOf("2.2.0", "http://docs.mongodb.org/v2.2/reference/configuration-options/", Config22())
+              arrayOf("2.6.0", "http://docs.mongodb.org/v2.6/reference/configuration-options/", Config26())
         )
     }
 }

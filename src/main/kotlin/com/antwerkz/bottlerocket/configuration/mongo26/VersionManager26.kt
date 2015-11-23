@@ -5,23 +5,13 @@ import com.antwerkz.bottlerocket.DatabaseRole
 import com.antwerkz.bottlerocket.MongoExecutable
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.types.Destination.FILE
-import com.antwerkz.bottlerocket.configuration.types.State.DISABLED
 import com.antwerkz.bottlerocket.configuration.types.State.ENABLED
-import com.antwerkz.bottlerocket.executable.Mongod
-import com.antwerkz.bottlerocket.runCommand
 import com.github.zafarkhaja.semver.Version
 import com.mongodb.MongoClient
 import org.bson.Document
 import java.io.File
 
-class VersionManager26(version: Version) : BaseVersionManager(version) {
-    override fun setReplicaSetName(node: Mongod, name: String) {
-        node.config.merge( configuration {
-            replication {
-                replSetName = name
-            }
-        })
-    }
+open class VersionManager26(version: Version) : BaseVersionManager(version) {
 
     override fun enableAuth(node: MongoExecutable, pemFile: String?) {
         node.config.merge(configuration {
@@ -46,8 +36,10 @@ class VersionManager26(version: Version) : BaseVersionManager(version) {
                      .append("roles", roles.map { it.toDB() }))
      }
 
-    override fun getReplicaSetConfig(client: MongoClient) = client.getDatabase("local")
-          .getCollection("system.replset").find().limit(1).first()
+    override fun getReplicaSetConfig(client: MongoClient): Document? {
+        return client.getDatabase("local")
+                .getCollection("system.replset").find().first()
+    }
 
     override fun initialConfig(baseDir: File, name: String, port: Int): Configuration {
         return configuration {
