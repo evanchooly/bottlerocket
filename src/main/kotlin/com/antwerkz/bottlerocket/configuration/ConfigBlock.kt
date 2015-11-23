@@ -2,7 +2,6 @@ package com.antwerkz.bottlerocket.configuration
 
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty1
-import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaSetter
 import kotlin.reflect.memberProperties
 import kotlin.reflect.primaryConstructor
@@ -47,19 +46,12 @@ public interface ConfigBlock {
     }
 
     fun isSupportedMode(configMode: ConfigMode, property: KProperty1<ConfigBlock, *>): Boolean {
-        try {
-            val mode = getAnnotation<Mode>(property)
-            val supportedMode = mode == null || mode.value == configMode || configMode == ConfigMode.ALL
-
-            return supportedMode;
-        } catch(e: Exception) {
-            println("property = $property")
-            throw e
-        }
+        val mode = getAnnotation<Mode>(property) as Mode?
+        return mode == null || mode.value == configMode || configMode == ConfigMode.ALL;
     }
 
-    private inline fun <reified T : Annotation> getAnnotation(property: KProperty1<ConfigBlock, *>): T? {
-        return property.javaField?.getAnnotation(T::class.java)
+    private inline fun <reified T : Annotation> getAnnotation(property: KProperty1<ConfigBlock, *>): Annotation? {
+        return property.annotations.firstOrNull { it is T }
     }
 
     fun toMap(mode: ConfigMode = ConfigMode.MONGOD, includeAll: Boolean = false): Map<String, Any> {
@@ -121,4 +113,3 @@ fun Map<*, *>.toYaml(indent: String = ""): String {
 fun String.toCamelCase(): String {
     return if (length > 1) this[0].toLowerCase() + substring(1) else toLowerCase()
 }
-

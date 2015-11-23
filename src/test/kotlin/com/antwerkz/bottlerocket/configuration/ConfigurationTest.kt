@@ -176,13 +176,17 @@ systemLog:
     public fun mongosConfig() {
         val path = "/var/lib/mongo/data"
         val configuration = configuration {
+            replication {
+                oplogSizeMB = 100
+            }
             storage {
                 dbPath = path
             }
         }
 
         val yaml = configuration.toYaml(mode = ConfigMode.MONGOS)
-        Assert.assertTrue(-1 < yaml.indexOf(path), "Didn't find '${path}' in \n${yaml}")
+        Assert.assertTrue(-1 == yaml.indexOf(path), "Found '${path}' in \n${yaml}")
+        Assert.assertTrue(-1 == yaml.indexOf("oplogSizeMB"), "Found 'oplogSizeMB' in \n${yaml}")
     }
 
     @Test
