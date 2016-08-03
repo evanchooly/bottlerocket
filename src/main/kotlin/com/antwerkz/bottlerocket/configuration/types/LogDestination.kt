@@ -6,7 +6,7 @@ enum class LogDestination {
     FILE;
 
     override fun toString(): String {
-        return name().toLowerCase()
+        return name.toLowerCase()
     }
 
 }

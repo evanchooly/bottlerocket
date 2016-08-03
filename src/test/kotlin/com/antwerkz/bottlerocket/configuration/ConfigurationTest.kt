@@ -8,9 +8,9 @@ import com.antwerkz.bottlerocket.configuration.types.Verbosity
 import org.testng.Assert
 import org.testng.annotations.Test
 
-public class ConfigurationTest {
+class ConfigurationTest {
     companion object {
-        public @JvmStatic val COMPLEX_CONFIG: String =
+        @JvmStatic val complexConfig: String =
               """net:
   bindIp: 127.0.0.1
   port: 27017
@@ -39,7 +39,7 @@ systemLog:
     }
 
     @Test
-    public fun testYaml() {
+    fun testYaml() {
         val configuration = configuration {
               systemLog {
                   destination = Destination.SYSLOG
@@ -72,7 +72,7 @@ systemLog:
     }
 
     @Test
-    public fun complexExample() {
+    fun complexExample() {
         val configuration = configuration {
               storage {
                   dbPath = "/var/lib/mongodb"
@@ -82,6 +82,8 @@ systemLog:
                     path = "/var/log/mongodb/mongod.log"
                     logAppend = true
                     component {
+                        net {}
+                        storage {  }
                         accessControl {
                             verbosity = Verbosity.TWO
                         }
@@ -112,11 +114,11 @@ systemLog:
   logAppend: true
   path: /var/log/mongodb/mongod.log
 """
-        Assert.assertEquals(configuration.toYaml(), target);
+        Assert.assertEquals(configuration.toYaml(), target)
     }
 
     @Test
-    public fun testBuilder() {
+    fun testBuilder() {
         val config = configuration {
             systemLog {
                 destination = Destination.SYSLOG
@@ -146,7 +148,7 @@ systemLog:
     }
 
     @Test
-    public fun testComplexBuilder() {
+    fun testComplexBuilder() {
         val configuration = configuration {
             storage {
                 dbPath = "/var/lib/mongodb"
@@ -169,11 +171,11 @@ systemLog:
         }
 
 
-        Assert.assertEquals(configuration.toYaml(), COMPLEX_CONFIG);
+        Assert.assertEquals(configuration.toYaml(), complexConfig)
     }
 
     @Test
-    public fun mongosConfig() {
+    fun mongosConfig() {
         val path = "/var/lib/mongo/data"
         val configuration = configuration {
             replication {
@@ -196,13 +198,13 @@ systemLog:
                 dbPath = "/var/lib/mongo/noodle"
             }
             net {
-                port = 12345;
+                port = 12345
             }
         }
         val update = configuration {
             processManagement {
                 operationProfiling {
-                    slowOpThresholdMs = 50;
+                    slowOpThresholdMs = 50
                 }
             }
             security {
@@ -211,7 +213,7 @@ systemLog:
         }
 
         Assert.assertNull(config.security.authorization)
-        config.merge(update);
+        config.merge(update)
         Assert.assertEquals(config.security.authorization, State.ENABLED)
         Assert.assertEquals(config.operationProfiling.slowOpThresholdMs, 50)
         Assert.assertNotEquals(update.storage.dbPath, "/var/lib/mongo/noodle")
@@ -220,6 +222,9 @@ systemLog:
     @Test
     fun properties() {
         val configuration = configuration {
+            net {
+                port = 1025
+            }
             storage {
                 dbPath = "/var/lib/mongodb"
             }
@@ -230,6 +235,7 @@ systemLog:
                 logAppend = true
                 logRotate = RotateBehavior.RENAME
                 component {
+                    storage {}
                     accessControl {
                         verbosity = Verbosity.TWO
                     }
@@ -242,8 +248,6 @@ systemLog:
 
         }
 
-        val s = configuration.toProperties(mode = ConfigMode.ALL)
-        println("s = \n${s}")
-        Assert.assertNotNull(s)
+        Assert.assertNotNull(configuration.toProperties(mode = ConfigMode.ALL))
     }
 }

@@ -2,7 +2,7 @@ package com.antwerkz.bottlerocket
 
 import org.bson.Document
 
-public class DatabaseRole(public val role: String, public val database: String? = null) {
+class DatabaseRole(val role: String, val database: String? = null) {
     fun toDB(): Any {
         if(database != null) {
             return Document("role", role)

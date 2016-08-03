@@ -1,6 +1,6 @@
 package com.antwerkz.bottlerocket.configuration
 
-public interface Configuration: ConfigBlock {
+interface Configuration: ConfigBlock {
     fun isAuthEnabled(): Boolean;
 
     override fun nodeName(): String {

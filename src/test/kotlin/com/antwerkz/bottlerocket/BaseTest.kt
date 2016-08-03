@@ -10,29 +10,25 @@ import java.util.ArrayList
 
 open class BaseTest {
     companion object {
-        private val LOG = LoggerFactory.getLogger(BaseTest::class.java)
         val versions = arrayOf(
-                arrayOf("2.6.10") //,
-                //                arrayOf("3.0.5")
-                //              arrayOf("3.1.6"),
+                arrayOf("2.6.12"),
+                arrayOf("3.0.5"),
+                arrayOf("3.2.8")
         )
     }
 
     lateinit var cluster: MongoCluster
 
     @AfterMethod
-    fun sleep() {
+    fun stopCluster() {
         cluster.shutdown()
-        LOG.info("Sleeping between tests")
-        Thread.sleep(3000)
     }
 
     @DataProvider(name = "versions")
     fun versions(): Array<Array<String>> {
         return BaseTest.versions
-    };
+    }
 
-    @Suppress("UNCHECKED")
     fun testClusterWrites() {
         startCluster()
 
@@ -50,15 +46,16 @@ open class BaseTest {
     }
 
     private fun startCluster(enableAuth: Boolean = false) {
-        if (!cluster.isStarted() ) {
+        if (!cluster.isStarted()) {
             cluster.clean()
             cluster.start()
             if (enableAuth) {
                 cluster.addUser("rockettest", "rocket", "cluster",
-                        listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin")));
+                        listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin")))
 
+                cluster.shutdown()
                 cluster.enableAuth()
-                cluster.restart()
+                cluster.start()
             }
         }
     }
@@ -68,7 +65,7 @@ open class BaseTest {
 
         Assert.assertTrue(cluster.isAuthEnabled())
 
-        var client = cluster.getClient()
+        val client = cluster.getClient()
 
         val names = client.listDatabaseNames()?.into(ArrayList<String>())
         Assert.assertFalse(names?.isEmpty() ?: true, names.toString())
@@ -99,7 +96,7 @@ open class BaseTest {
 
     fun assume(condition: Boolean, message: String) {
         if (!condition) {
-            throw SkipException(message);
+            throw SkipException(message)
         }
     }
 }

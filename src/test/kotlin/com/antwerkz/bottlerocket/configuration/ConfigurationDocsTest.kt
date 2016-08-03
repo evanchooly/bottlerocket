@@ -10,7 +10,7 @@ import java.net.URI
 import com.antwerkz.bottlerocket.configuration.mongo26.Configuration as Config26
 import com.antwerkz.bottlerocket.configuration.mongo30.Configuration as Config30
 
-public class ConfigurationDocsTest {
+class ConfigurationDocsTest {
     private var elements: MutableList<String> = arrayListOf()
 
     fun loadLinks(url: String, version: String) {
@@ -19,32 +19,16 @@ public class ConfigurationDocsTest {
 
         if (!file.exists()) {
             Request.Get(uri)
-                  .execute()
-                  .saveContent(file)
+                    .execute()
+                    .saveContent(file)
         }
         val doc = Jsoup.parse(file, "UTF-8")
-        elements = when(version) {
-            "3.0.0", "2.6.0" -> {
+        elements = when (version) {
+            "3.2.0", "3.0.0", "2.6.0" -> {
                 doc.select("a[class=headerlink]")
-                      .filter({ it.attr("href").contains('.') })
-                      .map({ it.attr("href") })
-                      .toArrayList()
-
-            }
-            "2.4.0", "2.2.0" -> {
-                var inSettings = false
-                doc.select("a[class=headerlink]")
-                      .filter({
-                          val include = inSettings
-                                && !it.attr("href").endsWith("-options")
-                                && !it.attr("href").equals("#setParameter")
-                                && !it.attr("href").equals("#master-slave-replication")
-                                && !it.attr("href").startsWith("#cmdoption--")
-                          inSettings = inSettings || it.attr("href").contains("settings")
-                          include
-                      })
-                      .map({ it.attr("href") })
-                      .toArrayList()
+                        .filter({ it.attr("href").contains('.') })
+                        .map({ it.attr("href") })
+                        .toMutableList()
 
             }
             else -> throw IllegalArgumentException("Unknown version: ${version}");
@@ -59,7 +43,7 @@ public class ConfigurationDocsTest {
     }
 
     private fun check(map: Map<String, String>) {
-        map.keySet().forEach {
+        map.keys.forEach {
             Assert.assertTrue(elements.remove("#${it}"), "Found ${it} in the configuration file but not in the docs.");
         }
     }
@@ -67,8 +51,8 @@ public class ConfigurationDocsTest {
     @DataProvider(name = "urls")
     fun urls(): Array<Array<Any>> {
         return arrayOf(
-              arrayOf("3.0.0", "http://docs.mongodb.org/v3.0/reference/configuration-options/", Config30()),
-              arrayOf("2.6.0", "http://docs.mongodb.org/v2.6/reference/configuration-options/", Config26())
+                arrayOf("3.0.0", "http://docs.mongodb.org/v3.0/reference/configuration-options/", Config30()),
+                arrayOf("2.6.0", "http://docs.mongodb.org/v2.6/reference/configuration-options/", Config26())
         )
     }
 }

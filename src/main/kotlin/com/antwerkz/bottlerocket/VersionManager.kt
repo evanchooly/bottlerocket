@@ -31,13 +31,11 @@ abstract class BaseVersionManager(override val version: Version) : VersionManage
         val LOG: Logger = LoggerFactory.getLogger(BaseVersionManager::class.java)
 
         fun of(version: Version): VersionManager {
-            val s = version.getNormalVersion()
-            return when (s.substring(0, s.lastIndexOf('.'))) {
-                "3.2" -> VersionManager32(version);
-                "3.1" -> VersionManager32(version);
-                "3.0" -> VersionManager30(version);
+            return when ("${version.majorVersion}.${version.minorVersion}") {
+                "3.2" -> VersionManager32(version)
+                "3.0" -> VersionManager30(version)
                 "2.6" -> VersionManager26(version)
-                else -> throw RuntimeException(version.toString());
+                else -> throw IllegalArgumentException("Unsupported version $version")
             }
         }
     }
@@ -54,6 +52,6 @@ fun MongoClient.runCommand(command: Document, readPreference: ReadPreference = R
         return getDatabase("admin")
               .runCommand(command, readPreference)
     } catch(e: Exception) {
-        throw RuntimeException("command failed", e)
+        throw RuntimeException("command failed: ${command} with preference ${readPreference}", e)
     }
 }

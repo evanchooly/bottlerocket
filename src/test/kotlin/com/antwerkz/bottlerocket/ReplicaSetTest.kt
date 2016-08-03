@@ -8,7 +8,7 @@ import java.io.File
 class ReplicaSetTest : BaseTest() {
 
     @Test(dataProvider = "versions")
-    public fun replicaSet(clusterVersion: String) {
+    fun replicaSet(clusterVersion: String) {
         cluster = ReplicaSet(baseDir = File("build/rocket/replicaSet"), version = clusterVersion)
         testClusterWrites()
         assertPrimary(30000)

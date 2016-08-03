@@ -7,7 +7,7 @@ import com.antwerkz.bottlerocket.ShardedCluster
 import com.antwerkz.bottlerocket.SingleNode
 import org.testng.annotations.DataProvider
 
-public class BottleRocketDataProvider {
+class BottleRocketDataProvider {
     companion object {
         val CLUSTER_VERSIONS = "rocket.cluster.versions"
         val CLUSTER_TYPES = "rocket.cluster.types"

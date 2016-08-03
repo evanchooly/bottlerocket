@@ -1,19 +1,7 @@
 package com.antwerkz.bottlerocket.configuration.mongo30
 
-import com.antwerkz.bottlerocket.configuration.ConfigBlock
-import com.antwerkz.bottlerocket.configuration.ConfigMode
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.AuditLog
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Net
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.OperationProfiling
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.ProcessManagement
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Replication
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Security
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Sharding
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Snmp
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.Storage
-import com.antwerkz.bottlerocket.configuration.mongo30.blocks.SystemLog
+import com.antwerkz.bottlerocket.configuration.mongo30.blocks.*
 import com.antwerkz.bottlerocket.configuration.types.State
-import com.github.zafarkhaja.semver.Version
 
 /**
  * @see http://docs.mongodb.org/v3.0/reference/configuration-options/

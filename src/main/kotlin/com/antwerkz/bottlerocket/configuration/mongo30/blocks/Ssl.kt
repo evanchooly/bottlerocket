@@ -16,5 +16,6 @@ class Ssl(
       var allowConnectionsWithoutCertificates: Boolean? = null,
       var allowInvalidCertificates: Boolean? = null,
       var allowInvalidHostnames: Boolean? = null,
+      var disabledProtocols: String? = null,
       var FIPSMode: Boolean? = null
 ) : ConfigBlock

@@ -6,8 +6,8 @@ import kotlin.reflect.jvm.javaSetter
 import kotlin.reflect.memberProperties
 import kotlin.reflect.primaryConstructor
 
-public interface ConfigBlock {
-    fun initConfigBlock<T : ConfigBlock> (configBlock: T, init: T.() -> Unit): T {
+interface ConfigBlock {
+    fun <T : ConfigBlock> initConfigBlock(configBlock: T, init: T.() -> Unit): T {
         configBlock.init()
         return configBlock
     }

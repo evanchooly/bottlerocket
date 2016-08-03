@@ -20,18 +20,22 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.PosixFilePermission
 import java.util.EnumSet
 
-public abstract class MongoCluster(public val name: String = BottleRocket.DEFAULT_NAME,
-                                   public val port: Int = BottleRocket.DEFAULT_PORT,
-                                   val version: String = BottleRocket.DEFAULT_VERSION,
-                                   public val baseDir: File = BottleRocket.DEFAULT_BASE_DIR) {
+abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
+                            val port: Int = BottleRocket.DEFAULT_PORT,
+                            val version: String = BottleRocket.DEFAULT_VERSION,
+                            val baseDir: File = BottleRocket.DEFAULT_BASE_DIR) {
+
+    companion object {
+        val perms = EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE)
+    }
 
     val mongoManager: MongoManager = MongoManager.of(version)
     var adminAdded: Boolean = false
     val keyFile: String = File(baseDir, "rocket.key").absolutePath
     val pemFile: String = File(baseDir, "rocket.pem").absolutePath
 
-    private var adminClient: MongoClient? = null;
-    private var client: MongoClient? = null;
+    private var adminClient: MongoClient? = null
+    private var client: MongoClient? = null
     private var credentials = arrayListOf<MongoCredential>()
 
     init {
@@ -47,24 +51,26 @@ public abstract class MongoCluster(public val name: String = BottleRocket.DEFAUL
         start()
     }
 
-    abstract fun start();
+    open fun start() {
+        if (!adminAdded) {
+            mongoManager.addAdminUser(getAdminClient())
+            adminAdded = true
+        }
+
+    }
 
     open fun shutdown() {
         adminClient?.close()
-        adminClient = null;
+        adminClient = null
         client?.close()
-        client = null;
+        client = null
+        Thread.sleep(1000)
     }
 
-    abstract fun isAuthEnabled(): Boolean;
+    abstract fun isAuthEnabled(): Boolean
 
     open fun enableAuth() {
         if (!isAuthEnabled()) {
-            if (!adminAdded) {
-                mongoManager.addAdminUser(getAdminClient())
-                adminAdded = true
-            }
-
             generateKeyFile()
             generatePemFile()
         }
@@ -77,16 +83,16 @@ public abstract class MongoCluster(public val name: String = BottleRocket.DEFAUL
     fun getAdminClient(): MongoClient {
         if (adminClient == null) {
             val adminCredentials = arrayListOf<MongoCredential>()
-            if(isAuthEnabled()) {
+            if (isAuthEnabled()) {
                 adminCredentials.add(MongoCredential.createCredential(MongoExecutable.SUPER_USER, "admin",
-                      MongoExecutable.SUPER_USER_PASSWORD.toCharArray()))
+                        MongoExecutable.SUPER_USER_PASSWORD.toCharArray()))
             }
             val builder = MongoClientOptions.builder()
                   .connectTimeout(3000)
             adminClient = MongoClient(getServerAddressList(), adminCredentials, builder.build())
         }
 
-        return adminClient!!;
+        return adminClient!!
     }
 
     fun getClient(): MongoClient {
@@ -96,7 +102,7 @@ public abstract class MongoCluster(public val name: String = BottleRocket.DEFAUL
             client = MongoClient(getServerAddressList(), credentials, builder.build())
         }
 
-        return client!!;
+        return client!!
     }
 
     fun generateKeyFile() {
@@ -106,15 +112,15 @@ public abstract class MongoCluster(public val name: String = BottleRocket.DEFAUL
             val stream = FileOutputStream(key)
             try {
                 ProcessExecutor()
-                      .command(listOf("openssl", "rand", "-base64", "741"))
-                      .redirectOutput(stream)
-                      .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asInfo())
-                      .execute()
+                        .commandSplit("openssl rand -base64 741")
+                        .redirectOutput(stream)
+                        .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
+                        .execute()
             } finally {
                 stream.close()
             }
         }
-        Files.setPosixFilePermissions(key.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
+        Files.setPosixFilePermissions(key.toPath(), perms)
     }
 
     fun generatePemFile() {
@@ -122,27 +128,29 @@ public abstract class MongoCluster(public val name: String = BottleRocket.DEFAUL
         val key = File(baseDir, "rocket-pem.key")
         val crt = File(baseDir, "rocket-pem.crt")
         if (!pem.exists()) {
-            var openssl = "openssl req -batch -newkey rsa:2048 -new -x509 -days 365 -nodes -out ${crt.absolutePath} -keyout ${key
-                  .absolutePath}";
-            var cat = "cat ${key.absolutePath} ${crt.absolutePath}"
             pem.parentFile.mkdirs()
-            val stream = FileOutputStream(pem.absolutePath)
             ProcessExecutor()
-                  .directory(baseDir)
-                  .command(openssl.split(" "))
-                  .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asDebug())
-                  .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
-                  .execute()
-            ProcessExecutor()
-                  .directory(baseDir)
-                  .command(cat.split(" "))
-                  .redirectOutput(stream)
-                  .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
-                  .execute()
+                    .directory(baseDir)
+                    .commandSplit("openssl req -batch -newkey rsa:2048 -new -x509 -days 365 -nodes -out ${crt.absolutePath} " +
+                            "-keyout ${key.absolutePath}")
+                    .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asDebug())
+                    .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
+                    .execute()
+            val pemStream = FileOutputStream(pem.absolutePath)
+            try {
+                ProcessExecutor()
+                        .directory(baseDir)
+                        .commandSplit("cat ${key.absolutePath} ${crt.absolutePath}")
+                        .redirectOutput(pemStream)
+                        .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
+                        .execute()
+            } finally {
+                pemStream.close()
+            }
         }
-        Files.setPosixFilePermissions(pem.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
-        Files.setPosixFilePermissions(key.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
-        Files.setPosixFilePermissions(crt.toPath(), EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
+        Files.setPosixFilePermissions(pem.toPath(), perms)
+        Files.setPosixFilePermissions(key.toPath(), perms)
+        Files.setPosixFilePermissions(crt.toPath(), perms)
     }
 
     abstract fun updateConfig(update: Configuration)
@@ -153,7 +161,7 @@ public abstract class MongoCluster(public val name: String = BottleRocket.DEFAUL
     }
 
     fun versionAtLeast(minVersion: Version): Boolean {
-        return Version.valueOf(version).greaterThanOrEqualTo(minVersion);
+        return Version.valueOf(version).greaterThanOrEqualTo(minVersion)
     }
 }
 
@@ -161,21 +169,21 @@ fun File.deleteTree() {
     if (exists()) {
         if (isDirectory) {
             Files.walkFileTree(toPath(), object : SimpleFileVisitor<Path>() {
-                override public fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
-                    Files.delete(file);
-                    return FileVisitResult.CONTINUE;
+                override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+                    Files.delete(file)
+                    return FileVisitResult.CONTINUE
                 }
 
-                override public fun postVisitDirectory(dir: Path, e: IOException?): FileVisitResult {
+                override fun postVisitDirectory(dir: Path, e: IOException?): FileVisitResult {
                     if (e == null) {
-                        Files.delete(dir);
-                        return FileVisitResult.CONTINUE;
+                        Files.delete(dir)
+                        return FileVisitResult.CONTINUE
                     } else {
                         // directory iteration failed
-                        throw e;
+                        throw e
                     }
                 }
-            });
+            })
         } else {
             throw RuntimeException("deleteTree() can only be called on directories:  ${this}")
         }

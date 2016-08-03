@@ -5,6 +5,6 @@ enum class State {
     DISABLED;
 
     override fun toString(): String {
-        return name().toLowerCase()
+        return name.toLowerCase()
     }
 }

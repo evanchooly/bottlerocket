@@ -8,17 +8,16 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 
-open
-public class SingleNode(name: String = BottleRocket.DEFAULT_NAME,
-                        port: Int = BottleRocket.DEFAULT_PORT,
-                        version: String = BottleRocket.DEFAULT_VERSION,
-                        baseDir: File = BottleRocket.DEFAULT_BASE_DIR) :
+open class SingleNode(name: String = BottleRocket.DEFAULT_NAME,
+                      port: Int = BottleRocket.DEFAULT_PORT,
+                      version: String = BottleRocket.DEFAULT_VERSION,
+                      baseDir: File = BottleRocket.DEFAULT_BASE_DIR) :
         MongoCluster(name, port, version, baseDir) {
 
     companion object {
         private val LOG: Logger = LoggerFactory.getLogger(SingleNode::class.java)
 
-        @JvmStatic public fun builder(): SingleNodeBuilder {
+        @JvmStatic fun builder(): SingleNodeBuilder {
             return SingleNodeBuilder()
         }
 
@@ -35,8 +34,8 @@ public class SingleNode(name: String = BottleRocket.DEFAULT_NAME,
     fun start() {
         if (!mongod.isAlive()) {
             mongod.start()
-//            Thread.sleep(3000)
         }
+        super.start()
     }
 
     override
@@ -56,7 +55,7 @@ public class SingleNode(name: String = BottleRocket.DEFAULT_NAME,
     override
     fun enableAuth() {
         super.enableAuth()
-        mongoManager.enableAuth(mongod);
+        mongoManager.enableAuth(mongod)
     }
 
     override fun isAuthEnabled(): Boolean {

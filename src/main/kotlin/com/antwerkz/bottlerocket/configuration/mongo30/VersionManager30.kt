@@ -9,7 +9,6 @@ import com.antwerkz.bottlerocket.configuration.Configuration as BaseConfiguratio
 
 open class VersionManager30(version: Version) : VersionManager26(version) {
     override fun getReplicaSetConfig(client: MongoClient): Document {
-        return client.runCommand(Document("replSetGetConfig", 1))
-                .get("config") as Document
+        return client.runCommand(Document("replSetGetConfig", 1))["config"] as Document
     }
 }

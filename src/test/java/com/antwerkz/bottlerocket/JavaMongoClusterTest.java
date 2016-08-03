@@ -15,14 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 import static com.antwerkz.bottlerocket.configuration.mongo30.ConfigurationKt.configuration;
 
-public class JavaMongoClusterTest {
+class JavaMongoClusterTest {
     @AfterMethod
-    public void sleep() throws InterruptedException {
+    void sleep() throws InterruptedException {
         Thread.sleep(1000);
     }
 
     @Test
-    public void singleNode() throws InterruptedException, UnknownHostException {
+    void singleNode() throws InterruptedException, UnknownHostException {
         final SingleNode cluster = SingleNode.builder()
                                             .baseDir(new File("build/rocket-java/singleNode"))
                                             .build();
@@ -35,7 +35,7 @@ public class JavaMongoClusterTest {
     }
 
     @Test
-    public void replicaSet() {
+    void replicaSet() {
         final ReplicaSet cluster = ReplicaSet.builder()
                                                 .baseDir(new File("build/rocket-java/replicaSet"))
                                                 .build();
@@ -55,7 +55,7 @@ public class JavaMongoClusterTest {
     }
 
     @Test
-    public void sharded() {
+    void sharded() {
         final ShardedCluster cluster = ShardedCluster.builder()
                                                      .baseDir(new File("build/rocket-java/sharded"))
                                                      .build();
@@ -81,7 +81,7 @@ public class JavaMongoClusterTest {
         }
     }
 
-    public void startCluster(final MongoCluster cluster) {
+    void startCluster(final MongoCluster cluster) {
         cluster.clean();
         cluster.updateConfig(configuration(c -> {
             c.storage(s -> {
@@ -97,7 +97,7 @@ public class JavaMongoClusterTest {
         cluster.start();
     }
 
-    public void testWrites(final MongoCluster cluster) {
+    void testWrites(final MongoCluster cluster) {
         final MongoClient client = cluster.getClient();
 
         final List<String> names = client.listDatabaseNames().into(new ArrayList<>());
@@ -113,7 +113,7 @@ public class JavaMongoClusterTest {
     }
 
 /*
-    public void mixedCluster() {
+    void mixedCluster() {
         final ReplicaSetBuilder builder = ReplicaSet.builder();
         builder.size(0);
         final ReplicaSet replicaSet = builder.build();

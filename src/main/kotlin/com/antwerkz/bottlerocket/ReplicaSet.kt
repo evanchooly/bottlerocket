@@ -13,16 +13,16 @@ import java.io.File
 import java.util.ArrayList
 import java.util.concurrent.TimeUnit
 
-class ReplicaSet public @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_NAME,
-                                                  port: Int = BottleRocket.DEFAULT_PORT,
-                                                  version: String = BottleRocket.DEFAULT_VERSION,
-                                                  baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
-                                                  val size: Int = 3) :
+class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_NAME,
+                                           port: Int = BottleRocket.DEFAULT_PORT,
+                                           version: String = BottleRocket.DEFAULT_VERSION,
+                                           baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
+                                           val size: Int = 3) :
         MongoCluster(name, port, version, baseDir) {
 
-    public val nodes: MutableList<Mongod> = arrayListOf()
+    val nodes: MutableList<Mongod> = arrayListOf()
     private var nodeMap = hashMapOf<Int, Mongod>()
-    public var initialized: Boolean = false;
+    var initialized: Boolean = false;
 
     companion object {
         private val LOG = LoggerFactory.getLogger(ReplicaSet::class.java)
@@ -47,7 +47,7 @@ class ReplicaSet public @JvmOverloads constructor(name: String = BottleRocket.DE
             nodes.add(node)
             basePort += 1;
         }
-        nodeMap.putAll(nodes.toMapBy { it.port })
+        nodeMap.putAll(nodes.associateBy { it.port })
     }
 
     override
@@ -58,6 +58,7 @@ class ReplicaSet public @JvmOverloads constructor(name: String = BottleRocket.DE
             }
 
             initialize()
+            super.start()
         }
     }
 
@@ -77,7 +78,7 @@ class ReplicaSet public @JvmOverloads constructor(name: String = BottleRocket.DE
                         val mongoClient = mongod.getClient(isAuthEnabled())
                         val result = mongoClient.runCommand(Document("isMaster", null));
 
-                        if (result.containsKey ("primary")) {
+                        if (result.containsKey("primary")) {
                             val host = result.getString("primary")
                             return nodeMap.get(Integer.valueOf(host.split(":".toRegex()).toTypedArray()[1]))
                         }
@@ -118,9 +119,9 @@ class ReplicaSet public @JvmOverloads constructor(name: String = BottleRocket.DE
     }
 
     fun initialize() {
-        val first = nodes.filter { it.isAlive() }.first()
-        val replicaSetConfig = mongoManager.getReplicaSetConfig(first.getClient())
-        if (replicaSetConfig == null) {
+//        val first = nodes.filter { it.isAlive() }.first()
+//        val replicaSetConfig = mongoManager.getReplicaSetConfig(first.getClient())
+        if (!initialized /*replicaSetConfig == null*/) {
             initiateReplicaSet()
             LOG.info("replSet initiated.  waiting for primary.")
             waitForPrimary()
@@ -140,7 +141,7 @@ class ReplicaSet public @JvmOverloads constructor(name: String = BottleRocket.DE
                         .append("members", listOf(Document("_id", 1)
                                 .append("host", "localhost:${primary.port}"))
                         )), ReadPreference.primaryPreferred())
-        if ( !(results.getDouble("ok")?.toInt()?.equals(1) ?: false) ) {
+        if (!(results.getDouble("ok")?.toInt()?.equals(1) ?: false)) {
             throw IllegalStateException("Failed to initiate replica set: ${results}")
         }
         initialized = true;
@@ -160,7 +161,7 @@ class ReplicaSet public @JvmOverloads constructor(name: String = BottleRocket.DE
 
             val results = client.runCommand(Document("replSetReconfig", config));
 
-            if ( results.getDouble("ok").toInt() != 1) {
+            if (results.getDouble("ok").toInt() != 1) {
                 throw RuntimeException("Failed to add members to replica set:  ${results}")
             }
         } else {

@@ -21,25 +21,35 @@ import java.net.URL
 import java.nio.file.Files
 import java.util.zip.GZIPInputStream
 
-public class MongoManager(val versionManager: VersionManager) : VersionManager by versionManager {
+class MongoManager(val versionManager: VersionManager) : VersionManager by versionManager {
     private val LOG = LoggerFactory.getLogger(MongoManager::class.java)
 
-    public companion object {
-        public var macDownload: String = "https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-%s.tgz"
-        public var linuxDownload: String = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-%s.tgz"
-        public var windowsDownload: String = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-%s.zip"
-
+    companion object {
+        @JvmStatic fun macDownload(version: Version): String {
+            return "https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-${version}.tgz"
+        }
+        @JvmStatic fun linuxDownload(version: Version): String {
+            return "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${version}.tgz"
+        }
+        @JvmStatic fun windowsDownload(version: Version): String {
+            return "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-${version}.zip"
+        }
         @JvmStatic fun of(versionString: String): MongoManager {
-            val version = Version.valueOf(versionString)
-            return MongoManager(BaseVersionManager.of(version));
+            return MongoManager(BaseVersionManager.of(Version.valueOf(versionString)))
         }
     }
 
-    public val downloadPath: File
-    public val binDir: String
-    public val mongo: String
-    public val mongod: String
-    public val mongos: String
+    val downloadPath: File
+    val binDir: String
+    var mongo: String
+
+        get() = ""
+
+        set(value) {}
+
+
+    val mongod: String
+    val mongos: String
 
     init {
         downloadPath = File(BottleRocket.TEMP_DIR, "mongo-downloads")
@@ -55,13 +65,13 @@ public class MongoManager(val versionManager: VersionManager) : VersionManager b
         }
     }
 
-    public fun download(): File {
+    fun download(): File {
         var url = if (SystemUtils.IS_OS_LINUX) {
-            linuxDownload
+            linuxDownload(version)
         } else if (SystemUtils.IS_OS_MAC_OSX) {
-            macDownload
+            macDownload(version)
         } else if (SystemUtils.IS_OS_WINDOWS) {
-            windowsDownload
+            windowsDownload(version)
         } else {
             throw RuntimeException("Unsupported operating system: ${SystemUtils.OS_NAME}")
         }
@@ -69,19 +79,19 @@ public class MongoManager(val versionManager: VersionManager) : VersionManager b
         return extractDownload({ downloadArchive(format(url, versionManager.version)) })
     }
 
-    public fun configServer(name: String, port: Int, baseDir: File): ConfigServer {
+    fun configServer(name: String, port: Int, baseDir: File): ConfigServer {
         return ConfigServer(this, name, port, baseDir)
     }
 
-    public fun mongod(name: String, port: Int, baseDir: File): Mongod {
+    fun mongod(name: String, port: Int, baseDir: File): Mongod {
         return Mongod(this, name, port, baseDir)
     }
 
-    public fun mongos(name: String, port: Int, baseDir: File, configServers: List<ConfigServer>): Mongos {
+    fun mongos(name: String, port: Int, baseDir: File, configServers: List<ConfigServer>): Mongos {
         return Mongos(this, name, port, baseDir, configServers)
     }
 
-    public fun extract(download: File): File {
+    fun extract(download: File): File {
         if (GzipUtils.isCompressedFilename(download.name)) {
             TarArchiveInputStream(GZIPInputStream(FileInputStream(download))).use { inputStream ->
                 extract(inputStream)
@@ -117,7 +127,7 @@ public class MongoManager(val versionManager: VersionManager) : VersionManager b
     private fun extractDownload(extractor: () -> File): File {
         var retry = 0
         while (true) {
-            var download: File = extractor()
+            val download: File = extractor()
             try {
                 val file = extract(download)
                 File(file, "bin").listFiles().forEach {

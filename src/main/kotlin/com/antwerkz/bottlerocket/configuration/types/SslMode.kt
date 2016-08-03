@@ -3,7 +3,7 @@ package com.antwerkz.bottlerocket.configuration.types
 enum class SslMode {
     DISABLED {
         override fun toString(): String {
-            return name().toLowerCase()
+            return name.toLowerCase()
         }
     },
     ALLOW,
@@ -11,6 +11,6 @@ enum class SslMode {
     REQUIRE;
 
     override fun toString(): String {
-        return name().toLowerCase() + "SSL";
+        return name.toLowerCase() + "SSL";
     }
 }

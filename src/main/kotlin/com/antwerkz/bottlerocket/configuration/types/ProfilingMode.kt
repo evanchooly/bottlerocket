@@ -10,6 +10,6 @@ enum class ProfilingMode {
     };
 
     override fun toString(): String {
-        return name().toLowerCase()
+        return name.toLowerCase()
     }
 }

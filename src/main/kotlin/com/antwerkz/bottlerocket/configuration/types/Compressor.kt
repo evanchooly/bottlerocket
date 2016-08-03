@@ -6,6 +6,6 @@ enum class Compressor {
     ZLIB;
 
     override fun toString(): String {
-        return name().toLowerCase()
+        return name.toLowerCase()
     }
 }

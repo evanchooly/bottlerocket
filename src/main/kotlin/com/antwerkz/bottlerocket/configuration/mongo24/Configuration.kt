@@ -101,7 +101,7 @@ enum class Profile {
     ALL;
 
     override fun toString(): String {
-        return ordinal().toString();
+        return ordinal.toString();
     }
 }
 

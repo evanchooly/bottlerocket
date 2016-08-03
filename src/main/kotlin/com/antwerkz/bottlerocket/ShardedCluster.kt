@@ -6,6 +6,7 @@ import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.mongodb.ServerAddress
 import org.bson.BsonDocument
+import org.bson.Document
 import org.bson.codecs.BsonDocumentCodec
 import org.bson.codecs.DecoderContext
 import org.bson.json.JsonReader
@@ -54,13 +55,16 @@ class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
 
     override
     fun start() {
-        configServers.forEach { it.start() }
-        shards.forEach { it.start() }
-        mongoses.forEach { it.start() }
+        if (!isStarted()) {
+            configServers.forEach { it.start() }
+            shards.forEach { it.start() }
+            mongoses.forEach { it.start() }
 
-        if (!initialized) {
-            shards.forEach { addMember(it) }
-            initialized = true
+            if (!initialized) {
+                shards.forEach { addMember(it) }
+                initialized = true
+            }
+            super.start()
         }
     }
 
@@ -98,9 +102,9 @@ class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
     private fun addMember(replicaSet: ReplicaSet) {
         val replSetUrl = replicaSet.replicaSetUrl();
 
-        val results = runCommand(mongoses.first(), "sh.addShard(\"${replSetUrl}\");")
+        val results = mongoses.first().runCommand(Document("addShard", replSetUrl))
 
-        if ( results.getInt32("ok").value != 1) {
+        if ( results.getDouble("ok").toInt() != 1) {
             throw RuntimeException("Failed to add ${replicaSet.name} to cluster:  ${results}")
         }
     }
@@ -138,7 +142,7 @@ class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
 
     }
 
-    public fun runCommand(mongos: Mongos, command: String): BsonDocument {
+    fun runCommand(mongos: Mongos, command: String): BsonDocument {
         val stream = ByteArrayOutputStream()
         val list = listOf(mongoManager.mongo,
               "admin", "--port", "${mongos.port}", "--quiet")
@@ -153,7 +157,7 @@ class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
         try {
             return BsonDocumentCodec().decode(JsonReader(json), DecoderContext.builder().build())
         } catch(e: Exception) {
-            LOG.error("Invalid response from server: ${json}")
+            LOG.error("Invalid response from server: ${json}", e)
             throw e;
         }
     }
@@ -161,9 +165,9 @@ class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
     override
     fun shutdown() {
         super.shutdown()
-        mongoses.forEach { it.shutdown() }
-        configServers.forEach { it.shutdown() }
         shards.forEach { it.shutdown() }
+        configServers.forEach { it.shutdown() }
+        mongoses.forEach { it.shutdown() }
     }
 
     override fun isAuthEnabled(): Boolean {

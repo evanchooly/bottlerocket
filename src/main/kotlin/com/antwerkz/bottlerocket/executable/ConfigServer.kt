@@ -8,7 +8,7 @@ import org.zeroturnaround.process.Processes
 import java.io.File
 import java.io.FileOutputStream
 
-public class ConfigServer(manager: MongoManager, name: String,
+class ConfigServer(manager: MongoManager, name: String,
                           port: Int, baseDir: File) : MongoExecutable(manager, name, port, baseDir) {
     companion object {
         private val LOG = LoggerFactory.getLogger(ConfigServer::class.java)
@@ -24,7 +24,7 @@ public class ConfigServer(manager: MongoManager, name: String,
             manager.writeConfig(file, config)
 
             LOG.info("Starting configsvr on port ${port}")
-            var processResult = ProcessExecutor()
+            val processResult = ProcessExecutor()
                   .command(manager.mongod,
                         "--configsvr",
                         "--config", file.absolutePath)
@@ -34,9 +34,11 @@ public class ConfigServer(manager: MongoManager, name: String,
                   //   .redirectError(Slf4jStream.of(LoggerFactory.getLogger("Mongod.${port}")).asInfo())
                   .destroyOnExit()
                   .start()
-            process = Processes.newJavaProcess(processResult?.process)
+            process = Processes.newPidProcess(processResult.process)
 
             waitForStartUp()
+        } else {
+            LOG.warn("start() was called on a running server: ${port}")
         }
     }
 }

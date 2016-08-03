@@ -5,6 +5,6 @@ enum class RotateBehavior {
     ROTATE;
 
     override fun toString(): String {
-        return name().toLowerCase()
+        return name.toLowerCase()
     }
 }
