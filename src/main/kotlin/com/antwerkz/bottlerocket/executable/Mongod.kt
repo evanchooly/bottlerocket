@@ -55,34 +55,4 @@ class Mongod(manager: MongoManager, name: String,
             LOG.warn("start() was called on a running server: ${port}")
         }
     }
-
-    fun shutdown2() {
-        if (process != null ) {
-            LOG.info("Stopping mongod on port ${port}")
-            baseDir.mkdirs()
-
-            val args = arrayListOf(manager.mongod,
-                  "--config", configFile.absolutePath, "--shutdown")
-            val processResult = ProcessExecutor()
-                    .command(args)
-                    .redirectOutput(stdOut)
-                    .redirectError(stdErr)
-                    .destroyOnExit()
-                    .start()
-
-            val shutdown = Processes.newPidProcess(processResult?.process)
-
-            Awaitility
-                    .await()
-                    .atMost(10, TimeUnit.SECONDS)
-                    .pollInterval(Duration.ONE_SECOND)
-                    .until<Boolean>({
-                        println("Waiting for server to die")
-                        !shutdown.isAlive
-                    })
-
-            stdOut.close()
-            stdErr.close()
-        }
-    }
 }

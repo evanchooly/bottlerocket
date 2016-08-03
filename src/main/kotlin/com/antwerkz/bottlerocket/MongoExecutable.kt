@@ -64,10 +64,7 @@ abstract class MongoExecutable(val manager: MongoManager, val name: String, val 
                 .await()
                 .atMost(30, TimeUnit.SECONDS)
                 .pollInterval(Duration.ONE_SECOND)
-                .until<Boolean>({
-                    println("Waiting for server to die")
-                    !process.isAlive
-                })
+                .until<Boolean>({ !process.isAlive })
         File(baseDir, "mongod.lock").delete()
         client?.close()
         client = null

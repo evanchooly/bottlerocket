@@ -1,4 +1,4 @@
-package com.antwerkz.bottlerocket.configuration.mongo30.blocks
+package com.antwerkz.bottlerocket.configuration.mongo32.blocks
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.types.Compressor

@@ -9,6 +9,7 @@ import java.io.File
 import java.net.URI
 import com.antwerkz.bottlerocket.configuration.mongo26.Configuration as Config26
 import com.antwerkz.bottlerocket.configuration.mongo30.Configuration as Config30
+import com.antwerkz.bottlerocket.configuration.mongo32.Configuration as Config32
 
 class ConfigurationDocsTest {
     private var elements: MutableList<String> = arrayListOf()
@@ -31,7 +32,7 @@ class ConfigurationDocsTest {
                         .toMutableList()
 
             }
-            else -> throw IllegalArgumentException("Unknown version: ${version}");
+            else -> throw IllegalArgumentException("Unknown version: ${version}")
         }
     }
 
@@ -39,18 +40,20 @@ class ConfigurationDocsTest {
     fun checkDocs(version: String, url: String, configuration: ConfigBlock) {
         loadLinks(url, version)
         check(configuration.toProperties(mode = ConfigMode.ALL, includeAll = true))
-        Assert.assertTrue(elements.isEmpty(), "elements should be empty now but has ${elements.size} items left: \n${elements}")
+        Assert.assertTrue(elements.isEmpty(), "found ${elements.size} extra items in $url: \n${elements
+                .joinToString("\n")}")
     }
 
     private fun check(map: Map<String, String>) {
         map.keys.forEach {
-            Assert.assertTrue(elements.remove("#${it}"), "Found ${it} in the configuration file but not in the docs.");
+            Assert.assertTrue(elements.remove("#${it}"), "Found ${it} in the configuration file but not in the docs.")
         }
     }
 
     @DataProvider(name = "urls")
     fun urls(): Array<Array<Any>> {
         return arrayOf(
+                arrayOf("3.2.0", "http://docs.mongodb.org/v3.2/reference/configuration-options/", Config32()),
                 arrayOf("3.0.0", "http://docs.mongodb.org/v3.0/reference/configuration-options/", Config30()),
                 arrayOf("2.6.0", "http://docs.mongodb.org/v2.6/reference/configuration-options/", Config26())
         )

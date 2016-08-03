@@ -1,4 +1,4 @@
-package com.antwerkz.bottlerocket.configuration.mongo26.blocks
+package com.antwerkz.bottlerocket.configuration.mongo32.blocks
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.types.SslMode
@@ -6,7 +6,6 @@ import com.antwerkz.bottlerocket.configuration.types.SslMode
 class Ssl(
       @Deprecated("Deprecated since version 2.6.")
       var sslOnNormalPorts: Boolean? = null,
-      var disabledProtocols: String? = null,
       var mode: SslMode? = null,
       var PEMKeyFile: String? = null,
       var PEMKeyPassword: String? = null,
@@ -14,7 +13,9 @@ class Ssl(
       var clusterPassword: String? = null,
       var CAFile: String? = null,
       var CRLFile: String? = null,
+      var allowConnectionsWithoutCertificates: Boolean? = null,
       var allowInvalidCertificates: Boolean? = null,
-      var FIPSMode: Boolean? = null,
-      var weakCertificateValidation: Boolean? = null
+      var allowInvalidHostnames: Boolean? = null,
+      var disabledProtocols: String? = null,
+      var FIPSMode: Boolean? = null
 ) : ConfigBlock
