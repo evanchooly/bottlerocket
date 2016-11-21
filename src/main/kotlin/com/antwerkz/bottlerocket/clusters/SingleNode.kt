@@ -1,6 +1,6 @@
-package com.antwerkz.bottlerocket
+package com.antwerkz.bottlerocket.clusters
 
-import com.antwerkz.bottlerocket.clusters.SingleNodeBuilder
+import com.antwerkz.bottlerocket.BottleRocket
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.mongodb.ServerAddress
@@ -8,7 +8,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 
-open class SingleNode(name: String = BottleRocket.DEFAULT_NAME,
+open class SingleNode @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_NAME,
                       port: Int = BottleRocket.DEFAULT_PORT,
                       version: String = BottleRocket.DEFAULT_VERSION,
                       baseDir: File = BottleRocket.DEFAULT_BASE_DIR) :
@@ -72,5 +72,18 @@ open class SingleNode(name: String = BottleRocket.DEFAULT_NAME,
             content += ", authentication = enabled"
         }
         return "Mongod { ${content} }"
+    }
+}
+
+class SingleNodeBuilder() : MongoClusterBuilder<SingleNodeBuilder>() {
+    constructor(mongod: SingleNode) : this() {
+        name(mongod.name)
+        port(mongod.port)
+        version(mongod.version)
+        baseDir(mongod.baseDir)
+    }
+
+    fun build(): SingleNode {
+        return SingleNode(name, port, version, baseDir)
     }
 }

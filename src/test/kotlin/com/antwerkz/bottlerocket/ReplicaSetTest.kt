@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.clusters.ReplicaSet
 import com.github.zafarkhaja.semver.Version
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test

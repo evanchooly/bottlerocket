@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.clusters.SingleNode
 import org.testng.annotations.Test
 import java.io.File
 

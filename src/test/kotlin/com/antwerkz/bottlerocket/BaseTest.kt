@@ -1,5 +1,7 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.clusters.MongoCluster
+import com.antwerkz.bottlerocket.clusters.ReplicaSet
 import org.bson.Document
 import org.testng.Assert
 import org.testng.SkipException

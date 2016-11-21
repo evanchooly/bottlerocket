@@ -1,10 +1,10 @@
 package com.antwerkz.bottlerocket.testng
 
-import com.antwerkz.bottlerocket.MongoCluster
+import com.antwerkz.bottlerocket.clusters.MongoCluster
 import com.antwerkz.bottlerocket.BottleRocket.DEFAULT_VERSION
-import com.antwerkz.bottlerocket.ReplicaSet
-import com.antwerkz.bottlerocket.ShardedCluster
-import com.antwerkz.bottlerocket.SingleNode
+import com.antwerkz.bottlerocket.clusters.ReplicaSet
+import com.antwerkz.bottlerocket.clusters.ShardedCluster
+import com.antwerkz.bottlerocket.clusters.SingleNode
 import org.testng.annotations.DataProvider
 
 class BottleRocketDataProvider {

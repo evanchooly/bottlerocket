@@ -1,5 +1,9 @@
 package com.antwerkz.bottlerocket;
 
+import com.antwerkz.bottlerocket.clusters.MongoCluster;
+import com.antwerkz.bottlerocket.clusters.ReplicaSet;
+import com.antwerkz.bottlerocket.clusters.ShardedCluster;
+import com.antwerkz.bottlerocket.clusters.SingleNode;
 import com.antwerkz.bottlerocket.executable.Mongod;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
@@ -24,8 +28,8 @@ class JavaMongoClusterTest {
     @Test
     void singleNode() throws InterruptedException, UnknownHostException {
         final SingleNode cluster = SingleNode.builder()
-                                            .baseDir(new File("build/rocket-java/singleNode"))
-                                            .build();
+                                             .baseDir(new File("build/rocket-java/singleNode"))
+                                             .build();
         try {
             startCluster(cluster);
             testWrites(cluster);
@@ -37,8 +41,8 @@ class JavaMongoClusterTest {
     @Test
     void replicaSet() {
         final ReplicaSet cluster = ReplicaSet.builder()
-                                                .baseDir(new File("build/rocket-java/replicaSet"))
-                                                .build();
+                                             .baseDir(new File("build/rocket-java/replicaSet"))
+                                             .build();
         try {
             startCluster(cluster);
 

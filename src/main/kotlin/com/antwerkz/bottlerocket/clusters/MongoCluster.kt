@@ -1,5 +1,9 @@
-package com.antwerkz.bottlerocket
+package com.antwerkz.bottlerocket.clusters
 
+import com.antwerkz.bottlerocket.BottleRocket
+import com.antwerkz.bottlerocket.DatabaseRole
+import com.antwerkz.bottlerocket.MongoExecutable
+import com.antwerkz.bottlerocket.MongoManager
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.github.zafarkhaja.semver.Version
 import com.mongodb.MongoClient
@@ -13,11 +17,13 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.file.FileVisitResult
+import java.nio.file.FileVisitResult.CONTINUE
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
-import java.nio.file.attribute.PosixFilePermission
+import java.nio.file.attribute.PosixFilePermission.OWNER_READ
+import java.nio.file.attribute.PosixFilePermission.OWNER_WRITE
 import java.util.EnumSet
 
 abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
@@ -26,7 +32,7 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
                             val baseDir: File = BottleRocket.DEFAULT_BASE_DIR) {
 
     companion object {
-        val perms = EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE)
+        val perms = EnumSet.of(OWNER_READ, OWNER_WRITE)
     }
 
     val mongoManager: MongoManager = MongoManager.of(version)
@@ -65,8 +71,6 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
         client?.close()
         client = null
     }
-
-    abstract fun isAuthEnabled(): Boolean
 
     open fun enableAuth() {
         if (!isAuthEnabled()) {
@@ -159,8 +163,6 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
         }
     }
 
-    abstract fun updateConfig(update: Configuration)
-
     fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
         mongoManager.addUser(getAdminClient(), database, userName, password, roles)
         credentials.add(MongoCredential.createCredential(userName, database, password.toCharArray()))
@@ -169,6 +171,11 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
     fun versionAtLeast(minVersion: Version): Boolean {
         return Version.valueOf(version).greaterThanOrEqualTo(minVersion)
     }
+
+    abstract fun isAuthEnabled(): Boolean
+
+    abstract fun updateConfig(update: Configuration)
+
 }
 
 fun File.deleteTree() {
@@ -177,13 +184,13 @@ fun File.deleteTree() {
             Files.walkFileTree(toPath(), object : SimpleFileVisitor<Path>() {
                 override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
                     Files.delete(file)
-                    return FileVisitResult.CONTINUE
+                    return CONTINUE
                 }
 
                 override fun postVisitDirectory(dir: Path, e: IOException?): FileVisitResult {
                     if (e == null) {
                         Files.delete(dir)
-                        return FileVisitResult.CONTINUE
+                        return CONTINUE
                     } else {
                         // directory iteration failed
                         throw e
@@ -193,5 +200,38 @@ fun File.deleteTree() {
         } else {
             throw RuntimeException("deleteTree() can only be called on directories:  ${this}")
         }
+    }
+}
+
+abstract class MongoClusterBuilder<out T>() {
+    var name: String = BottleRocket.DEFAULT_NAME
+        private set
+    var port: Int = BottleRocket.DEFAULT_PORT
+        private set
+    var version: String = BottleRocket.DEFAULT_VERSION
+        private set
+    var baseDir: File = BottleRocket.DEFAULT_BASE_DIR
+        private set
+
+    open fun name(value: String): T {
+        name = value
+        baseDir = if (baseDir == BottleRocket.DEFAULT_BASE_DIR) File(
+              "${BottleRocket.TEMP_DIR}/${name}") else baseDir
+        return this as T
+    }
+
+    fun port(value: Int): T {
+        port = value
+        return this as T
+    }
+
+    fun version(value: String): T {
+        version = value
+        return this as T
+    }
+
+    fun baseDir(value: File): T {
+        baseDir = value
+        return this as T
     }
 }

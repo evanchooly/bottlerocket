@@ -1,9 +1,10 @@
-package com.antwerkz.bottlerocket
+package com.antwerkz.bottlerocket.clusters
 
-import com.antwerkz.bottlerocket.clusters.ReplicaSetBuilder
+import com.antwerkz.bottlerocket.BottleRocket
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.mongo26.configuration
 import com.antwerkz.bottlerocket.executable.Mongod
+import com.antwerkz.bottlerocket.runCommand
 import com.jayway.awaitility.Awaitility
 import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
@@ -11,7 +12,7 @@ import org.bson.Document
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.ArrayList
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.SECONDS
 
 class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_NAME,
                                            port: Int = BottleRocket.DEFAULT_PORT,
@@ -22,7 +23,7 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
 
     val nodes: MutableList<Mongod> = arrayListOf()
     private var nodeMap = hashMapOf<Int, Mongod>()
-    var initialized: Boolean = false;
+    var initialized: Boolean = false
 
     companion object {
         private val LOG = LoggerFactory.getLogger(ReplicaSet::class.java)
@@ -43,9 +44,9 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
         for (i in 0..size - 1 /*step 3*/) {
             val nodeName = "${name}-${basePort}"
             val node = mongoManager.mongod(nodeName, basePort, File(baseDir, nodeName))
-            setReplicaSetName(node, name);
+            setReplicaSetName(node, name)
             nodes.add(node)
-            basePort += 1;
+            basePort += 1
         }
         nodeMap.putAll(nodes.associateBy { it.port })
     }
@@ -67,7 +68,7 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
     }
 
     fun addNode(node: Mongod) {
-        nodes.add(node);
+        nodes.add(node)
         nodeMap.put(node.port, node)
     }
 
@@ -76,14 +77,14 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
             nodes.filter({ it.isAlive() })
                     .forEach({ mongod ->
                         val mongoClient = mongod.getClient(isAuthEnabled())
-                        val result = mongoClient.runCommand(Document("isMaster", null));
+                        val result = mongoClient.runCommand(Document("isMaster", null))
 
                         if (result.containsKey("primary")) {
                             val host = result.getString("primary")
                             return nodeMap.get(Integer.valueOf(host.split(":".toRegex()).toTypedArray()[1]))
                         }
                     })
-            return null;
+            return null
         } catch(e: Exception) {
             LOG.error(e.message, e)
             return null
@@ -91,12 +92,12 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
     }
 
     fun hasPrimary(): Boolean {
-        return getPrimary() != null;
+        return getPrimary() != null
     }
 
     fun waitForPrimary(): Mongod? {
         Awaitility.await()
-                .atMost(30, TimeUnit.SECONDS)
+                .atMost(30, SECONDS)
                 .until<Boolean>({
                     hasPrimary()
                 })
@@ -144,7 +145,7 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
         if (!(results.getDouble("ok")?.toInt()?.equals(1) ?: false)) {
             throw IllegalStateException("Failed to initiate replica set: ${results}")
         }
-        initialized = true;
+        initialized = true
     }
 
     private fun addMembers() {
@@ -159,7 +160,7 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
                     .map { Document("_id", ++id).append("host", "localhost:${it.value.port}") }
                     .toCollection(members)
 
-            val results = client.runCommand(Document("replSetReconfig", config));
+            val results = client.runCommand(Document("replSetReconfig", config))
 
             if (results.getDouble("ok").toInt() != 1) {
                 throw RuntimeException("Failed to add members to replica set:  ${results}")
@@ -196,3 +197,16 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
     }
 }
 
+class ReplicaSetBuilder(): MongoClusterBuilder<ReplicaSetBuilder>() {
+    var size: Int = 3
+        private set
+
+    fun size(value: Int) : ReplicaSetBuilder {
+        size = value
+        return this
+    }
+
+    fun build(): ReplicaSet {
+        return ReplicaSet(name, port, version, baseDir, size)
+    }
+}

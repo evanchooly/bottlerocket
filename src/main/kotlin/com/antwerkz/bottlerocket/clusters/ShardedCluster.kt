@@ -1,6 +1,6 @@
-package com.antwerkz.bottlerocket
+package com.antwerkz.bottlerocket.clusters
 
-import com.antwerkz.bottlerocket.clusters.ShardedClusterBuilder
+import com.antwerkz.bottlerocket.BottleRocket
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongos
@@ -17,7 +17,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
+class ShardedCluster @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_NAME,
                      port: Int = BottleRocket.DEFAULT_PORT,
                      version: String = BottleRocket.DEFAULT_VERSION,
                      baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
@@ -80,9 +80,7 @@ class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
         super.enableAuth()
         configServers.forEach { mongoManager.enableAuth(it, keyFile) }
         shards.forEach { replSet ->
-//            mongoManager.addAdminUser(replSet.getAdminClient())
             replSet.nodes.forEach { mongoManager.enableAuth(it, keyFile) }
-//            replSet.adminAdded = true
         }
         mongoses.forEach { mongoManager.enableAuth(it, keyFile) }
     }
@@ -100,7 +98,7 @@ class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
     }
 
     private fun addMember(replicaSet: ReplicaSet) {
-        val replSetUrl = replicaSet.replicaSetUrl();
+        val replSetUrl = replicaSet.replicaSetUrl()
 
         val results = mongoses.first().runCommand(Document("addShard", replSetUrl))
 
@@ -114,7 +112,7 @@ class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
             for ( i in 0..shardCount - 1) {
                 val replicaSet = ReplicaSet("${name}${i}", nextPort, version, baseDir)
                 shards.add(replicaSet)
-                nextPort += replicaSet.size;
+                nextPort += replicaSet.size
             }
         }
     }
@@ -125,7 +123,7 @@ class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
                 val name = "configSvr-${nextPort}"
                 val configSvr = mongoManager.configServer(name, nextPort, File(baseDir, name))
                 configServers.add(configSvr)
-                nextPort += 1;
+                nextPort += 1
             }
         }
     }
@@ -135,7 +133,7 @@ class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
             for ( i in 1..mongosCount) {
                 val mongosName = "mongos-${nextPort}"
                 mongoses.add(mongoManager.mongos(mongosName, nextPort, File(baseDir, mongosName), configServers))
-                nextPort += 1;
+                nextPort += 1
 
             }
         }
@@ -158,7 +156,7 @@ class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
             return BsonDocumentCodec().decode(JsonReader(json), DecoderContext.builder().build())
         } catch(e: Exception) {
             LOG.error("Invalid response from server: ${json}", e)
-            throw e;
+            throw e
         }
     }
 
@@ -176,5 +174,33 @@ class ShardedCluster(name: String = BottleRocket.DEFAULT_NAME,
 
     override fun getServerAddressList(): List<ServerAddress> {
         return mongoses.map { it.getServerAddress() }
+    }
+}
+
+class ShardedClusterBuilder() : MongoClusterBuilder<ShardedClusterBuilder>() {
+    var shardCount: Int = 1
+        private set
+    var mongosCount: Int = 1
+        private set
+    var configSvrCount: Int = 1
+        private set
+
+    fun shardCount(value: Int) : ShardedClusterBuilder {
+        shardCount = value
+        return this
+    }
+
+    fun mongosCount(value: Int) : ShardedClusterBuilder {
+        mongosCount = value
+        return this
+    }
+
+    fun configSvrCount(value: Int) : ShardedClusterBuilder {
+        configSvrCount = value
+        return this
+    }
+
+    fun build(): ShardedCluster {
+        return ShardedCluster(name, port, version, baseDir, shardCount, mongosCount, configSvrCount)
     }
 }

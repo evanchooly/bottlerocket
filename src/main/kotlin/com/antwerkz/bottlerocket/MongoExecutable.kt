@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.clusters.deleteTree
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.jayway.awaitility.Awaitility
 import com.jayway.awaitility.Duration
