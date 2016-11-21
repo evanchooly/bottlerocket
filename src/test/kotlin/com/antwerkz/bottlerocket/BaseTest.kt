@@ -1,19 +1,20 @@
 package com.antwerkz.bottlerocket
 
 import org.bson.Document
-import org.slf4j.LoggerFactory
 import org.testng.Assert
 import org.testng.SkipException
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.DataProvider
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.ArrayList
 
 open class BaseTest {
     companion object {
         val versions = arrayOf(
-                arrayOf("2.6.12"),
-                arrayOf("3.0.5"),
-                arrayOf("3.2.8")
+                arrayOf("3.2.11"),
+                arrayOf("3.0.14"),
+                arrayOf("2.6.12")
         )
     }
 
@@ -98,5 +99,10 @@ open class BaseTest {
         if (!condition) {
             throw SkipException(message)
         }
+    }
+
+    protected fun basePath(): String {
+        val format = LocalTime.now().format(DateTimeFormatter.ofPattern("hhmmss"))
+        return "build/rocket/$format/"
     }
 }

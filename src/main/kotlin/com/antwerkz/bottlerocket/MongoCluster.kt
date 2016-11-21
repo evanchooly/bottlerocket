@@ -64,7 +64,6 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
         adminClient = null
         client?.close()
         client = null
-        Thread.sleep(1000)
     }
 
     abstract fun isAuthEnabled(): Boolean
@@ -120,7 +119,11 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
                 stream.close()
             }
         }
-        Files.setPosixFilePermissions(key.toPath(), perms)
+        try {
+            Files.setPosixFilePermissions(key.toPath(), perms)
+        } catch(ignored : UnsupportedOperationException) {
+
+        }
     }
 
     fun generatePemFile() {
@@ -148,9 +151,12 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
                 pemStream.close()
             }
         }
-        Files.setPosixFilePermissions(pem.toPath(), perms)
-        Files.setPosixFilePermissions(key.toPath(), perms)
-        Files.setPosixFilePermissions(crt.toPath(), perms)
+        try {
+            Files.setPosixFilePermissions(pem.toPath(), perms)
+            Files.setPosixFilePermissions(key.toPath(), perms)
+            Files.setPosixFilePermissions(crt.toPath(), perms)
+        } catch(ignored : UnsupportedOperationException) {
+        }
     }
 
     abstract fun updateConfig(update: Configuration)

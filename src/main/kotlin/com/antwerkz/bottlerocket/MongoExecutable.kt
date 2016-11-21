@@ -58,7 +58,6 @@ abstract class MongoExecutable(val manager: MongoManager, val name: String, val 
     open fun shutdown() {
 //        shutdownWithDriver()
         shutdownWithKill()
-        //        Thread.sleep(1000)
         val process = process!!
         Awaitility
                 .await()
@@ -90,7 +89,7 @@ abstract class MongoExecutable(val manager: MongoManager, val name: String, val 
     fun shutdownWithKill() {
         if (isAlive()) {
             LOG.info("Shutting down service on port ${port}")
-            process?.destroy(false)
+            process?.destroy(true)
         }
     }
 

@@ -66,7 +66,7 @@ class MongoManager(val versionManager: VersionManager) : VersionManager by versi
     }
 
     fun download(): File {
-        var url = if (SystemUtils.IS_OS_LINUX) {
+        val url = if (SystemUtils.IS_OS_LINUX) {
             linuxDownload(version)
         } else if (SystemUtils.IS_OS_MAC_OSX) {
             macDownload(version)

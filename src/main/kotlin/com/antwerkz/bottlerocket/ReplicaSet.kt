@@ -107,7 +107,7 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
     override
     fun shutdown() {
         val primary = getPrimary()
-        nodes.filter { it != primary }.forEach { it.shutdown() }
+        nodes.filter { it != primary }.forEach(Mongod::shutdown)
         primary?.shutdown()
         super.shutdown()
     }

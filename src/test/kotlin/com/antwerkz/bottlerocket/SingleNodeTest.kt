@@ -6,13 +6,13 @@ import java.io.File
 class SingleNodeTest : BaseTest() {
     @Test(dataProvider = "versions")
     fun singleNode(clusterVersion: String) {
-        cluster = SingleNode(baseDir = File("build/rocket/singleNode").absoluteFile, version = clusterVersion)
+        cluster = SingleNode(baseDir = File("${basePath()}/singleNode").absoluteFile, version = clusterVersion)
         testClusterWrites()
     }
 
     @Test(dataProvider = "versions")
     fun singleNodeAuth(clusterVersion: String) {
-        cluster = SingleNode(baseDir = File("build/rocket/singleNodeAuth").absoluteFile, version = clusterVersion)
+        cluster = SingleNode(baseDir = File("${basePath()}/singleNodeAuth").absoluteFile, version = clusterVersion)
         testClusterAuth()
         testClusterWrites()
     }
