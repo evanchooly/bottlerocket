@@ -11,7 +11,7 @@ class SingleNodeTest : BaseTest() {
         testClusterWrites()
     }
 
-    @Test(dataProvider = "versions")
+    @Test(dataProvider = "versions", enabled = false)
     fun singleNodeAuth(clusterVersion: String) {
         cluster = SingleNode(baseDir = File("${basePath()}/singleNodeAuth").absoluteFile, version = clusterVersion)
         testClusterAuth()

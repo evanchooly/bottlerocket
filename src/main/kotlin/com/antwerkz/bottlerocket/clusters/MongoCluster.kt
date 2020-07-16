@@ -3,16 +3,18 @@ package com.antwerkz.bottlerocket.clusters
 import com.antwerkz.bottlerocket.BottleRocket
 import com.antwerkz.bottlerocket.DatabaseRole
 import com.antwerkz.bottlerocket.MongoExecutable
+import com.antwerkz.bottlerocket.MongoExecutable.Companion.SUPER_USER_PASSWORD
 import com.antwerkz.bottlerocket.MongoManager
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.github.zafarkhaja.semver.Version
-import com.mongodb.MongoClient
-import com.mongodb.MongoClientOptions
+import com.mongodb.MongoClientSettings
 import com.mongodb.MongoCredential
+import com.mongodb.MongoCredential.createCredential
 import com.mongodb.ServerAddress
+import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoClients
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.LoggerFactory
-import org.zeroturnaround.exec.ProcessExecutor
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -24,7 +26,16 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.PosixFilePermission.OWNER_READ
 import java.nio.file.attribute.PosixFilePermission.OWNER_WRITE
+import java.security.Key
+import java.security.KeyPair
+import java.security.KeyPairGenerator
+import java.security.SecureRandom
+import java.security.Security
+import java.security.interfaces.RSAPrivateKey
+import java.security.interfaces.RSAPublicKey
+import java.util.Base64
 import java.util.EnumSet
+import java.util.concurrent.TimeUnit.MILLISECONDS
 
 abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
                             val port: Int = BottleRocket.DEFAULT_PORT,
@@ -42,7 +53,7 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
 
     private var adminClient: MongoClient? = null
     private var client: MongoClient? = null
-    private var credentials = arrayListOf<MongoCredential>()
+    private var credentials: MongoCredential? = null
 
     init {
         baseDir.mkdirs()
@@ -85,14 +96,17 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
 
     fun getAdminClient(): MongoClient {
         if (adminClient == null) {
-            val adminCredentials = arrayListOf<MongoCredential>()
+            val builder = MongoClientSettings.builder()
+                    .applyToConnectionPoolSettings {
+                        it.maxWaitTime(30, MILLISECONDS)
+                    }
+                    .applyToClusterSettings {
+                        it.hosts(getServerAddressList())
+                    }
             if (isAuthEnabled()) {
-                adminCredentials.add(MongoCredential.createCredential(MongoExecutable.SUPER_USER, "admin",
-                        MongoExecutable.SUPER_USER_PASSWORD.toCharArray()))
+                builder.credential(createCredential(MongoExecutable.SUPER_USER, "admin", SUPER_USER_PASSWORD.toCharArray()))
             }
-            val builder = MongoClientOptions.builder()
-                  .connectTimeout(3000)
-            adminClient = MongoClient(getServerAddressList(), adminCredentials, builder.build())
+            adminClient = MongoClients.create(builder.build())
         }
 
         return adminClient!!
@@ -100,9 +114,17 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
 
     fun getClient(): MongoClient {
         if (client == null) {
-            val builder = MongoClientOptions.builder()
-                  .connectTimeout(3000)
-            client = MongoClient(getServerAddressList(), credentials, builder.build())
+            val builder = MongoClientSettings.builder()
+                    .applyToConnectionPoolSettings {
+                        it.maxWaitTime(30, MILLISECONDS)
+                    }
+                    .applyToClusterSettings {
+                        it.hosts(getServerAddressList())
+                    }
+            credentials?.let {
+                builder.credential(credentials)
+            }
+            client = MongoClients.create(builder.build())
         }
 
         return client!!
@@ -113,59 +135,86 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
         if (!key.exists()) {
             key.parentFile.mkdirs()
             val stream = FileOutputStream(key)
-            try {
-                ProcessExecutor()
-                        .commandSplit("openssl rand -base64 741")
-                        .redirectOutput(stream)
-                        .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
-                        .execute()
-            } finally {
-                stream.close()
+            stream.use {
+                val secureRandom = SecureRandom()
+                val bytes = ByteArray(741)
+                secureRandom.nextBytes(bytes)
+                stream.write(Base64.getEncoder().encode(bytes))
             }
         }
         try {
             Files.setPosixFilePermissions(key.toPath(), perms)
         } catch(ignored : UnsupportedOperationException) {
-
         }
+    }
+
+    fun pem() {
+        val LOGGER = LoggerFactory.getLogger(MongoCluster::class.java)
+        val KEY_SIZE = 1024
+        fun generateRSAKeyPair(): KeyPair {
+            val generator = KeyPairGenerator.getInstance("RSA", "BC")
+            generator.initialize(KEY_SIZE)
+            val keyPair = generator.generateKeyPair()
+            LOGGER.info("RSA key pair generated.")
+            return keyPair
+        }
+
+        fun writePemFile(key: Key, description: String, filename: String) {
+            val pemFile = PemFile(key, description)
+            pemFile.write(filename)
+            LOGGER.info(String.format("%s successfully writen in file %s.", description, filename))
+        }
+
+        Security.addProvider(BouncyCastleProvider())
+        LOGGER.info("BouncyCastle provider added.")
+        val keyPair = generateRSAKeyPair()
+        val priv = keyPair.private as RSAPrivateKey
+        val pub = keyPair.public as RSAPublicKey
+        writePemFile(priv, "RSA PRIVATE KEY", "id_rsa")
+        writePemFile(pub, "RSA PUBLIC KEY", "id_rsa.pub")
     }
 
     fun generatePemFile() {
         val pem = File(pemFile)
-        val key = File(baseDir, "rocket-pem.key")
-        val crt = File(baseDir, "rocket-pem.crt")
+        val keyFile = File(baseDir, "rocket-pem.key")
+        val crtFile = File(baseDir, "rocket-pem.crt")
         if (!pem.exists()) {
-            pem.parentFile.mkdirs()
-            ProcessExecutor()
-                    .directory(baseDir)
-                    .commandSplit("openssl req -batch -newkey rsa:2048 -new -x509 -days 365 -nodes -out ${crt.absolutePath} " +
-                            "-keyout ${key.absolutePath}")
-                    .redirectOutput(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asDebug())
-                    .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
-                    .execute()
+            val generator = KeyPairGenerator.getInstance("RSA", "BC")
+            generator.initialize(1204)
+            val keyPair = generator.generateKeyPair()
+
+//            ProcessExecutor()
+//                    .directory(baseDir)
+//                    .commandSplit("openssl req -batch -newkey rsa:2048 -new -x509 -days 365 -nodes -out ${crt.absolutePath} " +
+//                            "-keyout ${key.absolutePath}")
+//                    .redirectOutput(of(getLogger(javaClass)).asDebug())
+//                    .redirectError(of(getLogger(javaClass)).asError())
+//                    .execute()
             val pemStream = FileOutputStream(pem.absolutePath)
+/*
             try {
                 ProcessExecutor()
                         .directory(baseDir)
                         .commandSplit("cat ${key.absolutePath} ${crt.absolutePath}")
                         .redirectOutput(pemStream)
-                        .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asError())
+                        .redirectError(of(getLogger(javaClass)).asError())
                         .execute()
             } finally {
                 pemStream.close()
             }
+*/
         }
         try {
             Files.setPosixFilePermissions(pem.toPath(), perms)
-            Files.setPosixFilePermissions(key.toPath(), perms)
-            Files.setPosixFilePermissions(crt.toPath(), perms)
+            Files.setPosixFilePermissions(keyFile.toPath(), perms)
+            Files.setPosixFilePermissions(crtFile.toPath(), perms)
         } catch(ignored : UnsupportedOperationException) {
         }
     }
 
     fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
         mongoManager.addUser(getAdminClient(), database, userName, password, roles)
-        credentials.add(MongoCredential.createCredential(userName, database, password.toCharArray()))
+        credentials  = createCredential(userName, database, password.toCharArray())
     }
 
     fun versionAtLeast(minVersion: Version): Boolean {

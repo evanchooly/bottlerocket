@@ -76,7 +76,7 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
         try {
             nodes.filter({ it.isAlive() })
                     .forEach({ mongod ->
-                        val mongoClient = mongod.getClient(isAuthEnabled())
+                        val mongoClient = mongod.getClient()
                         val result = mongoClient.runCommand(Document("isMaster", null))
 
                         if (result.containsKey("primary")) {
@@ -137,7 +137,7 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
 
     fun initiateReplicaSet() {
         val primary = nodes.first()
-        val results = primary.getClient(isAuthEnabled())
+        val results = primary.getClient()
                 .runCommand(Document("replSetInitiate", Document("_id", name)
                         .append("members", listOf(Document("_id", 1)
                                 .append("host", "localhost:${primary.port}"))

@@ -14,11 +14,10 @@ import com.antwerkz.bottlerocket.configuration.mongo32.blocks.SystemLog
 import com.antwerkz.bottlerocket.configuration.types.State
 
 /**
- * @see http://docs.mongodb.org/v3.0/reference/configuration-options/
+ * @see http://docs.mongodb.org/v3.2/reference/configuration-options/
  */
 class Configuration(
         var auditLog: AuditLog = AuditLog(),
-        var basisTech: BasisTech = BasisTech(),
         var net: Net = Net(),
         var operationProfiling: OperationProfiling = OperationProfiling(),
         var processManagement: ProcessManagement = ProcessManagement(),
@@ -43,10 +42,6 @@ class Configuration(
 
     fun net(init: Net.() -> Unit) {
         net = initConfigBlock(Net(), init)
-    }
-
-    fun basisTech(init: BasisTech.() -> Unit) {
-        basisTech = initConfigBlock(BasisTech(), init)
     }
 
     fun security(init: Security.() -> Unit) {

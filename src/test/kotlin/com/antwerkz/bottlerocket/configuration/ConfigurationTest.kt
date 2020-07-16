@@ -10,8 +10,9 @@ import org.testng.annotations.Test
 
 class ConfigurationTest {
     companion object {
-        @JvmStatic val complexConfig: String =
-              """net:
+        @JvmStatic
+        val complexConfig: String =
+                """net:
   bindIp: 127.0.0.1
   port: 27017
 processManagement:
@@ -33,26 +34,27 @@ systemLog:
   logRotate: rename
   path: /var/log/mongodb/mongod.log
 """
-                    //              "setParameter:\n" +
-                    //              "   enableLocalhostAuthBypass: false\n" +
+        //              "setParameter:\n" +
+        //              "   enableLocalhostAuthBypass: false\n" +
 
     }
 
     @Test
     fun testYaml() {
-        val configuration = configuration {
-              systemLog {
-                  destination = Destination.SYSLOG
-                  component {
-                        systemLog {  }
-                        accessControl {
-                            verbosity = Verbosity.FIVE
+        val configuration =
+                configuration {
+                    systemLog {
+                        destination = Destination.SYSLOG
+                        component {
+                            systemLog { }
+                            accessControl {
+                                verbosity = Verbosity.FIVE
+                            }
                         }
-                  }
-              }
-        }
+                    }
+                }
         val target =
-              """net:
+                """net:
   bindIp: 127.0.0.1
   port: 27017
 replication:
@@ -74,27 +76,27 @@ systemLog:
     @Test
     fun complexExample() {
         val configuration = configuration {
-              storage {
-                  dbPath = "/var/lib/mongodb"
-              }
-              systemLog {
-                    destination = Destination.FILE
-                    path = "/var/log/mongodb/mongod.log"
-                    logAppend = true
-                    component {
-                        net {}
-                        storage {  }
-                        accessControl {
-                            verbosity = Verbosity.TWO
-                        }
+            storage {
+                dbPath = "/var/lib/mongodb"
+            }
+            systemLog {
+                destination = Destination.FILE
+                path = "/var/log/mongodb/mongod.log"
+                logAppend = true
+                component {
+                    net {}
+                    storage { }
+                    accessControl {
+                        verbosity = Verbosity.TWO
                     }
-              }
-              processManagement {
-                    fork = true
-              }
+                }
+            }
+            processManagement {
+                fork = true
+            }
         }
         val target =
-              """net:
+                """net:
   bindIp: 127.0.0.1
   port: 27017
 processManagement:
@@ -130,7 +132,7 @@ systemLog:
             }
         }
         Assert.assertEquals(config.toYaml(),
-              """net:
+                """net:
   bindIp: 127.0.0.1
   port: 27017
 replication:

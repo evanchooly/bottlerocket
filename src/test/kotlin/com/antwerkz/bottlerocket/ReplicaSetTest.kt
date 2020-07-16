@@ -15,7 +15,7 @@ class ReplicaSetTest : BaseTest() {
         assertPrimary(30000)
     }
 
-    @Test(dataProvider = "versions")
+    @Test(dataProvider = "versions", enabled = false)
     fun replicaSetAuth(clusterVersion: String) {
         cluster = ReplicaSet(baseDir = File("${basePath()}/replicaSetAuth").absoluteFile, version = clusterVersion)
         testClusterAuth()

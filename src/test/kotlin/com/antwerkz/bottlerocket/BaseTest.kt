@@ -7,6 +7,7 @@ import org.testng.Assert
 import org.testng.SkipException
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.DataProvider
+import org.testng.annotations.Test
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.ArrayList
@@ -52,7 +53,7 @@ open class BaseTest {
         if (!cluster.isStarted()) {
             cluster.clean()
             cluster.start()
-            if (enableAuth) {
+            if (false && enableAuth) {
                 cluster.addUser("rockettest", "rocket", "cluster",
                         listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin")))
 
@@ -70,8 +71,8 @@ open class BaseTest {
 
         val client = cluster.getClient()
 
-        val names = client.listDatabaseNames()?.into(ArrayList<String>())
-        Assert.assertFalse(names?.isEmpty() ?: true, names.toString())
+        val names = client.listDatabaseNames().into(ArrayList<String>())
+        Assert.assertFalse(names.isEmpty(), names.toString())
     }
 
     fun assertPrimary(port: Int) {

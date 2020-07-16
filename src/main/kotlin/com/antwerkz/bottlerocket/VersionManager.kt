@@ -6,8 +6,8 @@ import com.antwerkz.bottlerocket.configuration.mongo26.VersionManager26
 import com.antwerkz.bottlerocket.configuration.mongo30.VersionManager30
 import com.antwerkz.bottlerocket.configuration.mongo32.VersionManager32
 import com.github.zafarkhaja.semver.Version
-import com.mongodb.MongoClient
 import com.mongodb.ReadPreference
+import com.mongodb.client.MongoClient
 import org.bson.Document
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

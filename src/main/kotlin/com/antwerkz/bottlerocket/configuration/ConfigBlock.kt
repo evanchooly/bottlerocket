@@ -2,9 +2,9 @@ package com.antwerkz.bottlerocket.configuration
 
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty1
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.javaSetter
-import kotlin.reflect.memberProperties
-import kotlin.reflect.primaryConstructor
 
 interface ConfigBlock {
     fun <T : ConfigBlock> initConfigBlock(configBlock: T, init: T.() -> Unit): T {

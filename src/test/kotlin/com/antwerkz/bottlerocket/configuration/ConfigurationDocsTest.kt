@@ -16,7 +16,7 @@ class ConfigurationDocsTest {
 
     fun loadLinks(url: String, version: String) {
         val uri = URI(url)
-        val file = File("build", "${version}-configuration-options.html")
+        val file = File("target", "${version}-configuration-options.html")
 
         if (!file.exists()) {
             Request.Get(uri)
@@ -39,14 +39,14 @@ class ConfigurationDocsTest {
     @Test(dataProvider = "urls")
     fun checkDocs(version: String, url: String, configuration: ConfigBlock) {
         loadLinks(url, version)
-        check(configuration.toProperties(mode = ConfigMode.ALL, includeAll = true))
+        check(configuration.toProperties(mode = ConfigMode.ALL, includeAll = true), url)
         Assert.assertTrue(elements.isEmpty(), "found ${elements.size} extra items in $url: \n${elements
                 .joinToString("\n")}")
     }
 
-    private fun check(map: Map<String, String>) {
+    private fun check(map: Map<String, String>, url: String) {
         map.keys.forEach {
-            Assert.assertTrue(elements.remove("#${it}"), "Found ${it} in the configuration file but not in the docs.")
+            Assert.assertTrue(elements.remove("#${it}"), "Found ${it} in the configuration file but not in the docs: ${url}")
         }
     }
 

@@ -7,7 +7,7 @@ import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.types.Destination.FILE
 import com.antwerkz.bottlerocket.configuration.types.State.ENABLED
 import com.github.zafarkhaja.semver.Version
-import com.mongodb.MongoClient
+import com.mongodb.client.MongoClient
 import org.bson.Document
 import java.io.File
 
@@ -50,7 +50,7 @@ open class VersionManager26(version: Version) : BaseVersionManager(version) {
                 pidFilePath = File(baseDir, "${name}.pid").toString()
             }
             storage {
-                dbPath = baseDir.getAbsolutePath()
+                dbPath = baseDir.absolutePath
             }
             systemLog {
                 destination = FILE

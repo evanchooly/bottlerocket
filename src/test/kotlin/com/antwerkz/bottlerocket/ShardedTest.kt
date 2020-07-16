@@ -13,7 +13,7 @@ class ShardedTest : BaseTest() {
         validateShards()
     }
 
-    @Test(dataProvider = "versions")
+    @Test(dataProvider = "versions", enabled = false)
     fun shardedAuth(clusterVersion: String) {
         assume(!clusterVersion.startsWith("2.6"), "Auth and sharding on 2.6 are currently failing for some reason")
         cluster = ShardedCluster(baseDir = File("${basePath()}/shardedAuth"), version = clusterVersion)
