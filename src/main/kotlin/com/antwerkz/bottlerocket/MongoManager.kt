@@ -1,9 +1,16 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.configuration.ConfigMode
+import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.configuration.mongo36.MongoManager36
+import com.antwerkz.bottlerocket.configuration.mongo40.MongoManager40
+import com.antwerkz.bottlerocket.configuration.mongo42.MongoManager42
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.github.zafarkhaja.semver.Version
+import com.mongodb.ReadPreference
+import com.mongodb.client.MongoClient
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.ArchiveInputStream
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
@@ -11,6 +18,8 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipUtils
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.SystemUtils
+import org.apache.http.client.fluent.Request
+import org.bson.Document
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
@@ -18,36 +27,32 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.lang.String.format
 import java.net.URL
-import java.nio.file.Files
 import java.util.zip.GZIPInputStream
 
-class MongoManager(val versionManager: VersionManager) : VersionManager by versionManager {
+abstract class MongoManager(val version: Version) {
     private val LOG = LoggerFactory.getLogger(MongoManager::class.java)
+    abstract var windowsBaseUrl: String
+    abstract var macBaseUrl: String
+    abstract var linuxBaseUrl: String
 
     companion object {
-        @JvmStatic fun macDownload(version: Version): String {
-            return "https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-${version}.tgz"
-        }
-        @JvmStatic fun linuxDownload(version: Version): String {
-            return "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${version}.tgz"
-        }
-        @JvmStatic fun windowsDownload(version: Version): String {
-            return "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-${version}.zip"
-        }
-        @JvmStatic fun of(versionString: String): MongoManager {
-            return MongoManager(BaseVersionManager.of(Version.valueOf(versionString)))
+        @JvmStatic
+        fun of(versionString: String): MongoManager {
+            val version = Version.valueOf(versionString)
+            return when ("${version.majorVersion}.${version.minorVersion}") {
+                "4.2" -> MongoManager42(version)
+                "4.0" -> MongoManager40(version)
+                "3.6" -> MongoManager36(version)
+                else -> throw IllegalArgumentException("Unsupported version ${version}")
+            }
         }
     }
 
     val downloadPath: File
     val binDir: String
     var mongo: String
-
         get() = ""
-
         set(value) {}
-
-
     val mongod: String
     val mongos: String
 
@@ -65,22 +70,41 @@ class MongoManager(val versionManager: VersionManager) : VersionManager by versi
         }
     }
 
-    fun download(): File {
-        val url = if (SystemUtils.IS_OS_LINUX) {
-            linuxDownload(version)
-        } else if (SystemUtils.IS_OS_MAC_OSX) {
-            macDownload(version)
-        } else if (SystemUtils.IS_OS_WINDOWS) {
-            windowsDownload(version)
-        } else {
-            throw RuntimeException("Unsupported operating system: ${SystemUtils.OS_NAME}")
-        }
-
-        return extractDownload({ downloadArchive(format(url, versionManager.version)) })
-    }
-
     fun configServer(name: String, port: Int, baseDir: File): ConfigServer {
         return ConfigServer(this, name, port, baseDir)
+    }
+
+    fun writeConfig(configFile: File, config: Configuration, mode: ConfigMode) {
+        configFile.writeText(config.toYaml(mode))
+    }
+
+    abstract fun initialConfig(baseDir: File, name: String, port: Int): Configuration
+
+    open fun getReplicaSetConfig(client: MongoClient): Document? {
+        return client.getDatabase("local")
+                .getCollection("system.replset").find().first()
+    }
+/*
+    fun enableAuth(node: MongoExecutable, pemFile: String? = null) {
+        node.config.merge(configuration {
+            security {
+                authorization = ENABLED
+                keyFile = pemFile
+            }
+        })
+    }
+*/
+    fun addUser(client: MongoClient, database: String, userName: String, password: String, roles: List<DatabaseRole>) {
+        client.getDatabase(database).runCommand(Document("createUser", userName)
+                .append("pwd", password)
+                .append("roles", roles.map { it.toDB() }))
+    }
+
+    fun addAdminUser(client: MongoClient) {
+        addUser(client, "admin", MongoExecutable.SUPER_USER, MongoExecutable.SUPER_USER_PASSWORD,
+                listOf(DatabaseRole("root", "admin"),
+                        DatabaseRole("userAdminAnyDatabase", "admin"),
+                        DatabaseRole("readWriteAnyDatabase", "admin")))
     }
 
     fun mongod(name: String, port: Int, baseDir: File): Mongod {
@@ -91,7 +115,30 @@ class MongoManager(val versionManager: VersionManager) : VersionManager by versi
         return Mongos(this, name, port, baseDir, configServers)
     }
 
-    fun extract(download: File): File {
+    internal fun macDownload(version: Version): String {
+        return "$macBaseUrl${version}.tgz"
+    }
+
+    internal fun linuxDownload(version: Version): String {
+        return "$linuxBaseUrl${version}.tgz"
+    }
+
+    internal fun windowsDownload(version: Version): String {
+        return "$windowsBaseUrl${version}.zip"
+    }
+
+    private fun download(): File {
+        val url = when {
+            SystemUtils.IS_OS_LINUX -> linuxDownload(version)
+            SystemUtils.IS_OS_MAC_OSX -> macDownload(version)
+            SystemUtils.IS_OS_WINDOWS -> windowsDownload(version)
+            else -> throw RuntimeException("Unsupported operating system: ${SystemUtils.OS_NAME}")
+        }
+
+        return extractDownload { downloadArchive(format(url, version)) }
+    }
+
+    private fun extract(download: File): File {
         if (GzipUtils.isCompressedFilename(download.name)) {
             TarArchiveInputStream(GZIPInputStream(FileInputStream(download))).use { inputStream ->
                 extract(inputStream)
@@ -105,7 +152,6 @@ class MongoManager(val versionManager: VersionManager) : VersionManager by versi
             } catch (e: IOException) {
                 throw RuntimeException(e.message, e)
             }
-
 
             return File(downloadPath, download.name.substring(0, download.name.length - 4))
         }
@@ -142,26 +188,30 @@ class MongoManager(val versionManager: VersionManager) : VersionManager by versi
                     throw RuntimeException("Failed to extract file: ${e.message}")
                 }
             }
-
         }
     }
 
-    fun downloadArchive(path: String): File {
-        try {
-            val url = URL(path)
-            var downloadName = url.path
-            downloadName = downloadName.substring(downloadName.lastIndexOf('/') + 1)
-            val download = File(downloadPath, downloadName)
-            if (!download.exists()) {
-                LOG.info("${download    } does not exist.  Downloading binaries from mongodb.org")
-                download.parentFile.mkdirs()
-                url.openConnection().inputStream.use { stream -> Files.copy(stream, download.toPath()) }
-            }
-            return download
-
-        } catch (e: IOException) {
-            throw RuntimeException(e.message, e)
+    private fun downloadArchive(path: String): File {
+        val url = URL(path)
+        val downloadName = url.path.substringAfterLast('/')
+        val download = File(downloadPath, downloadName)
+        if (!download.exists()) {
+            LOG.info("${download} does not exist.  Downloading binaries from mongodb.org")
+            download.parentFile.mkdirs()
+            Request.Get(path)
+                    .userAgent("Mozilla/5.0 (compatible; bottlerocket; +https://github.com/evanchooly/bottlerocket)")
+                    .execute()
+                    .saveContent(download)
         }
+        return download
+    }
+}
 
+fun MongoClient.runCommand(command: Document, readPreference: ReadPreference = ReadPreference.primary()): Document {
+    try {
+        return getDatabase("admin")
+                .runCommand(command, readPreference)
+    } catch (e: Exception) {
+        throw RuntimeException("command failed: ${command} with preference ${readPreference}", e)
     }
 }

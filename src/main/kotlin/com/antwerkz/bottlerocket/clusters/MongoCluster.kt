@@ -83,12 +83,14 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
         client = null
     }
 
+/*
     open fun enableAuth() {
         if (!isAuthEnabled()) {
             generateKeyFile()
             generatePemFile()
         }
     }
+*/
 
     fun clean() {
         baseDir.deleteTree()

@@ -113,11 +113,13 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
         super.shutdown()
     }
 
+/*
     override
     fun enableAuth() {
         super.enableAuth()
         nodes.forEach { mongoManager.enableAuth(it, keyFile) }
     }
+*/
 
     fun initialize() {
 //        val first = nodes.filter { it.isAlive() }.first()

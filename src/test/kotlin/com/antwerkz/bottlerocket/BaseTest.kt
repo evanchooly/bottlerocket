@@ -15,9 +15,9 @@ import java.util.ArrayList
 open class BaseTest {
     companion object {
         val versions = arrayOf(
-                arrayOf("3.2.11"),
-                arrayOf("3.0.14"),
-                arrayOf("2.6.12")
+                arrayOf("4.2.8")//,
+//                arrayOf("4.0.19"),
+//                arrayOf("3.6.18")
         )
     }
 
@@ -30,7 +30,7 @@ open class BaseTest {
 
     @DataProvider(name = "versions")
     fun versions(): Array<Array<String>> {
-        return BaseTest.versions
+        return versions
     }
 
     fun testClusterWrites() {

@@ -4,6 +4,7 @@ import com.antwerkz.bottlerocket.clusters.ShardedCluster
 import org.testng.annotations.Test
 import java.io.File
 
+@Test(enabled = false)
 class ShardedTest : BaseTest() {
 
     @Test(dataProvider = "versions")

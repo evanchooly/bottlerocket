@@ -2,6 +2,7 @@ package com.antwerkz.bottlerocket.executable
 
 import com.antwerkz.bottlerocket.MongoExecutable
 import com.antwerkz.bottlerocket.MongoManager
+import com.antwerkz.bottlerocket.configuration.ConfigMode.MONGOS
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.process.Processes
@@ -21,7 +22,7 @@ class ConfigServer(manager: MongoManager, name: String,
             baseDir.mkdirs()
             val file = File(baseDir, "configsvr.conf")
 
-            manager.writeConfig(file, config)
+            manager.writeConfig(file, config, MONGOS)
 
             LOG.info("Starting configsvr on port ${port}")
             val processResult = ProcessExecutor()
