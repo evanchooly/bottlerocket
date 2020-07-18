@@ -2,7 +2,7 @@ package com.antwerkz.bottlerocket.clusters
 
 import com.antwerkz.bottlerocket.BottleRocket
 import com.antwerkz.bottlerocket.configuration.Configuration
-import com.antwerkz.bottlerocket.configuration.mongo26.configuration
+import com.antwerkz.bottlerocket.configuration.configuration
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.runCommand
 import com.jayway.awaitility.Awaitility

@@ -1,6 +1,7 @@
 package com.antwerkz.bottlerocket.configuration.types
 
 enum class Compressor {
+    DISABLED,
     NONE,
     SNAPPY,
     ZLIB;

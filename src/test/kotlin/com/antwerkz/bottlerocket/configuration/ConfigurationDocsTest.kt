@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket.configuration
 
+import com.github.zafarkhaja.semver.Version
 import org.apache.http.client.fluent.Request
 import org.jsoup.Jsoup
 import org.testng.Assert
@@ -7,14 +8,11 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.io.File
 import java.net.URI
-import com.antwerkz.bottlerocket.configuration.mongo26.Configuration as Config26
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration as Config30
-import com.antwerkz.bottlerocket.configuration.mongo32.Configuration as Config32
+import kotlin.reflect.KProperty
+import kotlin.reflect.full.findAnnotation
 
 class ConfigurationDocsTest {
-    private var elements: MutableList<String> = arrayListOf()
-
-    fun loadLinks(url: String, version: String) {
+    private fun loadLinks(url: String, version: Version): MutableList<String> {
         val uri = URI(url)
         val file = File("target", "${version}-configuration-options.html")
 
@@ -24,38 +22,56 @@ class ConfigurationDocsTest {
                     .saveContent(file)
         }
         val doc = Jsoup.parse(file, "UTF-8")
-        elements = when (version) {
-            "3.2.0", "3.0.0", "2.6.0" -> {
-                doc.select("a[class=headerlink]")
-                        .filter({ it.attr("href").contains('.') })
-                        .map({ it.attr("href") })
-                        .toMutableList()
-
-            }
-            else -> throw IllegalArgumentException("Unknown version: ${version}")
-        }
+        return doc.select("a[class=headerlink]")
+                .filter { it.attr("href").contains('.') }
+                .map { it.attr("href").substring(1) }
+                .sorted()
+                .toMutableList()
     }
 
     @Test(dataProvider = "urls")
-    fun checkDocs(version: String, url: String, configuration: ConfigBlock) {
-        loadLinks(url, version)
-        check(configuration.toProperties(mode = ConfigMode.ALL, includeAll = true), url)
+    fun checkDocs(version: Version, url: String) {
+        val elements = loadLinks(url, version)
+        val properties = configuration {}.toLookups()
+        val missing = check(version, properties, elements, url)
         Assert.assertTrue(elements.isEmpty(), "found ${elements.size} extra items in $url: \n${elements
                 .joinToString("\n")}")
     }
 
-    private fun check(map: Map<String, String>, url: String) {
-        map.keys.forEach {
-            Assert.assertTrue(elements.remove("#${it}"), "Found ${it} in the configuration file but not in the docs: ${url}")
+    private fun check(version: Version, map: Map<String, KProperty<*>>, elements: MutableList<String>, url: String): MutableList<String> {
+        val outdated = mutableListOf<String>()
+        map.forEach {(key, value) ->
+            val present = elements.remove(key)
+            var annotated = false
+            if(!present) {
+                annotated = wasRemoved(value, version)
+                        || wasAdded(value, version)
+            }
+            if(!present && !annotated) outdated += "Found ${key} in the model but not in the configuration: ${url}"
         }
+
+        Assert.assertTrue(outdated.isEmpty(), "Found mismatches between docs and code: " + outdated.joinToString("\n", "\n"))
+        return outdated
+    }
+
+    private fun wasAdded(value: KProperty<*>, version: Version): Boolean {
+        return value.findAnnotation<Added>()?.run {
+            Version.valueOf(this.value).greaterThanOrEqualTo(version)
+        } ?: false
+    }
+
+    private fun wasRemoved(value: KProperty<*>, version: Version): Boolean {
+        return value.findAnnotation<Removed>()?.run {
+            Version.valueOf(this.value).lessThanOrEqualTo(version)
+        }?: false
     }
 
     @DataProvider(name = "urls")
     fun urls(): Array<Array<Any>> {
         return arrayOf(
-                arrayOf("3.2.0", "http://docs.mongodb.org/v3.2/reference/configuration-options/", Config32()),
-                arrayOf("3.0.0", "http://docs.mongodb.org/v3.0/reference/configuration-options/", Config30()),
-                arrayOf("2.6.0", "http://docs.mongodb.org/v2.6/reference/configuration-options/", Config26())
+                arrayOf<Any>(Version.forIntegers(4, 2), "http://docs.mongodb.org/v4.2/reference/configuration-options/"),
+                arrayOf<Any>(Version.forIntegers(4, 0), "http://docs.mongodb.org/v4.0/reference/configuration-options/"),
+                arrayOf<Any>(Version.forIntegers(3, 6), "http://docs.mongodb.org/v3.6/reference/configuration-options/")
         )
     }
 }

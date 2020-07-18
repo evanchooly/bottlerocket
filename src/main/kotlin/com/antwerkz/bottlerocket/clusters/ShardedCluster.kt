@@ -75,6 +75,7 @@ class ShardedCluster @JvmOverloads constructor(name: String = BottleRocket.DEFAU
         return mongosAlive && configServersAlive && shardsAlive
     }
 
+/*
     override
     fun enableAuth() {
         super.enableAuth()
@@ -84,6 +85,7 @@ class ShardedCluster @JvmOverloads constructor(name: String = BottleRocket.DEFAU
         }
         mongoses.forEach { mongoManager.enableAuth(it, keyFile) }
     }
+*/
 
     override fun updateConfig(update: Configuration) {
         shards.forEach {

@@ -2,9 +2,11 @@ package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.configuration.ConfigMode
 import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.configuration.configuration
 import com.antwerkz.bottlerocket.configuration.mongo36.MongoManager36
 import com.antwerkz.bottlerocket.configuration.mongo40.MongoManager40
 import com.antwerkz.bottlerocket.configuration.mongo42.MongoManager42
+import com.antwerkz.bottlerocket.configuration.types.Destination.FILE
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.executable.Mongos
@@ -29,13 +31,14 @@ import java.lang.String.format
 import java.net.URL
 import java.util.zip.GZIPInputStream
 
-abstract class MongoManager(val version: Version) {
-    private val LOG = LoggerFactory.getLogger(MongoManager::class.java)
-    abstract var windowsBaseUrl: String
-    abstract var macBaseUrl: String
-    abstract var linuxBaseUrl: String
+abstract class MongoManager(val version: Version,
+                            val windowsBaseUrl: String,
+                            val macBaseUrl: String,
+                            val linuxBaseUrl: String) {
 
     companion object {
+        private val LOG = LoggerFactory.getLogger(MongoManager::class.java)
+
         @JvmStatic
         fun of(versionString: String): MongoManager {
             val version = Version.valueOf(versionString)
@@ -78,7 +81,23 @@ abstract class MongoManager(val version: Version) {
         configFile.writeText(config.toYaml(mode))
     }
 
-    abstract fun initialConfig(baseDir: File, name: String, port: Int): Configuration
+    fun initialConfig(baseDir: File, name: String, port: Int): Configuration {
+        return configuration {
+            net {
+                this.port = port
+            }
+            processManagement {
+                pidFilePath = File(baseDir, "${name}.pid").toString()
+            }
+            storage {
+                dbPath = baseDir.absolutePath
+            }
+            systemLog {
+                destination = FILE
+                path = "${baseDir}/mongo.log"
+            }
+        }
+    }
 
     open fun getReplicaSetConfig(client: MongoClient): Document? {
         return client.getDatabase("local")

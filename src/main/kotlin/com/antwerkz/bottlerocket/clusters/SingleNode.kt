@@ -52,11 +52,13 @@ open class SingleNode @JvmOverloads constructor(name: String = BottleRocket.DEFA
         return listOf(mongod.getServerAddress())
     }
 
+/*
     override
     fun enableAuth() {
         super.enableAuth()
         mongoManager.enableAuth(mongod)
     }
+*/
 
     override fun isAuthEnabled(): Boolean {
         return mongod.isAuthEnabled()

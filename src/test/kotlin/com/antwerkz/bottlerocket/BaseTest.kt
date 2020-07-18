@@ -58,7 +58,7 @@ open class BaseTest {
                         listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin")))
 
                 cluster.shutdown()
-                cluster.enableAuth()
+//                cluster.enableAuth()
                 cluster.start()
             }
         }
@@ -105,7 +105,6 @@ open class BaseTest {
     }
 
     protected fun basePath(): String {
-        val format = LocalTime.now().format(DateTimeFormatter.ofPattern("hhmmss"))
-        return "build/rocket/$format/"
+        return "target/rocket/"
     }
 }

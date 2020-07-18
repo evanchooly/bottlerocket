@@ -1,6 +1,5 @@
 package com.antwerkz.bottlerocket.configuration
 
-import com.antwerkz.bottlerocket.configuration.mongo30.configuration
 import com.antwerkz.bottlerocket.configuration.types.Destination
 import com.antwerkz.bottlerocket.configuration.types.RotateBehavior
 import com.antwerkz.bottlerocket.configuration.types.State
@@ -21,9 +20,6 @@ replication:
   oplogSizeMB: 10
 storage:
   dbPath: /var/lib/mongodb
-  mmapv1:
-    preallocDataFiles: false
-    smallFiles: true
   repairPath: /var/lib/mongodb_tmp
 systemLog:
   component:
@@ -59,10 +55,6 @@ systemLog:
   port: 27017
 replication:
   oplogSizeMB: 10
-storage:
-  mmapv1:
-    preallocDataFiles: false
-    smallFiles: true
 systemLog:
   component:
     accessControl:
@@ -105,9 +97,6 @@ replication:
   oplogSizeMB: 10
 storage:
   dbPath: /var/lib/mongodb
-  mmapv1:
-    preallocDataFiles: false
-    smallFiles: true
 systemLog:
   component:
     accessControl:
@@ -137,10 +126,6 @@ systemLog:
   port: 27017
 replication:
   oplogSizeMB: 10
-storage:
-  mmapv1:
-    preallocDataFiles: false
-    smallFiles: true
 systemLog:
   component:
     accessControl:
@@ -219,37 +204,5 @@ systemLog:
         Assert.assertEquals(config.security.authorization, State.ENABLED)
         Assert.assertEquals(config.operationProfiling.slowOpThresholdMs, 50)
         Assert.assertNotEquals(update.storage.dbPath, "/var/lib/mongo/noodle")
-    }
-
-    @Test
-    fun properties() {
-        val configuration = configuration {
-            net {
-                port = 1025
-            }
-            storage {
-                dbPath = "/var/lib/mongodb"
-            }
-            systemLog {
-
-                destination = Destination.FILE
-                path = "/var/log/mongodb/mongod.log"
-                logAppend = true
-                logRotate = RotateBehavior.RENAME
-                component {
-                    storage {}
-                    accessControl {
-                        verbosity = Verbosity.TWO
-                    }
-                }
-            }
-
-            processManagement {
-                fork = true
-            }
-
-        }
-
-        Assert.assertNotNull(configuration.toProperties(mode = ConfigMode.ALL))
     }
 }
