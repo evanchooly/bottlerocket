@@ -5,23 +5,13 @@ import com.antwerkz.bottlerocket.clusters.ReplicaSet
 import com.github.zafarkhaja.semver.Version
 import org.bson.Document
 import org.testng.Assert
-import org.testng.SkipException
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.DataProvider
-import org.testng.annotations.Test
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.ArrayList
 
 open class BaseTest {
-    companion object {
-        val versions = arrayOf(
-                Version.forIntegers(4,2,8),
-                Version.forIntegers(4,0,19),
-                Version.forIntegers(3,6,18)
-        )
-    }
-
     lateinit var cluster: MongoCluster
 
     @AfterMethod
@@ -31,23 +21,25 @@ open class BaseTest {
 
     @DataProvider(name = "versions")
     fun versions(): Array<Version> {
-        return versions
+        return arrayOf(
+                Version.forIntegers(4, 2, 8),
+                Version.forIntegers(4, 0, 19),
+                Version.forIntegers(3, 6, 18)
+        )
     }
 
     fun testClusterWrites() {
         startCluster()
-
         val client = cluster.getClient()
-        val names = client.listDatabaseNames()?.into(ArrayList<String>())
-        Assert.assertFalse(names?.isEmpty() ?: true, names.toString())
-
+        val names = client.listDatabaseNames().into(ArrayList<String>())
+        Assert.assertFalse(names.isEmpty(), names.toString())
         val db = client.getDatabase("rockettest")
-        db?.drop()
-        val collection = db?.getCollection("singlenode")
+        db.drop()
+        val collection = db.getCollection("singlenode")
         val document = Document(hashMapOf<String, Any>("key" to "value"))
-        collection?.insertOne(document)
+        collection.insertOne(document)
 
-        Assert.assertEquals(collection?.find()?.first(), document)
+        Assert.assertEquals(collection.find().first(), document)
     }
 
     private fun startCluster(enableAuth: Boolean = false) {
@@ -69,9 +61,7 @@ open class BaseTest {
         startCluster(true)
 
         Assert.assertTrue(cluster.isAuthEnabled())
-
         val client = cluster.getClient()
-
         val names = client.listDatabaseNames().into(ArrayList<String>())
         Assert.assertFalse(names.isEmpty(), names.toString())
     }
@@ -89,8 +79,12 @@ open class BaseTest {
     }
 
     fun validateShards() {
-        val list = cluster.getAdminClient().getDatabase("config")?.getCollection("shards")?.find()?.into(ArrayList<Document>())
-        Assert.assertEquals(list?.size, 1, "Should find 1 shards")
+        val list = cluster.getAdminClient()
+                .getDatabase("config")
+                .getCollection("shards")
+                .find()
+                .into(ArrayList<Document>())
+        Assert.assertEquals(list.size, 1, "Should find 1 shard")
         for (document in list ?: listOf<Document>()) {
             when (document.getString("_id")) {
                 "rocket0" -> Assert.assertEquals(document["host"], "rocket0/localhost:30001,localhost:30002,localhost:30003")
@@ -99,13 +93,8 @@ open class BaseTest {
         }
     }
 
-    fun assume(condition: Boolean, message: String) {
-        if (!condition) {
-            throw SkipException(message)
-        }
-    }
-
     protected fun basePath(): String {
-        return "target/rocket/"
+        val format = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"))
+        return "build/rocket/$format/"
     }
 }
