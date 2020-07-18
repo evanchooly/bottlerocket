@@ -3,6 +3,7 @@ package com.antwerkz.bottlerocket.configuration.blocks
 import com.antwerkz.bottlerocket.configuration.Added
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
 import com.antwerkz.bottlerocket.configuration.Removed
+import com.antwerkz.bottlerocket.configuration.types.ServiceExecutor
 
 class Net(
         var port: Int? = 27017,
@@ -17,6 +18,7 @@ class Net(
         @Removed("4.0.0")
         var transportLayer: String? = null,
         var ssl: Ssl = Ssl(),
+        var tls: Tls = Tls(),
         var unixDomainSocket: UnixDomainSocket = UnixDomainSocket(),
         var wireObjectCheck: Boolean? = null
 ) : ConfigBlock {
@@ -28,12 +30,11 @@ class Net(
         ssl = initConfigBlock(Ssl(), init)
     }
 
+    fun tls(init: Tls.() -> Unit) {
+        tls = initConfigBlock(Tls(), init)
+    }
+
     fun compression(init: Compression.() -> Unit) {
         compression = initConfigBlock(Compression(), init)
     }
-}
-
-enum class ServiceExecutor {
-    SYNCHRONOUS,
-    ADAPTIVE
 }

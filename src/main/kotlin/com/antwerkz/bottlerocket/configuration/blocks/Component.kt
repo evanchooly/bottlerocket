@@ -1,19 +1,19 @@
 package com.antwerkz.bottlerocket.configuration.blocks
 
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.AccessControl
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.Command
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.Control
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.Ftdc
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.Geo
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.Index
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.Network
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.Query
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.Replication
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.Sharding
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.Storage
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.Transaction
-import com.antwerkz.bottlerocket.configuration.blocks.LogComponent.Write
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.AccessControl
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Command
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Control
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Ftdc
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Geo
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Index
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Network
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Query
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Replication
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Sharding
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Storage
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Transaction
+import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Write
 
 class Component(
         var accessControl: AccessControl = AccessControl(),
