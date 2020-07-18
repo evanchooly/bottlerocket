@@ -2,6 +2,7 @@ package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.MongoCluster
 import com.antwerkz.bottlerocket.clusters.ReplicaSet
+import com.github.zafarkhaja.semver.Version
 import org.bson.Document
 import org.testng.Assert
 import org.testng.SkipException
@@ -15,9 +16,9 @@ import java.util.ArrayList
 open class BaseTest {
     companion object {
         val versions = arrayOf(
-                arrayOf("4.2.8")//,
-//                arrayOf("4.0.19"),
-//                arrayOf("3.6.18")
+                Version.forIntegers(4,2,8),
+                Version.forIntegers(4,0,19),
+                Version.forIntegers(3,6,18)
         )
     }
 
@@ -29,7 +30,7 @@ open class BaseTest {
     }
 
     @DataProvider(name = "versions")
-    fun versions(): Array<Array<String>> {
+    fun versions(): Array<Version> {
         return versions
     }
 

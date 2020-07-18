@@ -5,6 +5,7 @@ import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.configuration
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.runCommand
+import com.github.zafarkhaja.semver.Version
 import com.jayway.awaitility.Awaitility
 import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
@@ -16,23 +17,23 @@ import java.util.concurrent.TimeUnit.SECONDS
 
 class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_NAME,
                                            port: Int = BottleRocket.DEFAULT_PORT,
-                                           version: String = BottleRocket.DEFAULT_VERSION,
+                                           version: Version = BottleRocket.DEFAULT_VERSION,
                                            baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
                                            val size: Int = 3) :
         MongoCluster(name, port, version, baseDir) {
-
     val nodes: MutableList<Mongod> = arrayListOf()
     private var nodeMap = hashMapOf<Int, Mongod>()
     var initialized: Boolean = false
 
     companion object {
         private val LOG = LoggerFactory.getLogger(ReplicaSet::class.java)
-
-        @JvmStatic fun builder(): ReplicaSetBuilder {
+        @JvmStatic
+        fun builder(): ReplicaSetBuilder {
             return ReplicaSetBuilder()
         }
 
-        @JvmStatic fun build(init: ReplicaSetBuilder.() -> Unit = {}): ReplicaSet {
+        @JvmStatic
+        fun build(init: ReplicaSetBuilder.() -> Unit = {}): ReplicaSet {
             val builder = ReplicaSetBuilder()
             builder.init()
             return builder.build()
@@ -85,7 +86,7 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
                         }
                     })
             return null
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             LOG.error(e.message, e)
             return null
         }
@@ -112,7 +113,6 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
         primary?.shutdown()
         super.shutdown()
     }
-
 /*
     override
     fun enableAuth() {
@@ -120,7 +120,6 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
         nodes.forEach { mongoManager.enableAuth(it, keyFile) }
     }
 */
-
     fun initialize() {
 //        val first = nodes.filter { it.isAlive() }.first()
 //        val replicaSetConfig = mongoManager.getReplicaSetConfig(first.getClient())
@@ -161,7 +160,6 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
                     .filter({ it.index > 0 })
                     .map { Document("_id", ++id).append("host", "localhost:${it.value.port}") }
                     .toCollection(members)
-
             val results = client.runCommand(Document("replSetReconfig", config))
 
             if (results.getDouble("ok").toInt() != 1) {
@@ -199,11 +197,11 @@ class ReplicaSet @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_N
     }
 }
 
-class ReplicaSetBuilder(): MongoClusterBuilder<ReplicaSetBuilder>() {
+class ReplicaSetBuilder() : MongoClusterBuilder<ReplicaSetBuilder>() {
     var size: Int = 3
         private set
 
-    fun size(value: Int) : ReplicaSetBuilder {
+    fun size(value: Int): ReplicaSetBuilder {
         size = value
         return this
     }

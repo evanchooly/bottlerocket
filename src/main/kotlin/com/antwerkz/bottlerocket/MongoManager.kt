@@ -49,6 +49,16 @@ abstract class MongoManager(val version: Version,
                 else -> throw IllegalArgumentException("Unsupported version ${version}")
             }
         }
+
+        @JvmStatic
+        fun of(version: Version): MongoManager {
+            return when ("${version.majorVersion}.${version.minorVersion}") {
+                "4.2" -> MongoManager42(version)
+                "4.0" -> MongoManager40(version)
+                "3.6" -> MongoManager36(version)
+                else -> throw IllegalArgumentException("Unsupported version ${version}")
+            }
+        }
     }
 
     val downloadPath: File

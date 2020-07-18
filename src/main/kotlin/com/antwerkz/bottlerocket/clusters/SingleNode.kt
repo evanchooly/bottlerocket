@@ -3,15 +3,16 @@ package com.antwerkz.bottlerocket.clusters
 import com.antwerkz.bottlerocket.BottleRocket
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.Mongod
+import com.github.zafarkhaja.semver.Version
 import com.mongodb.ServerAddress
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 
 open class SingleNode @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_NAME,
-                      port: Int = BottleRocket.DEFAULT_PORT,
-                      version: String = BottleRocket.DEFAULT_VERSION,
-                      baseDir: File = BottleRocket.DEFAULT_BASE_DIR) :
+                                                port: Int = BottleRocket.DEFAULT_PORT,
+                                                version: Version = BottleRocket.DEFAULT_VERSION,
+                                                baseDir: File = BottleRocket.DEFAULT_BASE_DIR) :
         MongoCluster(name, port, version, baseDir) {
 
     companion object {

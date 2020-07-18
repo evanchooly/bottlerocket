@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 
 abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
                             val port: Int = BottleRocket.DEFAULT_PORT,
-                            val version: String = BottleRocket.DEFAULT_VERSION,
+                            val version: Version = BottleRocket.DEFAULT_VERSION,
                             val baseDir: File = BottleRocket.DEFAULT_BASE_DIR) {
 
     companion object {
@@ -220,7 +220,7 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
     }
 
     fun versionAtLeast(minVersion: Version): Boolean {
-        return Version.valueOf(version).greaterThanOrEqualTo(minVersion)
+        return version.greaterThanOrEqualTo(minVersion)
     }
 
     abstract fun isAuthEnabled(): Boolean
@@ -259,7 +259,7 @@ abstract class MongoClusterBuilder<out T>() {
         private set
     var port: Int = BottleRocket.DEFAULT_PORT
         private set
-    var version: String = BottleRocket.DEFAULT_VERSION
+    var version: Version = BottleRocket.DEFAULT_VERSION
         private set
     var baseDir: File = BottleRocket.DEFAULT_BASE_DIR
         private set
@@ -276,7 +276,7 @@ abstract class MongoClusterBuilder<out T>() {
         return this as T
     }
 
-    fun version(value: String): T {
+    fun version(value: Version): T {
         version = value
         return this as T
     }

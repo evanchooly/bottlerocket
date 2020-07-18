@@ -4,6 +4,7 @@ import com.antwerkz.bottlerocket.BottleRocket
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongos
+import com.github.zafarkhaja.semver.Version
 import com.mongodb.ServerAddress
 import org.bson.BsonDocument
 import org.bson.Document
@@ -18,12 +19,12 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 
 class ShardedCluster @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_NAME,
-                     port: Int = BottleRocket.DEFAULT_PORT,
-                     version: String = BottleRocket.DEFAULT_VERSION,
-                     baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
-                     var shardCount: Int = 1,
-                     var mongosCount: Int = 1,
-                     var configSvrCount: Int = 1) :
+                                               port: Int = BottleRocket.DEFAULT_PORT,
+                                               version: Version = BottleRocket.DEFAULT_VERSION,
+                                               baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
+                                               var shardCount: Int = 1,
+                                               var mongosCount: Int = 1,
+                                               var configSvrCount: Int = 1) :
       MongoCluster(name, port, version, baseDir) {
 
     var shards = arrayListOf<ReplicaSet>()
