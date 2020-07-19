@@ -1,15 +1,14 @@
 package com.antwerkz.bottlerocket.configuration;
 
-import com.antwerkz.bottlerocket.configuration.mongo30.Configuration;
 import com.antwerkz.bottlerocket.configuration.types.Destination;
 import com.antwerkz.bottlerocket.configuration.types.RotateBehavior;
 import com.antwerkz.bottlerocket.configuration.types.Verbosity;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import static com.antwerkz.bottlerocket.configuration.mongo30.ConfigurationKt.configuration;
+import static com.antwerkz.bottlerocket.configuration.ConfigurationKt.configuration;
 
-class JavaConfigurationTest {
+public class JavaConfigurationTest {
     @Test
     void testYaml() {
         final Configuration configuration = configuration(c -> {
@@ -33,10 +32,6 @@ class JavaConfigurationTest {
             "  port: 27017\n" +
             "replication:\n" +
             "  oplogSizeMB: 10\n" +
-            "storage:\n" +
-            "  mmapv1:\n" +
-            "    preallocDataFiles: false\n" +
-            "    smallFiles: true\n" +
             "systemLog:\n" +
             "  component:\n" +
             "    accessControl:\n" +
@@ -87,9 +82,6 @@ class JavaConfigurationTest {
             "  oplogSizeMB: 10\n" +
             "storage:\n" +
             "  dbPath: /var/lib/mongodb\n" +
-            "  mmapv1:\n" +
-            "    preallocDataFiles: false\n" +
-            "    smallFiles: true\n" +
             "  repairPath: /var/lib/mongodb_tmp\n" +
             "systemLog:\n" +
             "  component:\n" +

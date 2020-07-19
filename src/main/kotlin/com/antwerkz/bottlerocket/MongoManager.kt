@@ -110,7 +110,9 @@ abstract class MongoManager(val version: Version,
     }
 
     fun deleteBinaries() {
-        File(binDir).parentFile.deleteRecursively()
+        val file = File(binDir)
+        LOG.info("Deleting the extracted binaries at $file")
+        file.parentFile.deleteRecursively()
     }
 
     open fun getReplicaSetConfig(client: MongoClient): Document? {

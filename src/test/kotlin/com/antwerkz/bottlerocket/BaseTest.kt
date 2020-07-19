@@ -14,7 +14,8 @@ import java.util.ArrayList
 
 open class BaseTest {
     companion object {
-        val format = LocalTime.now().format(DateTimeFormatter.ofPattern("HH_mm"))
+        @JvmStatic
+        val timestamp = LocalTime.now().format(DateTimeFormatter.ofPattern("HH_mm"))
     }
 
     lateinit var cluster: MongoCluster
@@ -99,6 +100,6 @@ open class BaseTest {
     }
 
     protected fun basePath(version: Version): File {
-        return File("target/rocket/$format/${version}").absoluteFile
+        return File("target/rocket/$timestamp/${version}").absoluteFile
     }
 }
