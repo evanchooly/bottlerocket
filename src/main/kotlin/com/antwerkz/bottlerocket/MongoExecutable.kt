@@ -54,24 +54,24 @@ abstract class MongoExecutable(val manager: MongoManager, val name: String, val 
         shutdownWithKill()
         val process = process!!
         Awaitility
-                .await()
-                .atMost(30, TimeUnit.SECONDS)
-                .pollInterval(Duration.ONE_SECOND)
-                .until<Boolean>({ !process.isAlive })
+            .await()
+            .atMost(30, TimeUnit.SECONDS)
+            .pollInterval(Duration.ONE_SECOND)
+            .until<Boolean>({ !process.isAlive })
         File(baseDir, "mongod.lock").delete()
         client.close()
     }
 
     fun shutdownWithDriver() {
         if (isAlive()) {
-            LOG.info("Shutting down service on port ${port}")
+            LOG.info("Shutting down service on port $port")
             try {
                 getClient().runCommand(Document("shutdown", 1))
-            } catch(e: Exception) {
-                if ( e.cause !is MongoSocketReadException) {
+            } catch (e: Exception) {
+                if (e.cause !is MongoSocketReadException) {
                     LOG.warn("Failed to shutdown server.  Forcibly killing instead.", e)
                     process?.destroy(true)
-                } else if ( e.cause is MongoCommandException) {
+                } else if (e.cause is MongoCommandException) {
                     throw e
                 }
             }
@@ -80,7 +80,7 @@ abstract class MongoExecutable(val manager: MongoManager, val name: String, val 
 
     fun shutdownWithKill() {
         if (isAlive()) {
-            LOG.info("Shutting down service on port ${port}")
+            LOG.info("Shutting down service on port $port")
             process?.destroy(true)
         }
     }
@@ -92,10 +92,10 @@ abstract class MongoExecutable(val manager: MongoManager, val name: String, val 
     fun getClient(): MongoClient {
         if (!::client.isInitialized) {
             this.client = MongoClients.create(MongoClientSettings.builder()
-                    .applyToClusterSettings { builder ->
-                        builder.hosts(listOf(getServerAddress()))
-                    }
-                    .build())
+                .applyToClusterSettings { builder ->
+                    builder.hosts(listOf(getServerAddress()))
+                }
+                .build())
         }
 
         return client
@@ -103,26 +103,26 @@ abstract class MongoExecutable(val manager: MongoManager, val name: String, val 
 
     fun waitForStartUp() {
         Awaitility
-                .await()
-                .atMost(30, TimeUnit.SECONDS)
-                .pollInterval(3, TimeUnit.SECONDS)
-                .until<Boolean>({
-                    tryConnect()
-                })
+            .await()
+            .atMost(30, TimeUnit.SECONDS)
+            .pollInterval(3, TimeUnit.SECONDS)
+            .until<Boolean>({
+                tryConnect()
+            })
     }
 
     fun tryConnect(): Boolean {
         try {
             getClient().getDatabase("admin")
-                    .listCollectionNames()
+                .listCollectionNames()
             return true
-        } catch(e: Throwable) {
+        } catch (e: Throwable) {
             return false
         }
     }
 
     override fun toString(): String {
-        var s = "${javaClass.simpleName}:${port}"
+        var s = "${javaClass.simpleName}:$port"
         if (isAuthEnabled()) {
             s += ", auth:true"
         }
@@ -132,5 +132,3 @@ abstract class MongoExecutable(val manager: MongoManager, val name: String, val 
         return s
     }
 }
-
-

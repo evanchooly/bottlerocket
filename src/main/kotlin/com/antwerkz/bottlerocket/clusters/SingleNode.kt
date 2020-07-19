@@ -5,24 +5,22 @@ import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.github.zafarkhaja.semver.Version
 import com.mongodb.ServerAddress
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.io.File
 
-open class SingleNode @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_NAME,
-                                                port: Int = BottleRocket.DEFAULT_PORT,
-                                                version: Version = BottleRocket.DEFAULT_VERSION,
-                                                baseDir: File = BottleRocket.DEFAULT_BASE_DIR) :
-        MongoCluster(name, port, version, baseDir) {
-
+open class SingleNode @JvmOverloads constructor(
+    name: String = BottleRocket.DEFAULT_NAME,
+    port: Int = BottleRocket.DEFAULT_PORT,
+    version: Version = BottleRocket.DEFAULT_VERSION,
+    baseDir: File = BottleRocket.DEFAULT_BASE_DIR
+) : MongoCluster(name, port, version, baseDir) {
     companion object {
-        private val LOG: Logger = LoggerFactory.getLogger(SingleNode::class.java)
-
-        @JvmStatic fun builder(): SingleNodeBuilder {
+        @JvmStatic
+        fun builder(): SingleNodeBuilder {
             return SingleNodeBuilder()
         }
 
-        @JvmStatic fun build(init: SingleNodeBuilder.() -> Unit): SingleNode {
+        @JvmStatic
+        fun build(init: SingleNodeBuilder.() -> Unit): SingleNode {
             val builder = SingleNodeBuilder()
             builder.init()
             return builder().build()
@@ -53,14 +51,13 @@ open class SingleNode @JvmOverloads constructor(name: String = BottleRocket.DEFA
         return listOf(mongod.getServerAddress())
     }
 
-/*
-    override
-    fun enableAuth() {
-        super.enableAuth()
-        mongoManager.enableAuth(mongod)
-    }
-*/
-
+    /*
+        override
+        fun enableAuth() {
+            super.enableAuth()
+            mongoManager.enableAuth(mongod)
+        }
+    */
     override fun isAuthEnabled(): Boolean {
         return mongod.isAuthEnabled()
     }
@@ -70,11 +67,11 @@ open class SingleNode @JvmOverloads constructor(name: String = BottleRocket.DEFA
     }
 
     override fun toString(): String {
-        var content = "name = ${name}, version = ${version}, port = ${port}, baseDir = ${baseDir}, running = ${mongod.isAlive()}"
+        var content = "name = $name, version = $version, port = $port, baseDir = $baseDir, running = ${mongod.isAlive()}"
         if (isAuthEnabled()) {
             content += ", authentication = enabled"
         }
-        return "Mongod { ${content} }"
+        return "Mongod { $content }"
     }
 }
 

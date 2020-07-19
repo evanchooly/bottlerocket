@@ -8,5 +8,4 @@ enum class LogDestination {
     override fun toString(): String {
         return name.toLowerCase()
     }
-
 }

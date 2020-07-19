@@ -6,19 +6,18 @@ import com.antwerkz.bottlerocket.configuration.Mode
 import com.antwerkz.bottlerocket.configuration.Removed
 
 class Storage(
-        @Mode(ConfigMode.MONGOD) var dbPath: String? = null,
-        @Mode(ConfigMode.MONGOD) var directoryPerDB: Boolean? = null,
-        @Mode(ConfigMode.MONGOD) var indexBuildRetry: Boolean? = null,
-        @Removed("4.2.0")
-        @Mode(ConfigMode.MONGOD) var repairPath: String? = null,
-        @Mode(ConfigMode.MONGOD) var syncPeriodSecs: Int? = null,
-        var engine: String? = null,
-        @Mode(ConfigMode.MONGOD) var journal: Journal = Journal(),
-        var mmapv1: Mmapv1 = Mmapv1(),
-        var inMemory: InMemory = InMemory(),
-        var wiredTiger: WiredTiger = WiredTiger()
+    @Mode(ConfigMode.MONGOD) var dbPath: String? = null,
+    @Mode(ConfigMode.MONGOD) var directoryPerDB: Boolean? = null,
+    @Mode(ConfigMode.MONGOD) var indexBuildRetry: Boolean? = null,
+    @Removed("4.2.0")
+    @Mode(ConfigMode.MONGOD) var repairPath: String? = null,
+    @Mode(ConfigMode.MONGOD) var syncPeriodSecs: Int? = null,
+    var engine: String? = null,
+    @Mode(ConfigMode.MONGOD) var journal: Journal = Journal(),
+    var mmapv1: Mmapv1 = Mmapv1(),
+    var inMemory: InMemory = InMemory(),
+    var wiredTiger: WiredTiger = WiredTiger()
 ) : ConfigBlock {
-
     fun journal(init: Journal.() -> Unit) {
         journal = initConfigBlock(Journal(), init)
     }
@@ -26,6 +25,7 @@ class Storage(
     fun mmapv1(init: Mmapv1.() -> Unit) {
         mmapv1 = initConfigBlock(Mmapv1(), init)
     }
+
     fun inMemory(init: InMemory.() -> Unit) {
         inMemory = initConfigBlock(InMemory(), init)
     }

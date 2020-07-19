@@ -6,21 +6,21 @@ import com.antwerkz.bottlerocket.configuration.Removed
 import com.antwerkz.bottlerocket.configuration.types.ServiceExecutor
 
 class Net(
-        var port: Int? = 27017,
-        var bindIp: String? = "127.0.0.1",
-        @Added("3.6.0")
-        var bindIpAll: Boolean? = null,
-        var compression: Compression = Compression(),
-        var ipv6: Boolean? = null,
-        var maxIncomingConnections: Int? = null,
-        @Added("3.6.0")
-        var serviceExecutor: ServiceExecutor? = null,
-        @Removed("4.0.0")
-        var transportLayer: String? = null,
-        var ssl: Ssl = Ssl(),
-        var tls: Tls = Tls(),
-        var unixDomainSocket: UnixDomainSocket = UnixDomainSocket(),
-        var wireObjectCheck: Boolean? = null
+    var port: Int? = 27017,
+    var bindIp: String? = "127.0.0.1",
+    @Added("3.6.0")
+    var bindIpAll: Boolean? = null,
+    var compression: Compression = Compression(),
+    var ipv6: Boolean? = null,
+    var maxIncomingConnections: Int? = null,
+    @Added("3.6.0")
+    var serviceExecutor: ServiceExecutor? = null,
+    @Removed("4.0.0")
+    var transportLayer: String? = null,
+    var ssl: Ssl = Ssl(),
+    var tls: Tls = Tls(),
+    var unixDomainSocket: UnixDomainSocket = UnixDomainSocket(),
+    var wireObjectCheck: Boolean? = null
 ) : ConfigBlock {
     fun unixDomainSocket(init: UnixDomainSocket.() -> Unit) {
         unixDomainSocket = initConfigBlock(UnixDomainSocket(), init)

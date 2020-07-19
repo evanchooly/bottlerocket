@@ -10,7 +10,7 @@ enum class Verbosity {
     FIVE;
 
     fun toConfigValue(): Int {
-        return ordinal - 1;
+        return ordinal - 1
     }
 
     override fun toString(): String {

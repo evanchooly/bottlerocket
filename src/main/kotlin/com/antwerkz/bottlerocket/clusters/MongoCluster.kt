@@ -37,10 +37,12 @@ import java.util.Base64
 import java.util.EnumSet
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
-abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
-                            val port: Int = BottleRocket.DEFAULT_PORT,
-                            val version: Version = BottleRocket.DEFAULT_VERSION,
-                            val baseDir: File = BottleRocket.DEFAULT_BASE_DIR) {
+abstract class MongoCluster(
+    val name: String = BottleRocket.DEFAULT_NAME,
+    val port: Int = BottleRocket.DEFAULT_PORT,
+    val version: Version = BottleRocket.DEFAULT_VERSION,
+    val baseDir: File = BottleRocket.DEFAULT_BASE_DIR
+) {
 
     companion object {
         val perms = EnumSet.of(OWNER_READ, OWNER_WRITE)
@@ -50,7 +52,6 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
     var adminAdded: Boolean = false
     val keyFile: String = File(baseDir, "rocket.key").absolutePath
     val pemFile: String = File(baseDir, "rocket.pem").absolutePath
-
     private var adminClient: MongoClient? = null
     private var client: MongoClient? = null
     private var credentials: MongoCredential? = null
@@ -60,9 +61,7 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
     }
 
     abstract fun getServerAddressList(): List<ServerAddress>
-
     abstract fun isStarted(): Boolean
-
     fun restart() {
         shutdown()
         start()
@@ -82,7 +81,6 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
         client = null
         mongoManager.deleteBinaries()
     }
-
 /*
     open fun enableAuth() {
         if (!isAuthEnabled()) {
@@ -91,7 +89,6 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
         }
     }
 */
-
     fun clean() {
         baseDir.deleteTree()
     }
@@ -146,7 +143,7 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
         }
         try {
             Files.setPosixFilePermissions(key.toPath(), perms)
-        } catch(ignored : UnsupportedOperationException) {
+        } catch (ignored: UnsupportedOperationException) {
         }
     }
 
@@ -184,7 +181,6 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
             val generator = KeyPairGenerator.getInstance("RSA", "BC")
             generator.initialize(1204)
             val keyPair = generator.generateKeyPair()
-
 //            ProcessExecutor()
 //                    .directory(baseDir)
 //                    .commandSplit("openssl req -batch -newkey rsa:2048 -new -x509 -days 365 -nodes -out ${crt.absolutePath} " +
@@ -210,13 +206,13 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
             Files.setPosixFilePermissions(pem.toPath(), perms)
             Files.setPosixFilePermissions(keyFile.toPath(), perms)
             Files.setPosixFilePermissions(crtFile.toPath(), perms)
-        } catch(ignored : UnsupportedOperationException) {
+        } catch (ignored: UnsupportedOperationException) {
         }
     }
 
     fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
         mongoManager.addUser(getAdminClient(), database, userName, password, roles)
-        credentials  = createCredential(userName, database, password.toCharArray())
+        credentials = createCredential(userName, database, password.toCharArray())
     }
 
     fun versionAtLeast(minVersion: Version): Boolean {
@@ -224,9 +220,7 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
     }
 
     abstract fun isAuthEnabled(): Boolean
-
     abstract fun updateConfig(update: Configuration)
-
 }
 
 fun File.deleteTree() {
@@ -249,7 +243,7 @@ fun File.deleteTree() {
                 }
             })
         } else {
-            throw RuntimeException("deleteTree() can only be called on directories:  ${this}")
+            throw RuntimeException("deleteTree() can only be called on directories:  $this")
         }
     }
 }
@@ -267,7 +261,7 @@ abstract class MongoClusterBuilder<out T>() {
     open fun name(value: String): T {
         name = value
         baseDir = if (baseDir == BottleRocket.DEFAULT_BASE_DIR) File(
-              "${BottleRocket.TEMP_DIR}/${name}") else baseDir
+                "${BottleRocket.TEMP_DIR}/$name") else baseDir
         return this as T
     }
 

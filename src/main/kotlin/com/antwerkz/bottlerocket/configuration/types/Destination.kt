@@ -6,6 +6,6 @@ enum class Destination(val fileValue: String) {
     SYSLOG("syslog");
 
     override fun toString(): String {
-        return fileValue;
+        return fileValue
     }
 }

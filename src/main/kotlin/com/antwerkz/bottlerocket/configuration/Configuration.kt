@@ -1,11 +1,13 @@
 package com.antwerkz.bottlerocket.configuration
 
 import com.antwerkz.bottlerocket.configuration.blocks.AuditLog
+import com.antwerkz.bottlerocket.configuration.blocks.Cloud
 import com.antwerkz.bottlerocket.configuration.blocks.Net
 import com.antwerkz.bottlerocket.configuration.blocks.OperationProfiling
 import com.antwerkz.bottlerocket.configuration.blocks.ProcessManagement
 import com.antwerkz.bottlerocket.configuration.blocks.Replication
 import com.antwerkz.bottlerocket.configuration.blocks.Security
+import com.antwerkz.bottlerocket.configuration.blocks.SetParameter
 import com.antwerkz.bottlerocket.configuration.blocks.Sharding
 import com.antwerkz.bottlerocket.configuration.blocks.Snmp
 import com.antwerkz.bottlerocket.configuration.blocks.Storage
@@ -13,18 +15,18 @@ import com.antwerkz.bottlerocket.configuration.blocks.SystemLog
 import com.antwerkz.bottlerocket.configuration.types.State
 
 class Configuration(
-        var auditLog: AuditLog = AuditLog(),
-        var cloud: Cloud = Cloud(),
-        var net: Net = Net(),
-        var operationProfiling: OperationProfiling = OperationProfiling(),
-        var processManagement: ProcessManagement = ProcessManagement(),
-        var replication: Replication = Replication(),
-        var security: Security = Security(),
-        var sharding: Sharding = Sharding(),
-        var snmp: Snmp = Snmp(),
-        var storage: Storage = Storage(),
-        var systemLog: SystemLog = SystemLog(),
-        var setParameter: SetParameter = SetParameter()
+    var auditLog: AuditLog = AuditLog(),
+    var cloud: Cloud = Cloud(),
+    var net: Net = Net(),
+    var operationProfiling: OperationProfiling = OperationProfiling(),
+    var processManagement: ProcessManagement = ProcessManagement(),
+    var replication: Replication = Replication(),
+    var security: Security = Security(),
+    var sharding: Sharding = Sharding(),
+    var snmp: Snmp = Snmp(),
+    var storage: Storage = Storage(),
+    var systemLog: SystemLog = SystemLog(),
+    var setParameter: SetParameter = SetParameter()
 ) : ConfigBlock {
     fun isAuthEnabled(): Boolean {
         return security.authorization == State.ENABLED || security.keyFile != null

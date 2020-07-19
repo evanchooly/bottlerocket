@@ -11,30 +11,28 @@ import java.io.File
 import java.io.FileOutputStream
 
 class Mongos(manager: MongoManager, name: String, port: Int, baseDir: File, val configServers: List<ConfigServer>)
-: MongoExecutable(manager, name, port, baseDir) {
-
-    override val logger: Logger = LoggerFactory.getLogger("Mongos.${port}")
-
+    : MongoExecutable(manager, name, port, baseDir) {
+    override val logger: Logger = LoggerFactory.getLogger("Mongos.$port")
     fun start() {
         if (process == null || !process?.isAlive!!) {
             baseDir.mkdirs()
             val file = File(baseDir, "mongos.conf")
             manager.writeConfig(file, config, MONGOS)
 
-            logger.info("Starting mongos on port ${port}")
+            logger.info("Starting mongos on port $port")
             val processResult = ProcessExecutor()
-                    .command(manager.mongos,
-                            "--configdb", configServers.map { "localhost:${it.port}" }.joinToString(","),
-                            "--config", file.absolutePath)
-                    .redirectOutput(FileOutputStream(File(baseDir, "${name}.out")))
-                    .redirectError(FileOutputStream(File(baseDir, "${name}.err")))
-                    .destroyOnExit()
-                    .start()
+                .command(manager.mongos,
+                    "--configdb", configServers.map { "localhost:${it.port}" }.joinToString(","),
+                    "--config", file.absolutePath)
+                .redirectOutput(FileOutputStream(File(baseDir, "$name.out")))
+                .redirectError(FileOutputStream(File(baseDir, "$name.err")))
+                .destroyOnExit()
+                .start()
             process = Processes.newPidProcess(processResult.process)
 
             waitForStartUp()
         } else {
-            logger.warn("start() was called on a running server: ${port}")
+            logger.warn("start() was called on a running server: $port")
         }
     }
 }

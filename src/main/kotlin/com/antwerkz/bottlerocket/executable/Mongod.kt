@@ -11,7 +11,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 class Mongod(manager: MongoManager, name: String, port: Int, baseDir: File) : MongoExecutable(manager, name, port, baseDir) {
-    override val logger: Logger = LoggerFactory.getLogger("Mongod.${port}")
+    override val logger: Logger = LoggerFactory.getLogger("Mongod.$port")
     private val stdOut: FileOutputStream by lazy {
         FileOutputStream(File(baseDir, "mongod.out"))
     }
@@ -21,7 +21,7 @@ class Mongod(manager: MongoManager, name: String, port: Int, baseDir: File) : Mo
     private val configFile = File(baseDir, "mongod.conf")
     fun start(replicaSetName: String? = null) {
         if (process == null || !process?.isAlive!!) {
-            logger.info("Starting mongod on port ${port}")
+            logger.info("Starting mongod on port $port")
             baseDir.mkdirs()
             val configFile = configFile
             manager.writeConfig(configFile, config, MONGOD)
@@ -41,7 +41,7 @@ class Mongod(manager: MongoManager, name: String, port: Int, baseDir: File) : Mo
 
             waitForStartUp()
         } else {
-            logger.warn("start() was called on a running server: ${port}")
+            logger.warn("start() was called on a running server: $port")
         }
     }
 }

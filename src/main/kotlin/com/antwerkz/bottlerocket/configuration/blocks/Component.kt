@@ -16,19 +16,19 @@ import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Transaction
 import com.antwerkz.bottlerocket.configuration.blocks.LogComponents.Write
 
 class Component(
-        var accessControl: AccessControl = AccessControl(),
-        var command: Command = Command(),
-        var control: Control = Control(),
-        var ftdc: Ftdc = Ftdc(),
-        var geo: Geo = Geo(),
-        var index: Index = Index(),
-        var network: Network = Network(),
-        var query: Query = Query(),
-        var replication: Replication = Replication(),
-        var sharding: Sharding = Sharding(),
-        var storage: Storage = Storage(),
-        var transaction: Transaction = Transaction(),
-        var write: Write = Write()
+    var accessControl: AccessControl = AccessControl(),
+    var command: Command = Command(),
+    var control: Control = Control(),
+    var ftdc: Ftdc = Ftdc(),
+    var geo: Geo = Geo(),
+    var index: Index = Index(),
+    var network: Network = Network(),
+    var query: Query = Query(),
+    var replication: Replication = Replication(),
+    var sharding: Sharding = Sharding(),
+    var storage: Storage = Storage(),
+    var transaction: Transaction = Transaction(),
+    var write: Write = Write()
 ) : ConfigBlock {
     fun accessControl(init: AccessControl.() -> Unit) {
         accessControl = initConfigBlock(AccessControl(), init)

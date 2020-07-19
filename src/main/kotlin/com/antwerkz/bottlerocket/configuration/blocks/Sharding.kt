@@ -6,9 +6,9 @@ import com.antwerkz.bottlerocket.configuration.Mode
 import com.antwerkz.bottlerocket.configuration.types.ClusterRole
 
 class Sharding(
-      @Mode(ConfigMode.MONGOD)
-      var clusterRole: ClusterRole? = null,
-      var archiveMovedChunks: Boolean? = null,
-      @Mode(ConfigMode.MONGOS)
-      var configDB: String? = null
+    @Mode(ConfigMode.MONGOD)
+    var clusterRole: ClusterRole? = null,
+    var archiveMovedChunks: Boolean? = null,
+    @Mode(ConfigMode.MONGOS)
+    var configDB: String? = null
 ) : ConfigBlock

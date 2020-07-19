@@ -28,9 +28,9 @@ open class BaseTest {
     @DataProvider(name = "versions")
     fun versions(): Array<Version> {
         return arrayOf(
-                Version.forIntegers(4, 2, 8),
-                Version.forIntegers(4, 0, 19),
-                Version.forIntegers(3, 6, 18)
+            Version.forIntegers(4, 2, 8),
+            Version.forIntegers(4, 0, 19),
+            Version.forIntegers(3, 6, 18)
         )
     }
 
@@ -54,7 +54,7 @@ open class BaseTest {
             cluster.start()
             if (false && enableAuth) {
                 cluster.addUser("rockettest", "rocket", "cluster",
-                        listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin")))
+                    listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin")))
 
                 cluster.shutdown()
 //                cluster.enableAuth()
@@ -78,18 +78,18 @@ open class BaseTest {
             Assert.assertTrue(replicaSet.hasPrimary())
             Assert.assertTrue(replicaSet.waitForPrimary() != null)
             val primary = replicaSet.getPrimary()
-            Assert.assertEquals(primary?.port, port, "${port} should be the primary at startup")
+            Assert.assertEquals(primary?.port, port, "$port should be the primary at startup")
         } else {
-            Assert.fail("${cluster} is not a replica set cluster")
+            Assert.fail("$cluster is not a replica set cluster")
         }
     }
 
     fun validateShards() {
         val list = cluster.getAdminClient()
-                .getDatabase("config")
-                .getCollection("shards")
-                .find()
-                .into(ArrayList<Document>())
+            .getDatabase("config")
+            .getCollection("shards")
+            .find()
+            .into(ArrayList<Document>())
         Assert.assertEquals(list.size, 1, "Should find 1 shard")
         for (document in list ?: listOf<Document>()) {
             when (document.getString("_id")) {
@@ -100,6 +100,6 @@ open class BaseTest {
     }
 
     protected fun basePath(version: Version): File {
-        return File("target/rocket/$timestamp/${version}").absoluteFile
+        return File("target/rocket/$timestamp/$version").absoluteFile
     }
 }

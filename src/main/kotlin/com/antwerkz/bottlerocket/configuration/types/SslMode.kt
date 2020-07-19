@@ -11,6 +11,6 @@ enum class SslMode {
     REQUIRE;
 
     override fun toString(): String {
-        return name.toLowerCase() + "SSL";
+        return name.toLowerCase() + "SSL"
     }
 }

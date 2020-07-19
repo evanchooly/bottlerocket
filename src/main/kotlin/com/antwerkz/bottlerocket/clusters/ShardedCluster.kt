@@ -18,15 +18,15 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-class ShardedCluster @JvmOverloads constructor(name: String = BottleRocket.DEFAULT_NAME,
-                                               port: Int = BottleRocket.DEFAULT_PORT,
-                                               version: Version = BottleRocket.DEFAULT_VERSION,
-                                               baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
-                                               var shardCount: Int = 1,
-                                               var mongosCount: Int = 1,
-                                               var configSvrCount: Int = 1) :
-      MongoCluster(name, port, version, baseDir) {
-
+class ShardedCluster @JvmOverloads constructor(
+    name: String = BottleRocket.DEFAULT_NAME,
+    port: Int = BottleRocket.DEFAULT_PORT,
+    version: Version = BottleRocket.DEFAULT_VERSION,
+    baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
+    var shardCount: Int = 1,
+    var mongosCount: Int = 1,
+    var configSvrCount: Int = 1
+) : MongoCluster(name, port, version, baseDir) {
     var shards = arrayListOf<ReplicaSet>()
     var mongoses = arrayListOf<Mongos>()
     var configServers = arrayListOf<ConfigServer>()
@@ -35,12 +35,13 @@ class ShardedCluster @JvmOverloads constructor(name: String = BottleRocket.DEFAU
 
     companion object {
         private val LOG = LoggerFactory.getLogger(ShardedCluster::class.java)
-
-        @JvmStatic fun builder(): ShardedClusterBuilder {
+        @JvmStatic
+        fun builder(): ShardedClusterBuilder {
             return ShardedClusterBuilder()
         }
 
-        @JvmStatic fun build(init: ShardedClusterBuilder.() -> Unit = {}): ShardedCluster {
+        @JvmStatic
+        fun build(init: ShardedClusterBuilder.() -> Unit = {}): ShardedCluster {
             val builder = ShardedClusterBuilder()
             builder.init()
             return builder.build()
@@ -52,7 +53,6 @@ class ShardedCluster @JvmOverloads constructor(name: String = BottleRocket.DEFAU
         createShards()
         createConfigServers()
     }
-
 
     override
     fun start() {
@@ -75,7 +75,6 @@ class ShardedCluster @JvmOverloads constructor(name: String = BottleRocket.DEFAU
         val shardsAlive = shards.filter { it.isStarted() }.count() != 0
         return mongosAlive && configServersAlive && shardsAlive
     }
-
 /*
     override
     fun enableAuth() {
@@ -87,7 +86,6 @@ class ShardedCluster @JvmOverloads constructor(name: String = BottleRocket.DEFAU
         mongoses.forEach { mongoManager.enableAuth(it, keyFile) }
     }
 */
-
     override fun updateConfig(update: Configuration) {
         shards.forEach {
             it.updateConfig(update)
@@ -102,18 +100,17 @@ class ShardedCluster @JvmOverloads constructor(name: String = BottleRocket.DEFAU
 
     private fun addMember(replicaSet: ReplicaSet) {
         val replSetUrl = replicaSet.replicaSetUrl()
-
         val results = mongoses.first().runCommand(Document("addShard", replSetUrl))
 
-        if ( results.getDouble("ok").toInt() != 1) {
-            throw RuntimeException("Failed to add ${replicaSet.name} to cluster:  ${results}")
+        if (results.getDouble("ok").toInt() != 1) {
+            throw RuntimeException("Failed to add ${replicaSet.name} to cluster:  $results")
         }
     }
 
     private fun createShards() {
         if (shards.isEmpty()) {
-            for ( i in 0..shardCount - 1) {
-                val replicaSet = ReplicaSet("${name}${i}", nextPort, version, baseDir)
+            for (i in 0..shardCount - 1) {
+                val replicaSet = ReplicaSet("$name$i", nextPort, version, baseDir)
                 shards.add(replicaSet)
                 nextPort += replicaSet.size
             }
@@ -122,8 +119,8 @@ class ShardedCluster @JvmOverloads constructor(name: String = BottleRocket.DEFAU
 
     private fun createConfigServers() {
         if (configServers.isEmpty()) {
-            for ( i in 1..configSvrCount ) {
-                val name = "configSvr-${nextPort}"
+            for (i in 1..configSvrCount) {
+                val name = "configSvr-$nextPort"
                 val configSvr = mongoManager.configServer(name, nextPort, File(baseDir, name))
                 configServers.add(configSvr)
                 nextPort += 1
@@ -133,32 +130,29 @@ class ShardedCluster @JvmOverloads constructor(name: String = BottleRocket.DEFAU
 
     private fun createMongoses() {
         if (mongoses.isEmpty()) {
-            for ( i in 1..mongosCount) {
-                val mongosName = "mongos-${nextPort}"
+            for (i in 1..mongosCount) {
+                val mongosName = "mongos-$nextPort"
                 mongoses.add(mongoManager.mongos(mongosName, nextPort, File(baseDir, mongosName), configServers))
                 nextPort += 1
-
             }
         }
-
     }
 
     fun runCommand(mongos: Mongos, command: String): BsonDocument {
         val stream = ByteArrayOutputStream()
         val list = listOf(mongoManager.mongo,
-              "admin", "--port", "${mongos.port}", "--quiet")
+            "admin", "--port", "${mongos.port}", "--quiet")
         ProcessExecutor()
-              .command(list)
-              .redirectOutput(stream)
-              .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asInfo())
-              .redirectInput(ByteArrayInputStream(command.toByteArray()))
-              .execute()
-
+            .command(list)
+            .redirectOutput(stream)
+            .redirectError(Slf4jStream.of(LoggerFactory.getLogger(javaClass)).asInfo())
+            .redirectInput(ByteArrayInputStream(command.toByteArray()))
+            .execute()
         val json = String(stream.toByteArray()).trim()
         try {
             return BsonDocumentCodec().decode(JsonReader(json), DecoderContext.builder().build())
-        } catch(e: Exception) {
-            LOG.error("Invalid response from server: ${json}", e)
+        } catch (e: Exception) {
+            LOG.error("Invalid response from server: $json", e)
             throw e
         }
     }
@@ -188,17 +182,17 @@ class ShardedClusterBuilder() : MongoClusterBuilder<ShardedClusterBuilder>() {
     var configSvrCount: Int = 1
         private set
 
-    fun shardCount(value: Int) : ShardedClusterBuilder {
+    fun shardCount(value: Int): ShardedClusterBuilder {
         shardCount = value
         return this
     }
 
-    fun mongosCount(value: Int) : ShardedClusterBuilder {
+    fun mongosCount(value: Int): ShardedClusterBuilder {
         mongosCount = value
         return this
     }
 
-    fun configSvrCount(value: Int) : ShardedClusterBuilder {
+    fun configSvrCount(value: Int): ShardedClusterBuilder {
         configSvrCount = value
         return this
     }

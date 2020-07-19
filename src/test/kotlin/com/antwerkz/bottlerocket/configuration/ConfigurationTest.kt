@@ -32,7 +32,6 @@ systemLog:
 """
         //              "setParameter:\n" +
         //              "   enableLocalhostAuthBypass: false\n" +
-
     }
 
     @Test
@@ -157,7 +156,6 @@ systemLog:
             }
         }
 
-
         Assert.assertEquals(configuration.toYaml(), complexConfig)
     }
 
@@ -174,8 +172,8 @@ systemLog:
         }
 
         val yaml = configuration.toYaml(mode = ConfigMode.MONGOS)
-        Assert.assertTrue(-1 == yaml.indexOf(path), "Found '${path}' in \n${yaml}")
-        Assert.assertTrue(-1 == yaml.indexOf("oplogSizeMB"), "Found 'oplogSizeMB' in \n${yaml}")
+        Assert.assertTrue(-1 == yaml.indexOf(path), "Found '$path' in \n$yaml")
+        Assert.assertTrue(-1 == yaml.indexOf("oplogSizeMB"), "Found 'oplogSizeMB' in \n$yaml")
     }
 
     @Test

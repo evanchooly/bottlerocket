@@ -29,7 +29,7 @@ interface ConfigBlock {
             if (fieldValue is ConfigBlock) {
                 val fieldMap = fieldValue.toLookups()
                 fieldMap.forEach { (key, value) ->
-                    map.put("${it.name}.${key}", value)
+                    map.put("${it.name}.$key", value)
                 }
             } else {
                 map.put(it.name, it)
@@ -41,22 +41,20 @@ interface ConfigBlock {
 
     fun merge(update: ConfigBlock) {
         val c = this.javaClass.kotlin
-
         val comparison: ConfigBlock = c.primaryConstructor?.callBy(mapOf())!!
         val target = this
         c.memberProperties.forEach { p: KProperty1<ConfigBlock, *> ->
             val fieldValue = p.get(update)
-            if ( fieldValue != null ) {
+            if (fieldValue != null) {
                 if (fieldValue is ConfigBlock) {
                     (p.get(target) as ConfigBlock).merge(fieldValue)
                 } else {
-                    if ( fieldValue != p.get(comparison)) {
+                    if (fieldValue != p.get(comparison)) {
                         (p as KMutableProperty<*>).javaSetter?.invoke(target, fieldValue)
                     }
                 }
             }
         }
-
     }
 
     fun isSupportedMode(configMode: ConfigMode, property: KProperty1<ConfigBlock, *>): Boolean {
@@ -71,14 +69,14 @@ interface ConfigBlock {
     fun toMap(mode: ConfigMode = ConfigMode.MONGOD, includeAll: Boolean = false): Map<String, Any> {
         val map = linkedMapOf<String, Any>()
         javaClass.kotlin.memberProperties.forEach {
-            if ( isSupportedMode(mode, it)) {
+            if (isSupportedMode(mode, it)) {
                 val fieldValue = it.get(this)
                 if (fieldValue is ConfigBlock) {
                     val fieldMap = fieldValue.toMap(mode, includeAll)
                     if (!fieldMap.isEmpty()) {
                         map.putAll(fieldMap)
                     }
-                } else if ( includeAll || fieldValue != null) {
+                } else if (includeAll || fieldValue != null) {
                     map.put(it.name, fieldValue.toString())
                 }
             }
@@ -93,10 +91,10 @@ fun Map<*, *>.flatten(prefix: String = ""): Map<String, String> {
 
     entries.forEach {
         if (it.value is Map<*, *>) {
-            val subPrefix = if(prefix != "") prefix + "." + it.key else it.key.toString()
+            val subPrefix = if (prefix != "") prefix + "." + it.key else it.key.toString()
             map.putAll(((it.value as Map<*, *>).flatten(subPrefix)))
         } else {
-            val subPrefix = if(prefix != "") prefix + "." else prefix
+            val subPrefix = if (prefix != "") prefix + "." else prefix
             map.put("$subPrefix${it.key}", it.value.toString())
         }
     }
@@ -114,14 +112,13 @@ fun Map<*, *>.toYaml(indent: String = ""): String {
             }
         } else {
             builder.append(indent)
-                  .append(it.key)
-                  .append(": ")
-                  .append(it.value)
-                  .append("\n")
+                .append(it.key)
+                .append(": ")
+                .append(it.value)
+                .append("\n")
         }
     }
     return builder.toString()
-
 }
 
 fun String.toCamelCase(): String {

@@ -31,11 +31,7 @@ import java.lang.String.format
 import java.net.URL
 import java.util.zip.GZIPInputStream
 
-abstract class MongoManager(val version: Version,
-                            val windowsBaseUrl: String,
-                            val macBaseUrl: String,
-                            val linuxBaseUrl: String) {
-
+abstract class MongoManager(val version: Version, val windowsBaseUrl: String, val macBaseUrl: String, val linuxBaseUrl: String) {
     companion object {
         private val LOG = LoggerFactory.getLogger(MongoManager::class.java)
 
@@ -46,7 +42,7 @@ abstract class MongoManager(val version: Version,
                 "4.2" -> MongoManager42(version)
                 "4.0" -> MongoManager40(version)
                 "3.6" -> MongoManager36(version)
-                else -> throw IllegalArgumentException("Unsupported version ${version}")
+                else -> throw IllegalArgumentException("Unsupported version $version")
             }
         }
 
@@ -56,7 +52,7 @@ abstract class MongoManager(val version: Version,
                 "4.2" -> MongoManager42(version)
                 "4.0" -> MongoManager40(version)
                 "3.6" -> MongoManager36(version)
-                else -> throw IllegalArgumentException("Unsupported version ${version}")
+                else -> throw IllegalArgumentException("Unsupported version $version")
             }
         }
     }
@@ -73,13 +69,13 @@ abstract class MongoManager(val version: Version,
         downloadPath = File(BottleRocket.TEMP_DIR, "mongo-downloads")
         binDir = "${download()}/bin"
         if (SystemUtils.IS_OS_WINDOWS) {
-            mongo = "${binDir}/mongo.exe"
-            mongod = "${binDir}/mongod.exe"
-            mongos = "${binDir}/mongos.exe"
+            mongo = "$binDir/mongo.exe"
+            mongod = "$binDir/mongod.exe"
+            mongos = "$binDir/mongos.exe"
         } else {
-            mongo = "${binDir}/mongo"
-            mongod = "${binDir}/mongod"
-            mongos = "${binDir}/mongos"
+            mongo = "$binDir/mongo"
+            mongod = "$binDir/mongod"
+            mongos = "$binDir/mongos"
         }
     }
 
@@ -97,14 +93,14 @@ abstract class MongoManager(val version: Version,
                 this.port = port
             }
             processManagement {
-                pidFilePath = File(baseDir, "${name}.pid").toString()
+                pidFilePath = File(baseDir, "$name.pid").toString()
             }
             storage {
                 dbPath = baseDir.absolutePath
             }
             systemLog {
                 destination = FILE
-                path = "${baseDir}/mongo.log"
+                path = "$baseDir/mongo.log"
             }
         }
     }
@@ -117,29 +113,30 @@ abstract class MongoManager(val version: Version,
 
     open fun getReplicaSetConfig(client: MongoClient): Document? {
         return client.getDatabase("local")
-                .getCollection("system.replset").find().first()
+            .getCollection("system.replset").find().first()
     }
-/*
-    fun enableAuth(node: MongoExecutable, pemFile: String? = null) {
-        node.config.merge(configuration {
-            security {
-                authorization = ENABLED
-                keyFile = pemFile
-            }
-        })
-    }
-*/
+
+    /*
+        fun enableAuth(node: MongoExecutable, pemFile: String? = null) {
+            node.config.merge(configuration {
+                security {
+                    authorization = ENABLED
+                    keyFile = pemFile
+                }
+            })
+        }
+    */
     fun addUser(client: MongoClient, database: String, userName: String, password: String, roles: List<DatabaseRole>) {
         client.getDatabase(database).runCommand(Document("createUser", userName)
-                .append("pwd", password)
-                .append("roles", roles.map { it.toDB() }))
+            .append("pwd", password)
+            .append("roles", roles.map { it.toDB() }))
     }
 
     fun addAdminUser(client: MongoClient) {
         addUser(client, "admin", MongoExecutable.SUPER_USER, MongoExecutable.SUPER_USER_PASSWORD,
-                listOf(DatabaseRole("root", "admin"),
-                        DatabaseRole("userAdminAnyDatabase", "admin"),
-                        DatabaseRole("readWriteAnyDatabase", "admin")))
+            listOf(DatabaseRole("root", "admin"),
+                DatabaseRole("userAdminAnyDatabase", "admin"),
+                DatabaseRole("readWriteAnyDatabase", "admin")))
     }
 
     fun mongod(name: String, port: Int, baseDir: File): Mongod {
@@ -151,15 +148,15 @@ abstract class MongoManager(val version: Version,
     }
 
     internal fun macDownload(version: Version): String {
-        return "$macBaseUrl${version}.tgz"
+        return "$macBaseUrl$version.tgz"
     }
 
     internal fun linuxDownload(version: Version): String {
-        return "$linuxBaseUrl${version}.tgz"
+        return "$linuxBaseUrl$version.tgz"
     }
 
     internal fun windowsDownload(version: Version): String {
-        return "$windowsBaseUrl${version}.zip"
+        return "$windowsBaseUrl$version.zip"
     }
 
     private fun download(): File {
@@ -190,7 +187,7 @@ abstract class MongoManager(val version: Version,
 
             return File(downloadPath, download.name.substring(0, download.name.length - 4))
         }
-        throw RuntimeException("Unsupported file type: ${download}")
+        throw RuntimeException("Unsupported file type: $download")
     }
 
     private fun extract(inputStream: ArchiveInputStream) {
@@ -231,12 +228,12 @@ abstract class MongoManager(val version: Version,
         val downloadName = url.path.substringAfterLast('/')
         val download = File(downloadPath, downloadName)
         if (!download.exists()) {
-            LOG.info("${download} does not exist.  Downloading binaries from mongodb.org")
+            LOG.info("$download does not exist.  Downloading binaries from mongodb.org")
             download.parentFile.mkdirs()
             Request.Get(path)
-                    .userAgent("Mozilla/5.0 (compatible; bottlerocket; +https://github.com/evanchooly/bottlerocket)")
-                    .execute()
-                    .saveContent(download)
+                .userAgent("Mozilla/5.0 (compatible; bottlerocket; +https://github.com/evanchooly/bottlerocket)")
+                .execute()
+                .saveContent(download)
         }
         return download
     }
@@ -245,8 +242,8 @@ abstract class MongoManager(val version: Version,
 fun MongoClient.runCommand(command: Document, readPreference: ReadPreference = ReadPreference.primary()): Document {
     try {
         return getDatabase("admin")
-                .runCommand(command, readPreference)
+            .runCommand(command, readPreference)
     } catch (e: Exception) {
-        throw RuntimeException("command failed: ${command} with preference ${readPreference}", e)
+        throw RuntimeException("command failed: $command with preference $readPreference", e)
     }
 }

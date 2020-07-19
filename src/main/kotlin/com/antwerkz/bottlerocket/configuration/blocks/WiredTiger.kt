@@ -3,11 +3,10 @@ package com.antwerkz.bottlerocket.configuration.blocks
 import com.antwerkz.bottlerocket.configuration.ConfigBlock
 
 class WiredTiger(
-        var collectionConfig: CollectionConfig = CollectionConfig(),
-        var engineConfig: EngineConfig = EngineConfig(),
-        var indexConfig: IndexConfig = IndexConfig()
+    var collectionConfig: CollectionConfig = CollectionConfig(),
+    var engineConfig: EngineConfig = EngineConfig(),
+    var indexConfig: IndexConfig = IndexConfig()
 ) : ConfigBlock {
-
     fun collectionConfig(init: CollectionConfig.() -> Unit) {
         collectionConfig = initConfigBlock(CollectionConfig(), init)
     }

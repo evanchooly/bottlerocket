@@ -152,16 +152,6 @@
 
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
-                <inherited>true</inherited>
-                <configuration>
-                    <source>11</source>
-                    <target>11</target>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>
@@ -267,7 +257,7 @@
                 <version>0.9.4</version>
                 <executions>
                     <execution>
-                        <id>format-and-check</id>
+                        <id>check</id>
                         <goals>
                             <!--<goal>format</goal>-->
                             <goal>check</goal>
