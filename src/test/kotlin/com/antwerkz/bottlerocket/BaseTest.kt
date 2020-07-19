@@ -7,11 +7,16 @@ import org.bson.Document
 import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.DataProvider
+import java.io.File
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.ArrayList
 
 open class BaseTest {
+    companion object {
+        val format = LocalTime.now().format(DateTimeFormatter.ofPattern("HH_mm"))
+    }
+
     lateinit var cluster: MongoCluster
 
     @AfterMethod
@@ -88,13 +93,12 @@ open class BaseTest {
         for (document in list ?: listOf<Document>()) {
             when (document.getString("_id")) {
                 "rocket0" -> Assert.assertEquals(document["host"], "rocket0/localhost:30001,localhost:30002,localhost:30003")
-                else -> Assert.fail("found unknown shard member: " + document)
+                else -> Assert.fail("found unknown shard member: $document")
             }
         }
     }
 
-    protected fun basePath(): String {
-        val format = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"))
-        return "build/rocket/$format/"
+    protected fun basePath(version: Version): File {
+        return File("target/rocket/$format/${version}").absoluteFile
     }
 }

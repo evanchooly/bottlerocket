@@ -5,19 +5,18 @@ import com.github.zafarkhaja.semver.Version
 import org.testng.annotations.Test
 import java.io.File
 
-@Test(enabled = false)
 class ShardedTest : BaseTest() {
 
-    @Test(dataProvider = "versions")
-    fun sharded(clusterVersion: Version) {
-        cluster = ShardedCluster(baseDir = File("${basePath()}/sharded"), version = clusterVersion)
+    @Test(dataProvider = "versions", enabled = false)
+    fun sharded(version: Version) {
+        cluster = ShardedCluster(baseDir = File("${basePath(version)}/sharded"), version = version)
         testClusterWrites()
         validateShards()
     }
 
     @Test(dataProvider = "versions", enabled = false)
-    fun shardedAuth(clusterVersion: Version) {
-        cluster = ShardedCluster(baseDir = File("${basePath()}/shardedAuth"), version = clusterVersion)
+    fun shardedAuth(version: Version) {
+        cluster = ShardedCluster(baseDir = File("${basePath(version)}/shardedAuth"), version = version)
         testClusterAuth()
         validateShards()
         testClusterWrites()
