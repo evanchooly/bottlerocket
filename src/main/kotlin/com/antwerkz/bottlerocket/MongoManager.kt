@@ -109,6 +109,10 @@ abstract class MongoManager(val version: Version,
         }
     }
 
+    fun deleteBinaries() {
+        File(binDir).parentFile.deleteRecursively()
+    }
+
     open fun getReplicaSetConfig(client: MongoClient): Document? {
         return client.getDatabase("local")
                 .getCollection("system.replset").find().first()

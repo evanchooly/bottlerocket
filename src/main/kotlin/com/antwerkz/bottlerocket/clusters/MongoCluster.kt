@@ -73,7 +73,6 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
             mongoManager.addAdminUser(getAdminClient())
             adminAdded = true
         }
-
     }
 
     open fun shutdown() {
@@ -81,6 +80,7 @@ abstract class MongoCluster(val name: String = BottleRocket.DEFAULT_NAME,
         adminClient = null
         client?.close()
         client = null
+        mongoManager.deleteBinaries()
     }
 
 /*
