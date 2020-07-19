@@ -14,5 +14,7 @@ object BottleRocket {
     val DEFAULT_VERSION = Version.forIntegers(4, 2, 8)
     @JvmField
     val DEFAULT_BASE_DIR = File("${TEMP_DIR}/${DEFAULT_NAME}")
+    @JvmField
+    var linuxVersion = "rhel80"
 }
 
