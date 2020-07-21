@@ -39,6 +39,9 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
         internal fun linux(): String {
             val etc = File("/etc")
             val version = when {
+                File(etc, "redhat-release").exists() -> {
+                    "rhel80"
+                }
                 File(etc, "os-release").exists() -> {
                     val props = Properties()
                     File(etc, "os-release").inputStream().use {
@@ -47,9 +50,6 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
 
                         "ubuntu" + version.replace(".", "").replace("\"", "")
                     }
-                }
-                File(etc, "redhat-release").exists() -> {
-                    "rhel80"
                 }
                 else -> {
                     "rhel80"
