@@ -29,11 +29,35 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.lang.String.format
 import java.net.URL
+import java.util.Properties
 import java.util.zip.GZIPInputStream
 
 abstract class MongoManager(val version: Version, val windowsBaseUrl: String, val macBaseUrl: String, val linuxBaseUrl: String) {
     companion object {
         private val LOG = LoggerFactory.getLogger(MongoManager::class.java)
+
+        internal fun linux(): String {
+            val etc = File("/etc")
+            val version = when {
+                File(etc, "os-release").exists() -> {
+                    val props = Properties()
+                    File(etc, "os-release").inputStream().use {
+                        props.load(it)
+                        val version = props["VERSION_ID"] as String
+
+                        "ubuntu" + version.replace(".", "").replace("\"", "")
+                    }
+                }
+                File(etc, "redhat-release").exists() -> {
+                    "rhel80"
+                }
+                else -> {
+                    "rhel80"
+                }
+            }
+            LOG.info("Linux version detected: $version")
+            return version
+        }
 
         @JvmStatic
         fun of(versionString: String): MongoManager {
@@ -224,7 +248,7 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
         val downloadName = url.path.substringAfterLast('/')
         val download = File(downloadPath, downloadName)
         if (!download.exists()) {
-            LOG.info("$download does not exist.  Downloading binaries from mongodb.org")
+            LOG.info("$download does not exist.  Downloading binaries from $url")
             download.parentFile.mkdirs()
             Request.Get(path)
                 .userAgent("Mozilla/5.0 (compatible; bottlerocket; +https://github.com/evanchooly/bottlerocket)")

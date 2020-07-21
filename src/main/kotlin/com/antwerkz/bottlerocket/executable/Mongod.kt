@@ -5,6 +5,7 @@ import com.antwerkz.bottlerocket.MongoManager
 import com.antwerkz.bottlerocket.configuration.ConfigMode.MONGOD
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.zeroturnaround.exec.MessageLogger
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.process.Processes
 import java.io.File
@@ -31,11 +32,16 @@ class Mongod(manager: MongoManager, name: String, port: Int, baseDir: File) : Mo
                 args.addAll(arrayOf("--replSet", replicaSetName))
             }
             val processResult = ProcessExecutor()
-                    .command(args)
-                    .redirectOutput(stdOut)
-                    .redirectError(stdErr)
-                    .destroyOnExit()
-                    .start()
+                .command(args)
+                .setMessageLogger(object : MessageLogger {
+                    override fun message(log: Logger?, format: String?, vararg arguments: Any?) {
+                        logger.info(format, arguments)
+                    }
+                })
+//                    .redirectOutput(stdOut)
+//                    .redirectError(stdErr)
+                .destroyOnExit()
+                .start()
 
             process = Processes.newPidProcess(processResult?.process)
 

@@ -21,18 +21,4 @@ object BottleRocket {
 
     @JvmField
     val DEFAULT_BASE_DIR = File("$TEMP_DIR/$DEFAULT_NAME")
-
-    @JvmField
-    var linuxVersion = "rhel80"
-
-    init {
-        val etc = File("/etc")
-        if (File(etc, "redhat-release").exists()) {
-            LOG.info("RedHat Linux detected")
-            linuxVersion = "rhel80"
-        } else if (File(etc, "lsb-release").exists()) {
-            LOG.info("Ubuntu Linux detected")
-            linuxVersion = "ubuntu1804"
-        }
-    }
 }
