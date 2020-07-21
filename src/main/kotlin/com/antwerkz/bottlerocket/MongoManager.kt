@@ -60,8 +60,6 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
     val downloadPath: File
     val binDir: String
     var mongo: String
-        get() = ""
-        set(value) {}
     val mongod: String
     val mongos: String
 
@@ -106,9 +104,7 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
     }
 
     fun deleteBinaries() {
-        val file = File(binDir).parentFile
-        LOG.info("Deleting the extracted binaries at $file")
-        file.deleteRecursively()
+        File(binDir).parentFile.deleteRecursively()
     }
 
     open fun getReplicaSetConfig(client: MongoClient): Document? {
