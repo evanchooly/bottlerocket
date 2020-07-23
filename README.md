@@ -12,13 +12,13 @@ BottleRocket is an API to create MongoDB clusters in a variety shapes.  It's int
 <dependency>
     <groupId>com.antwerkz.bottlerocket</groupId>
     <artifactId>bottlerocket</artifactId>
-    <version>0.1</version>
+    <version>0.4</version>
  </dependency>
 ```
   
 ### Gradle
 ```groovy
-compile 'com.antwerkz.bottlerocket:bottlerocket:0.1`
+compile 'com.antwerkz.bottlerocket:bottlerocket:0.4`
 ```
 
 ## Using BottleRocket
@@ -63,5 +63,5 @@ isntances will be available starting at the default port of 30000.
 
 ## Versions
 
-BottleRocket is intended to work with a number of versions of MongoDB.  The version to use when building the cluster can be set via 
+BottleRocket is intended to work with version of MongoDB 3.6 onward.  The version to use when building the cluster can be set via 
 which builder is used to build your cluster.  Mixed version clusters are not currently supported via the builders but are on the roadmap.
