@@ -43,7 +43,6 @@ abstract class MongoCluster(
     val version: Version = BottleRocket.DEFAULT_VERSION,
     val baseDir: File = BottleRocket.DEFAULT_BASE_DIR
 ) {
-
     companion object {
         val perms = EnumSet.of(OWNER_READ, OWNER_WRITE)
     }
@@ -81,14 +80,15 @@ abstract class MongoCluster(
         client = null
         mongoManager.deleteBinaries()
     }
-/*
-    open fun enableAuth() {
-        if (!isAuthEnabled()) {
-            generateKeyFile()
-            generatePemFile()
+
+    /*
+        open fun enableAuth() {
+            if (!isAuthEnabled()) {
+                generateKeyFile()
+                generatePemFile()
+            }
         }
-    }
-*/
+    */
     fun clean() {
         baseDir.deleteTree()
     }
@@ -96,12 +96,12 @@ abstract class MongoCluster(
     fun getAdminClient(): MongoClient {
         if (adminClient == null) {
             val builder = MongoClientSettings.builder()
-                    .applyToConnectionPoolSettings {
-                        it.maxWaitTime(30, MILLISECONDS)
-                    }
-                    .applyToClusterSettings {
-                        it.hosts(getServerAddressList())
-                    }
+                .applyToConnectionPoolSettings {
+                    it.maxWaitTime(30, MILLISECONDS)
+                }
+                .applyToClusterSettings {
+                    it.hosts(getServerAddressList())
+                }
             if (isAuthEnabled()) {
                 builder.credential(createCredential(MongoExecutable.SUPER_USER, "admin", SUPER_USER_PASSWORD.toCharArray()))
             }
@@ -111,15 +111,16 @@ abstract class MongoCluster(
         return adminClient!!
     }
 
-    fun getClient(): MongoClient {
+    @JvmOverloads
+    fun getClient(builder: MongoClientSettings.Builder = MongoClientSettings.builder()): MongoClient {
         if (client == null) {
-            val builder = MongoClientSettings.builder()
-                    .applyToConnectionPoolSettings {
-                        it.maxWaitTime(30, MILLISECONDS)
-                    }
-                    .applyToClusterSettings {
-                        it.hosts(getServerAddressList())
-                    }
+            builder
+                .applyToConnectionPoolSettings {
+                    it.maxWaitTime(30, MILLISECONDS)
+                }
+                .applyToClusterSettings {
+                    it.hosts(getServerAddressList())
+                }
             credentials?.let {
                 builder.credential(credentials)
             }
@@ -261,7 +262,7 @@ abstract class MongoClusterBuilder<out T>() {
     open fun name(value: String): T {
         name = value
         baseDir = if (baseDir == BottleRocket.DEFAULT_BASE_DIR) File(
-                "${BottleRocket.TEMP_DIR}/$name") else baseDir
+            "${BottleRocket.TEMP_DIR}/$name") else baseDir
         return this as T
     }
 
