@@ -35,7 +35,6 @@ import java.util.zip.GZIPInputStream
 abstract class MongoManager(val version: Version, val windowsBaseUrl: String, val macBaseUrl: String, val linuxBaseUrl: String) {
     companion object {
         private val LOG = LoggerFactory.getLogger(MongoManager::class.java)
-
         internal fun linux(): String {
             val etc = File("/etc")
             val version = when {
@@ -55,7 +54,9 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
                     "rhel80"
                 }
             }
-            LOG.info("Linux version detected: $version")
+            if (SystemUtils.IS_OS_LINUX) {
+                LOG.info("Linux version detected: $version")
+            }
             return version
         }
 
@@ -135,7 +136,6 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
         return client.getDatabase("local")
             .getCollection("system.replset").find().first()
     }
-
     /*
         fun enableAuth(node: MongoExecutable, pemFile: String? = null) {
             node.config.merge(configuration {
@@ -147,9 +147,17 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
         }
     */
     fun addUser(client: MongoClient, database: String, userName: String, password: String, roles: List<DatabaseRole>) {
-        client.getDatabase(database).runCommand(Document("createUser", userName)
-            .append("pwd", password)
-            .append("roles", roles.map { it.toDB() }))
+        if (!hasUser(client, database, userName)) {
+            client.getDatabase(database).runCommand(Document("createUser", userName)
+                .append("pwd", password)
+                .append("roles", roles.map { it.toDB() }))
+        }
+    }
+
+    private fun hasUser(client: MongoClient, database: String, userName: String): Boolean {
+        val document = client.getDatabase(database)
+            .runCommand(Document("usersInfo", userName))
+        return (document["users"] as List<*>?)?.isNotEmpty() ?: false
     }
 
     fun addAdminUser(client: MongoClient) {

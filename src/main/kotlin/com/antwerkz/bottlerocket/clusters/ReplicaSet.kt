@@ -124,9 +124,9 @@ class ReplicaSet @JvmOverloads constructor(
         }
     */
     fun initialize() {
-//        val first = nodes.filter { it.isAlive() }.first()
-//        val replicaSetConfig = mongoManager.getReplicaSetConfig(first.getClient())
-        if (!initialized /*replicaSetConfig == null*/) {
+        val first = nodes.filter { it.isAlive() }.first()
+        val replicaSetConfig = mongoManager.getReplicaSetConfig(first.getClient())
+        if (!initialized && replicaSetConfig == null) {
             initiateReplicaSet()
             LOG.info("replSet initiated.  waiting for primary.")
             waitForPrimary()
