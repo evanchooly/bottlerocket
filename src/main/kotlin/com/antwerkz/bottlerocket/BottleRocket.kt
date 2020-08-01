@@ -20,5 +20,5 @@ object BottleRocket {
     val DEFAULT_VERSION = Version.forIntegers(4, 2, 8)
 
     @JvmField
-    val DEFAULT_BASE_DIR = File(if(File("buld").exists()) "build" else "target", DEFAULT_NAME)
+    val DEFAULT_BASE_DIR = File(if (File("buld").exists()) "build" else "target", DEFAULT_NAME)
 }
