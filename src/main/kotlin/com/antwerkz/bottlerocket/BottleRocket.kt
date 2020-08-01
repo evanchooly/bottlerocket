@@ -8,7 +8,7 @@ object BottleRocket {
     private val LOG = LoggerFactory.getLogger(BottleRocket::class.java)
 
     @JvmField
-    val TEMP_DIR = System.getProperty("java.io.tmpdir")
+    val TEMP_DIR = if(File("buld").exists()) "build" else "target"
 
     @JvmField
     val DEFAULT_NAME = "rocket"
