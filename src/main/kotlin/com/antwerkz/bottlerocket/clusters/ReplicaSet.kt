@@ -98,7 +98,7 @@ class ReplicaSet @JvmOverloads constructor(
     }
 
     fun waitForPrimary(): Mongod? {
-        Awaitility.await("Waiting for primary in ${baseDir}")
+        Awaitility.await("Waiting for primary in $baseDir")
             .atMost(30, SECONDS)
             .until<Boolean>({
                 hasPrimary()
