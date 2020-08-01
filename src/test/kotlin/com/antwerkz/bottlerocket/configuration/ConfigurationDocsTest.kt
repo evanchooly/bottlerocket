@@ -35,8 +35,8 @@ class ConfigurationDocsTest {
         val properties = configuration {
         }.toLookups()
         val missing = check(version, properties, elements, url)
-        Assert.assertTrue(elements.isEmpty(), "found ${elements.size} extra items in $url: \n${elements
-            .joinToString("\n")}")
+        Assert.assertTrue(elements.isEmpty(), "found ${elements.size} extra items in $url: \n${elements.joinToString("\n")}")
+        Assert.assertTrue(missing.isEmpty(), "found ${missing.size} extra items in $url: \n${missing.joinToString("\n")}")
     }
 
     private fun check(version: Version, map: Map<String, KProperty<*>>, elements: MutableList<String>, url: String): MutableList<String> {

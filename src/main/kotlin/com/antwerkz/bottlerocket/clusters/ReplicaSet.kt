@@ -76,18 +76,21 @@ class ReplicaSet @JvmOverloads constructor(
     }
 
     fun getPrimary(): Mongod? {
-        println("looking for primary")
-        nodes.filter { it.isAlive() }
-            .forEach { mongod ->
-                val result = mongod.getClient()
-                    .runCommand(Document("isMaster", null))
+        try {
+            nodes.filter { it.isAlive() }
+                .forEach { mongod ->
+                    val result = mongod.getClient()
+                        .runCommand(Document("isMaster", null))
 
-                if (result.containsKey("primary")) {
-                    val host = result.getString("primary")
-                    return nodeMap[host.substringAfter(":")[1].toInt()]
+                    if (result.containsKey("primary")) {
+                        return nodeMap[result.getString("primary").substringAfter(":").toInt()]
+                    }
                 }
-            }
-        return null
+            return null
+        } catch (e: Exception) {
+            LOG.error(e.message, e)
+            return null
+        }
     }
 
     fun hasPrimary(): Boolean {
@@ -95,12 +98,11 @@ class ReplicaSet @JvmOverloads constructor(
     }
 
     fun waitForPrimary(): Mongod? {
-        Awaitility.await()
+        Awaitility.await("Waiting for primary in ${baseDir}")
             .atMost(30, SECONDS)
-            .until<Boolean> {
-                println("waiting for primary")
+            .until<Boolean>({
                 hasPrimary()
-            }
+            })
 
         return getPrimary()
     }
@@ -108,7 +110,9 @@ class ReplicaSet @JvmOverloads constructor(
     override
     fun shutdown() {
         val primary = getPrimary()
-        nodes.filter { it != primary }.forEach(Mongod::shutdown)
+        nodes
+            .filter { it != primary }
+            .forEach(Mongod::shutdown)
         primary?.shutdown()
         super.shutdown()
     }
