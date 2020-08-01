@@ -76,22 +76,18 @@ class ReplicaSet @JvmOverloads constructor(
     }
 
     fun getPrimary(): Mongod? {
-        try {
-            nodes.filter({ it.isAlive() })
-                .forEach({ mongod ->
-                    val mongoClient = mongod.getClient()
-                    val result = mongoClient.runCommand(Document("isMaster", null))
+        println("looking for primary")
+        nodes.filter { it.isAlive() }
+            .forEach { mongod ->
+                val result = mongod.getClient()
+                    .runCommand(Document("isMaster", null))
 
-                    if (result.containsKey("primary")) {
-                        val host = result.getString("primary")
-                        return nodeMap.get(Integer.valueOf(host.split(":".toRegex()).toTypedArray()[1]))
-                    }
-                })
-            return null
-        } catch (e: Exception) {
-            LOG.error(e.message, e)
-            return null
-        }
+                if (result.containsKey("primary")) {
+                    val host = result.getString("primary")
+                    return nodeMap[host.substringAfter(":")[1].toInt()]
+                }
+            }
+        return null
     }
 
     fun hasPrimary(): Boolean {
@@ -101,9 +97,10 @@ class ReplicaSet @JvmOverloads constructor(
     fun waitForPrimary(): Mongod? {
         Awaitility.await()
             .atMost(30, SECONDS)
-            .until<Boolean>({
+            .until<Boolean> {
+                println("waiting for primary")
                 hasPrimary()
-            })
+            }
 
         return getPrimary()
     }
@@ -160,7 +157,7 @@ class ReplicaSet @JvmOverloads constructor(
             val members = config.get("members") as ArrayList<Document>
             var id = members[0].getInteger("_id")
             nodes.asSequence().withIndex()
-                .filter({ it.index > 0 })
+                .filter { it.index > 0 }
                 .map { Document("_id", ++id).append("host", "localhost:${it.value.port}") }
                 .toCollection(members)
             val results = client.runCommand(Document("replSetReconfig", config))
