@@ -8,7 +8,7 @@ import org.testng.annotations.Test
 import java.io.File
 
 class MongoMangerTest {
-    @Test
+    @Test(enabled = false)  // disabled by default to avoid churn. let OS failures get picked up on travis first
     fun downloads() {
         for (os in listOf("windows", "linux", "osx")) {
             for (version in listOf(Version.valueOf("4.2.8"), Version.valueOf("4.0.19"), Version.valueOf("3.6.18"))) {
