@@ -10,12 +10,9 @@ notifications:
 os:
   - linux
   - osx
-  - windows
+#  - windows
 
 jdk:
   - openjdk11
-  - openjdk12
-  - openjdk13
-  - openjdk14
 
 script: mvn test
