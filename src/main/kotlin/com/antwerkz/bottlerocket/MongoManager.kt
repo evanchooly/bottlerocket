@@ -82,9 +82,7 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
     val mongo: String by lazy { "$binDir/mongo$extension" }
     val mongod: String by lazy { "$binDir/mongod$extension" }
     val mongos: String by lazy { "$binDir/mongos$extension" }
-
-    private val extension =         if (SystemUtils.IS_OS_WINDOWS) "exe" else ""
-
+    private val extension = if (SystemUtils.IS_OS_WINDOWS) "exe" else ""
     fun configServer(name: String, port: Int, baseDir: File): ConfigServer {
         return ConfigServer(this, name, port, baseDir)
     }
@@ -227,7 +225,7 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
                 val base = entry.name.substringBefore("/")
                 when (root) {
                     null -> root = base
-                    else -> if(base != root) throw IllegalStateException("Found conflicting root folders:  $root vs $base")
+                    else -> if (base != root) throw IllegalStateException("Found conflicting root folders:  $root vs $base")
                 }
             }
             file.parentFile.mkdirs()
