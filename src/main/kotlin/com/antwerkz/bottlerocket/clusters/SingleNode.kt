@@ -62,7 +62,7 @@ open class SingleNode @JvmOverloads constructor(
         return mongod.isAuthEnabled()
     }
 
-    override fun updateConfig(update: Configuration) {
+    override fun configure(update: Configuration) {
         mongod.config.merge(update)
     }
 

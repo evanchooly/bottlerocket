@@ -86,9 +86,10 @@ class ShardedCluster @JvmOverloads constructor(
         mongoses.forEach { mongoManager.enableAuth(it, keyFile) }
     }
 */
-    override fun updateConfig(update: Configuration) {
+
+    override fun configure(update: Configuration) {
         shards.forEach {
-            it.updateConfig(update)
+            it.configure(update)
         }
         mongoses.forEach {
             it.config.merge(update)

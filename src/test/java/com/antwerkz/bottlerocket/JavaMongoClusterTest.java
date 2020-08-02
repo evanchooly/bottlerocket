@@ -1,6 +1,5 @@
 package com.antwerkz.bottlerocket;
 
-import com.antwerkz.bottlerocket.BaseTest.Companion;
 import com.antwerkz.bottlerocket.clusters.MongoCluster;
 import com.antwerkz.bottlerocket.clusters.ReplicaSet;
 import com.antwerkz.bottlerocket.clusters.ShardedCluster;
@@ -92,7 +91,7 @@ public class JavaMongoClusterTest {
 
     void startCluster(final MongoCluster cluster) {
         cluster.clean();
-        cluster.updateConfig(configuration(c -> {
+        cluster.configure(configuration(c -> {
             c.storage(s -> {
                 s.mmapv1(m -> {
                     m.setPreallocDataFiles(false);

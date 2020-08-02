@@ -182,7 +182,7 @@ class ReplicaSet @JvmOverloads constructor(
         })
     }
 
-    override fun updateConfig(update: Configuration) {
+    override fun configure(update: Configuration) {
         nodes.forEach {
             it.config.merge(update)
         }

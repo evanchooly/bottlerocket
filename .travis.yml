@@ -1,0 +1,16 @@
+language: java
+
+notifications:
+  email:
+    recipients:
+      - jlee@antwerkz.com
+    on_success: change
+    on_failure: always
+
+jdk:
+  - openjdk11
+  - openjdk12
+  - openjdk13
+  - openjdk14
+
+script: mvn test

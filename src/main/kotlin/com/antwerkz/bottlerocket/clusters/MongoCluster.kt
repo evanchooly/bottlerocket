@@ -220,8 +220,16 @@ abstract class MongoCluster(
         return version.greaterThanOrEqualTo(minVersion)
     }
 
+    fun configure(update: Configuration.() -> Unit) {
+        val configuration = Configuration()
+        configuration.update()
+
+        configure(configuration)
+    }
+
     abstract fun isAuthEnabled(): Boolean
-    abstract fun updateConfig(update: Configuration)
+
+    abstract fun configure(update: Configuration)
 }
 
 fun File.deleteTree() {
