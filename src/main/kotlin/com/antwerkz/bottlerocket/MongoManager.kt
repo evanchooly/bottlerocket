@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.IOException
 import java.lang.String.format
 import java.net.URL
 import java.util.Properties
@@ -61,15 +60,7 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
         }
 
         @JvmStatic
-        fun of(versionString: String): MongoManager {
-            val version = Version.valueOf(versionString)
-            return when ("${version.majorVersion}.${version.minorVersion}") {
-                "4.2" -> MongoManager42(version)
-                "4.0" -> MongoManager40(version)
-                "3.6" -> MongoManager36(version)
-                else -> throw IllegalArgumentException("Unsupported version $version")
-            }
-        }
+        fun of(versionString: String) = of(Version.valueOf(versionString))
 
         @JvmStatic
         fun of(version: Version): MongoManager {
@@ -82,25 +73,17 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
         }
     }
 
-    val downloadPath: File
-    val binDir: String
-    var mongo: String
-    val mongod: String
-    val mongos: String
-
-    init {
-        downloadPath = File(BottleRocket.TEMP_DIR, "mongo-downloads")
-        binDir = "${download()}/bin"
-        if (SystemUtils.IS_OS_WINDOWS) {
-            mongo = "$binDir/mongo.exe"
-            mongod = "$binDir/mongod.exe"
-            mongos = "$binDir/mongos.exe"
-        } else {
-            mongo = "$binDir/mongo"
-            mongod = "$binDir/mongod"
-            mongos = "$binDir/mongos"
+    var archive: File? = null
+    var downloadPath: File = File(BottleRocket.TEMP_DIR, "mongo-downloads")
+        internal set(value) {
+            field = value
         }
-    }
+    val binDir: String by lazy { "${download()}/bin" }
+    val mongo: String by lazy { "$binDir/mongo$extension" }
+    val mongod: String by lazy { "$binDir/mongod$extension" }
+    val mongos: String by lazy { "$binDir/mongos$extension" }
+
+    private val extension =         if (SystemUtils.IS_OS_WINDOWS) "exe" else ""
 
     fun configServer(name: String, port: Int, baseDir: File): ConfigServer {
         return ConfigServer(this, name, port, baseDir)
@@ -136,6 +119,7 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
         return client.getDatabase("local")
             .getCollection("system.replset").find().first()
     }
+
     /*
         fun enableAuth(node: MongoExecutable, pemFile: String? = null) {
             node.config.merge(configuration {
@@ -195,63 +179,68 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
             else -> throw RuntimeException("Unsupported operating system: ${SystemUtils.OS_NAME}")
         }
 
-        return extractDownload { downloadArchive(format(url, version)) }
+        return extractDownload(format(url, version))
     }
 
-    private fun extract(download: File): File {
-        if (GzipUtils.isCompressedFilename(download.name)) {
-            TarArchiveInputStream(GZIPInputStream(FileInputStream(download))).use { inputStream ->
+    internal fun extractDownload(path: String): File {
+        var retry = 0
+        while (true) {
+            archive = downloadArchive(path)
+            try {
+                val file = archive?.extract()
+                file?.let {
+                    File(it, "bin").listFiles()
+                        ?.forEach { file ->
+                            file.setExecutable(true)
+                        }
+                    return it
+                }
+            } catch (e: Throwable) {
+                archive?.delete()
+                retry++
+                if (retry > 5) {
+                    throw RuntimeException("Failed to extract file: ${e.message}", e)
+                }
+            }
+        }
+    }
+
+    private fun File.extract(): File {
+        val root = if (GzipUtils.isCompressedFilename(name)) {
+            TarArchiveInputStream(GZIPInputStream(FileInputStream(this))).use { inputStream ->
                 extract(inputStream)
             }
-            return File(downloadPath, download.name.substring(0, download.name.length - 4))
-        } else if (download.name.endsWith(".zip")) {
-            try {
-                ZipArchiveInputStream(FileInputStream(download)).use { inputStream ->
-                    extract(inputStream)
-                }
-            } catch (e: IOException) {
-                throw RuntimeException(e.message, e)
+        } else {
+            ZipArchiveInputStream(FileInputStream(this)).use { inputStream ->
+                extract(inputStream)
             }
-
-            return File(downloadPath, download.name.substring(0, download.name.length - 4))
         }
-        throw RuntimeException("Unsupported file type: $download")
+        return File(downloadPath, root)
     }
 
-    private fun extract(inputStream: ArchiveInputStream) {
+    private fun extract(inputStream: ArchiveInputStream): String {
         var entry: ArchiveEntry? = inputStream.nextEntry
+        var root: String? = null
         while (entry != null) {
             val file = File(downloadPath, entry.name)
+            if (entry.name.contains("/")) {
+                val base = entry.name.substringBefore("/")
+                when (root) {
+                    null -> root = base
+                    else -> if(base != root) throw IllegalStateException("Found conflicting root folders:  $root vs $base")
+                }
+            }
             file.parentFile.mkdirs()
             val out = FileOutputStream(file)
             IOUtils.copy(inputStream, out)
             out.close()
             entry = inputStream.nextEntry
         }
+
+        return root ?: throw IllegalStateException("No root folder found")
     }
 
-    private fun extractDownload(extractor: () -> File): File {
-        var retry = 0
-        while (true) {
-            val download: File = extractor()
-            try {
-                val file = extract(download)
-                File(file, "bin").listFiles().forEach {
-                    it.setExecutable(true)
-                }
-
-                return file
-            } catch (e: Exception) {
-                download.delete()
-                retry++
-                if (retry > 5) {
-                    throw RuntimeException("Failed to extract file: ${e.message}")
-                }
-            }
-        }
-    }
-
-    private fun downloadArchive(path: String): File {
+    internal fun downloadArchive(path: String): File {
         val url = URL(path)
         val downloadName = url.path.substringAfterLast('/')
         val download = File(downloadPath, downloadName)
