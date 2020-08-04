@@ -1,7 +1,6 @@
 package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.SingleNode
-import com.github.zafarkhaja.semver.Version
 import org.testng.Assert
 import org.testng.Assert.fail
 import org.testng.annotations.Test
