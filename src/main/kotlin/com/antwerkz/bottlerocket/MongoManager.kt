@@ -3,10 +3,10 @@ package com.antwerkz.bottlerocket
 import com.antwerkz.bottlerocket.configuration.ConfigMode
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.configuration
-import com.antwerkz.bottlerocket.configuration.mongo36.MongoManager36
-import com.antwerkz.bottlerocket.configuration.mongo40.MongoManager40
-import com.antwerkz.bottlerocket.configuration.mongo42.MongoManager42
-import com.antwerkz.bottlerocket.configuration.types.Destination.FILE
+import com.antwerkz.bottlerocket.configuration.managers.MongoManager36
+import com.antwerkz.bottlerocket.configuration.managers.MongoManager40
+import com.antwerkz.bottlerocket.configuration.managers.MongoManager42
+import com.antwerkz.bottlerocket.configuration.managers.MongoManager44
 import com.antwerkz.bottlerocket.executable.ConfigServer
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.executable.Mongos
@@ -65,6 +65,7 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
         @JvmStatic
         fun of(version: Version): MongoManager {
             return when ("${version.majorVersion}.${version.minorVersion}") {
+                "4.4" -> MongoManager44(version)
                 "4.2" -> MongoManager42(version)
                 "4.0" -> MongoManager40(version)
                 "3.6" -> MongoManager36(version)
@@ -82,7 +83,7 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
     val mongo: String by lazy { "$binDir/mongo$extension" }
     val mongod: String by lazy { "$binDir/mongod$extension" }
     val mongos: String by lazy { "$binDir/mongos$extension" }
-    private val extension = if (SystemUtils.IS_OS_WINDOWS) "exe" else ""
+    private val extension = if (SystemUtils.IS_OS_WINDOWS) ".exe" else ""
     fun configServer(name: String, port: Int, baseDir: File): ConfigServer {
         return ConfigServer(this, name, port, baseDir)
     }
@@ -101,10 +102,6 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
             }
             storage {
                 dbPath = baseDir.absolutePath
-            }
-            systemLog {
-                destination = FILE
-                path = "$baseDir/mongo.log"
             }
         }
     }

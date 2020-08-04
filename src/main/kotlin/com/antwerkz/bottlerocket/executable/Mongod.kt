@@ -5,20 +5,13 @@ import com.antwerkz.bottlerocket.MongoManager
 import com.antwerkz.bottlerocket.configuration.ConfigMode.MONGOD
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.zeroturnaround.exec.MessageLogger
 import org.zeroturnaround.exec.ProcessExecutor
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import org.zeroturnaround.process.Processes
 import java.io.File
-import java.io.FileOutputStream
 
 class Mongod(manager: MongoManager, name: String, port: Int, baseDir: File) : MongoExecutable(manager, name, port, baseDir) {
     override val logger: Logger = LoggerFactory.getLogger("Mongod.$port")
-    private val stdOut: FileOutputStream by lazy {
-        FileOutputStream(File(baseDir, "mongod.out"))
-    }
-    private val stdErr: FileOutputStream by lazy {
-        FileOutputStream(File(baseDir, "mongod.err"))
-    }
     private val configFile = File(baseDir, "mongod.conf")
     fun start(replicaSetName: String? = null) {
         if (process == null || !process?.isAlive!!) {
@@ -27,19 +20,15 @@ class Mongod(manager: MongoManager, name: String, port: Int, baseDir: File) : Mo
             val configFile = configFile
             manager.writeConfig(configFile, config, MONGOD)
             val args = arrayListOf(manager.mongod,
-                    "--config", configFile.absolutePath)
+                "--config", configFile.absolutePath)
             if (replicaSetName != null) {
                 args.addAll(arrayOf("--replSet", replicaSetName))
             }
+            logger.debug("Starting mongod with this command: $args")
             val processResult = ProcessExecutor()
                 .command(args)
-                .setMessageLogger(object : MessageLogger {
-                    override fun message(log: Logger?, format: String?, vararg arguments: Any?) {
-                        logger.info(format, arguments)
-                    }
-                })
-//                    .redirectOutput(stdOut)
-//                    .redirectError(stdErr)
+                .redirectOutput(Slf4jStream.of(logger).asDebug())
+                .redirectError(Slf4jStream.of(logger).asError())
                 .destroyOnExit()
                 .start()
 

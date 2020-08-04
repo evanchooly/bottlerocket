@@ -27,11 +27,7 @@ open class BaseTest {
 
     @DataProvider(name = "versions")
     fun versions(): Array<Version> {
-        return arrayOf(
-            Version.forIntegers(4, 2, 8),
-            Version.forIntegers(4, 0, 19),
-            Version.forIntegers(3, 6, 18)
-        )
+        return Versions.values().map { it.version() }.toTypedArray()
     }
 
     fun testClusterWrites() {

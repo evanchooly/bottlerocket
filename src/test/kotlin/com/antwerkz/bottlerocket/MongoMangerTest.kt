@@ -12,7 +12,7 @@ class MongoMangerTest {
     @Test(enabled = false)
     fun downloads() {
         for (os in listOf("windows", "linux", "osx")) {
-            for (version in listOf(Version.valueOf("4.2.8"), Version.valueOf("4.0.19"), Version.valueOf("3.6.18"))) {
+            for (version in Versions.list()) {
                 val manager = MongoManager.of(version)
                 manager.downloadPath = File("target")
                 val url = when (os) {

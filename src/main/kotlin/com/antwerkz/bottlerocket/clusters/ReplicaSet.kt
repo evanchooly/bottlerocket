@@ -125,7 +125,7 @@ class ReplicaSet @JvmOverloads constructor(
         }
     */
     fun initialize() {
-        val first = nodes.filter { it.isAlive() }.first()
+        val first = nodes.filter { it.isAlive() }.firstOrNull() ?: throw IllegalStateException("No servers found")
         val replicaSetConfig = mongoManager.getReplicaSetConfig(first.getClient())
         if (!initialized && replicaSetConfig == null) {
             initiateReplicaSet()
