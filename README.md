@@ -1,8 +1,7 @@
 # BottleRocket
 
 BottleRocket is an API to create MongoDB clusters in a variety shapes.  It's intended for use in various testing scenarios where you need
- to test your application or library against various configurations of clusters.  BottleRocket is written in [Kotlin](http://kotlinlang
- .org/) but can be used by any Java project.  In fact, even though the core is written in Kotlin, the tests are written in Java to help 
+ to test your application or library against various configurations of clusters.  BottleRocket is written in [Kotlin](http://kotlinlang.org/) but can be used by any Java project.  In fact, even though the core is written in Kotlin, the tests are written in Java to help 
  ensure the API stays friendly to Java developers while still taking advantage of the language features Kotlin offers.
  
 ## Installing BottleRocket
