@@ -11,13 +11,13 @@ BottleRocket is an API to create MongoDB clusters in a variety shapes.  It's int
 <dependency>
     <groupId>com.antwerkz.bottlerocket</groupId>
     <artifactId>bottlerocket</artifactId>
-    <version>0.4</version>
+    <version>${version}</version>
  </dependency>
 ```
   
 ### Gradle
 ```groovy
-compile 'com.antwerkz.bottlerocket:bottlerocket:0.4`
+compile 'com.antwerkz.bottlerocket:bottlerocket:${version}`
 ```
 
 ## Using BottleRocket
