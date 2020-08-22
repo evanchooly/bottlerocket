@@ -7,27 +7,14 @@ import com.github.zafarkhaja.semver.Version
 import com.mongodb.ServerAddress
 import java.io.File
 
-open class SingleNode @JvmOverloads constructor(
+class SingleNode @JvmOverloads constructor(
+    clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
     name: String = BottleRocket.DEFAULT_NAME,
     port: Int = BottleRocket.DEFAULT_PORT,
-    version: Version = BottleRocket.DEFAULT_VERSION,
-    baseDir: File = BottleRocket.DEFAULT_BASE_DIR
-) : MongoCluster(name, port, version, baseDir) {
-    companion object {
-        @JvmStatic
-        fun builder(): SingleNodeBuilder {
-            return SingleNodeBuilder()
-        }
+    version: Version = BottleRocket.DEFAULT_VERSION
+) : MongoCluster(clusterRoot, name, version, PortAllocator(port)) {
 
-        @JvmStatic
-        fun build(init: SingleNodeBuilder.() -> Unit): SingleNode {
-            val builder = SingleNodeBuilder()
-            builder.init()
-            return builder().build()
-        }
-    }
-
-    private val mongod: Mongod = mongoManager.mongod(name, port, baseDir)
+    private val mongod: Mongod = mongoManager.mongod(clusterRoot, name, port)
 
     override
     fun start() {
@@ -63,27 +50,14 @@ open class SingleNode @JvmOverloads constructor(
     }
 
     override fun configure(update: Configuration) {
-        mongod.config.merge(update)
+        mongod.configure(update)
     }
 
     override fun toString(): String {
-        var content = "name = $name, version = $version, port = $port, baseDir = $baseDir, running = ${mongod.isAlive()}"
+        var content = "name = $name, version = $version, port = $allocator, baseDir = $clusterRoot, running = ${mongod.isAlive()}"
         if (isAuthEnabled()) {
             content += ", authentication = enabled"
         }
         return "Mongod { $content }"
-    }
-}
-
-class SingleNodeBuilder() : MongoClusterBuilder<SingleNodeBuilder>() {
-    constructor(mongod: SingleNode) : this() {
-        name(mongod.name)
-        port(mongod.port)
-        version(mongod.version)
-        baseDir(mongod.baseDir)
-    }
-
-    fun build(): SingleNode {
-        return SingleNode(name, port, version, baseDir)
     }
 }

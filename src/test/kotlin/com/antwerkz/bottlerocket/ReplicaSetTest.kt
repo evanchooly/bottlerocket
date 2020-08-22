@@ -8,14 +8,14 @@ import java.io.File
 class ReplicaSetTest : BaseTest() {
     @Test(dataProvider = "versions")
     fun replicaSet(version: Version) {
-        cluster = ReplicaSet(baseDir = File("${basePath(version)}/replicaSet").absoluteFile, version = version)
+        cluster = ReplicaSet(clusterRoot = File("${basePath(version)}/replicaSet").absoluteFile, version = version)
         testClusterWrites()
         assertPrimary(30000)
     }
 
     @Test(dataProvider = "versions", enabled = false)
     fun replicaSetAuth(version: Version) {
-        cluster = ReplicaSet(baseDir = File("${basePath(version)}/replicaSetAuth").absoluteFile, version = version)
+        cluster = ReplicaSet(clusterRoot = File("${basePath(version)}/replicaSetAuth").absoluteFile, version = version)
         testClusterAuth()
         testClusterWrites()
         assertPrimary(30000)

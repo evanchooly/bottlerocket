@@ -20,18 +20,15 @@ class MongoMangerTest {
                     "windows" -> manager.windowsDownload(version)
                     else -> TODO()
                 }
-                val archive = try {
-                    manager.downloadArchive(url)
-                } catch (e: Exception) {
-                    fail("Failed to download $url")
-                    throw e
-                }
-                Assert.assertTrue(archive.exists(), "Failed to download $url")
-                Assert.assertTrue(archive.length() > 0, "Failed to download $url")
+
+                manager.downloadArchive(url)
+
+                Assert.assertTrue(manager.archive.exists(), "Failed to download $url")
+                Assert.assertTrue(manager.archive.length() > 0, "Failed to download $url")
                 val baseDir = manager.extractDownload(url)
                 Assert.assertTrue(baseDir.exists(), "Failed to extract $url")
                 Assert.assertTrue(baseDir.listFiles()?.isNotEmpty() ?: false, "Failed to extract $url")
-                archive.delete()
+                manager.archive.delete()
                 baseDir.deleteRecursively()
             }
         }
@@ -39,9 +36,7 @@ class MongoMangerTest {
 
     @Test
     fun addUsers() {
-        val node = SingleNode
-            .builder()
-            .build()
+        val node = SingleNode()
 
         node.start()
 

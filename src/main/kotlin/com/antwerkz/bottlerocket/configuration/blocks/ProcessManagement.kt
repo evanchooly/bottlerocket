@@ -5,7 +5,7 @@ import com.antwerkz.bottlerocket.configuration.ConfigBlock
 class ProcessManagement(
     var pidFilePath: String? = null,
     var fork: Boolean? = null,
-    var windowsService: WindowsService = WindowsService(),
+    var windowsService: WindowsService? = null,
     var timeZoneInfo: String? = null
 ) : ConfigBlock {
     fun windowsService(init: WindowsService.() -> Unit) {

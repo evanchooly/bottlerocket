@@ -1,7 +1,10 @@
-package com.antwerkz.bottlerocket
+package com.antwerkz.bottlerocket.executable
 
+import com.antwerkz.bottlerocket.MongoManager
+import com.antwerkz.bottlerocket.clusters.Configurable
 import com.antwerkz.bottlerocket.clusters.deleteTree
 import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.runCommand
 import com.jayway.awaitility.Awaitility
 import com.jayway.awaitility.Duration
 import com.mongodb.MongoClientSettings
@@ -13,15 +16,21 @@ import com.mongodb.client.MongoClients
 import org.bson.Document
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.zeroturnaround.exec.ProcessExecutor
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream.of
 import org.zeroturnaround.process.PidProcess
+import org.zeroturnaround.process.Processes
 import java.io.File
+import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 
-abstract class MongoExecutable(val manager: MongoManager, val name: String, val port: Int, val baseDir: File) {
-    protected var process: PidProcess? = null
-    val config: Configuration
-    abstract val logger: Logger
+abstract class MongoExecutable
+    internal constructor(internal val manager: MongoManager, val baseDir: File, val name: String, val port: Int) : Configurable {
+    private var process: PidProcess? = null
     private lateinit var client: MongoClient
+    internal var config = manager.initialConfig(baseDir, name, port)
+        private set
+    val logger: Logger = LoggerFactory.getLogger("${this::class.simpleName}.$port")
 
     companion object {
         val SUPER_USER = "superuser"
@@ -29,8 +38,8 @@ abstract class MongoExecutable(val manager: MongoManager, val name: String, val 
         private val LOG = LoggerFactory.getLogger(MongoExecutable::class.java)
     }
 
-    init {
-        config = manager.initialConfig(baseDir, name, port)
+    override fun configure(update: Configuration) {
+        config = config.update(update)
     }
 
     fun isAuthEnabled(): Boolean {
@@ -49,7 +58,7 @@ abstract class MongoExecutable(val manager: MongoManager, val name: String, val 
         baseDir.deleteTree()
     }
 
-    open fun shutdown() {
+    fun shutdown() {
 //        shutdownWithDriver()
         shutdownWithKill()
         val process = process!!
@@ -106,19 +115,31 @@ abstract class MongoExecutable(val manager: MongoManager, val name: String, val 
             .await()
             .atMost(30, TimeUnit.SECONDS)
             .pollInterval(3, TimeUnit.SECONDS)
-            .until<Boolean>({
-                tryConnect()
-            })
+            .until<Boolean> {
+                try {
+                    getClient().getDatabase("admin")
+                        .listCollectionNames()
+                    true
+                } catch (e: Throwable) {
+                    false
+                }
+            }
     }
 
-    fun tryConnect(): Boolean {
-        try {
-            getClient().getDatabase("admin")
-                .listCollectionNames()
-            return true
-        } catch (e: Throwable) {
-            return false
-        }
+    protected fun exec(args: List<String>) {
+        logger.debug("Starting process with this command: $args")
+        val processResult = ProcessExecutor()
+            .command(args)
+//            .redirectOutput(of(logger).asDebug())
+//            .redirectError(of(logger).asError())
+            .redirectOutput(FileOutputStream(File(baseDir, "mongo.log")))
+            .redirectError(FileOutputStream(File(baseDir, "mongo.err")))
+            .destroyOnExit()
+            .start()
+
+        process = Processes.newPidProcess(processResult?.process)
+
+        waitForStartUp()
     }
 
     override fun toString(): String {

@@ -13,10 +13,10 @@ class Storage(
     @Mode(ConfigMode.MONGOD) var repairPath: String? = null,
     @Mode(ConfigMode.MONGOD) var syncPeriodSecs: Int? = null,
     var engine: String? = null,
-    @Mode(ConfigMode.MONGOD) var journal: Journal = Journal(),
-    var mmapv1: Mmapv1 = Mmapv1(),
-    var inMemory: InMemory = InMemory(),
-    var wiredTiger: WiredTiger = WiredTiger()
+    @Mode(ConfigMode.MONGOD) var journal: Journal? = null,
+    var mmapv1: Mmapv1? = null,
+    var inMemory: InMemory? = null,
+    var wiredTiger: WiredTiger? = null
 ) : ConfigBlock {
     fun journal(init: Journal.() -> Unit) {
         journal = initConfigBlock(Journal(), init)

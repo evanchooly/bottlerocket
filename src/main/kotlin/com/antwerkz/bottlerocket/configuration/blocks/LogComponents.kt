@@ -16,10 +16,10 @@ class LogComponents : ConfigBlock {
     class Query(var verbosity: Verbosity? = null) : ConfigBlock
     class Replication(
         var verbosity: Verbosity? = null,
-        var election: Election? = Election(),
-        var initialSync: InitialSync? = InitialSync(),
-        var heartbeats: Heartbeats? = Heartbeats(),
-        var rollback: Rollback? = Rollback()
+        var election: Election? = null,
+        var initialSync: InitialSync? = null,
+        var heartbeats: Heartbeats? = null,
+        var rollback: Rollback? = null
     ) : ConfigBlock {
         fun rollback(init: Rollback.() -> Unit) {
             rollback = initConfigBlock(Rollback(), init)
@@ -36,8 +36,8 @@ class LogComponents : ConfigBlock {
     class Sharding(var verbosity: Verbosity? = null) : ConfigBlock
     class Storage(
         var verbosity: Verbosity? = null,
-        var journal: Journal = Journal(),
-        var recovery: Recovery = Recovery()
+        var journal: Journal? = null,
+        var recovery: Recovery? = null
     ) : ConfigBlock {
         fun journal(init: Journal.() -> Unit) {
             journal = initConfigBlock(Journal(), init)

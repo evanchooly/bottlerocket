@@ -10,10 +10,10 @@ class Mmapv1(
     @Mode(ConfigMode.MONGOD) var preallocDataFiles: Boolean? = null,
     @Removed("4.2.0")
     @Mode(ConfigMode.MONGOD) var nsSize: Int? = null,
-    var quota: Quota = Quota(),
+    var quota: Quota? = null,
     @Removed("4.2.0")
     @Mode(ConfigMode.MONGOD) var smallFiles: Boolean? = null,
-    var journal: Journal = Journal()
+    var journal: Journal? = null
 ) : ConfigBlock {
     fun quota(init: Quota.() -> Unit) {
         quota = initConfigBlock(Quota(), init)

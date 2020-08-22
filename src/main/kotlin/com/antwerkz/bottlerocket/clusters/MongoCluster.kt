@@ -2,10 +2,11 @@ package com.antwerkz.bottlerocket.clusters
 
 import com.antwerkz.bottlerocket.BottleRocket
 import com.antwerkz.bottlerocket.DatabaseRole
-import com.antwerkz.bottlerocket.MongoExecutable
-import com.antwerkz.bottlerocket.MongoExecutable.Companion.SUPER_USER_PASSWORD
+import com.antwerkz.bottlerocket.executable.MongoExecutable
+import com.antwerkz.bottlerocket.executable.MongoExecutable.Companion.SUPER_USER_PASSWORD
 import com.antwerkz.bottlerocket.MongoManager
 import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.configuration.configuration
 import com.github.zafarkhaja.semver.Version
 import com.mongodb.MongoClientSettings
 import com.mongodb.MongoCredential
@@ -14,6 +15,7 @@ import com.mongodb.ServerAddress
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
@@ -38,29 +40,33 @@ import java.util.EnumSet
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
 abstract class MongoCluster(
+    val clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
     val name: String = BottleRocket.DEFAULT_NAME,
-    val port: Int = BottleRocket.DEFAULT_PORT,
     val version: Version = BottleRocket.DEFAULT_VERSION,
-    val baseDir: File = BottleRocket.DEFAULT_BASE_DIR
-) {
+    val allocator: PortAllocator = PortAllocator(BottleRocket.DEFAULT_PORT)
+): Configurable {
     companion object {
         val perms = EnumSet.of(OWNER_READ, OWNER_WRITE)
     }
 
-    val mongoManager: MongoManager = MongoManager.of(version)
+    internal val logger: Logger = LoggerFactory.getLogger("${this::class.simpleName}-$name")
+
+    internal val mongoManager: MongoManager = MongoManager.of(version)
     var adminAdded: Boolean = false
-    val keyFile: String = File(baseDir, "rocket.key").absolutePath
-    val pemFile: String = File(baseDir, "rocket.pem").absolutePath
+    val keyFile: String = File(clusterRoot, "rocket.key").absolutePath
+    val pemFile: String = File(clusterRoot, "rocket.pem").absolutePath
     private var adminClient: MongoClient? = null
     private var client: MongoClient? = null
     private var credentials: MongoCredential? = null
+    var configuration = configuration { }
 
     init {
-        baseDir.mkdirs()
+        clusterRoot.mkdirs()
     }
 
     abstract fun getServerAddressList(): List<ServerAddress>
     abstract fun isStarted(): Boolean
+
     fun restart() {
         shutdown()
         start()
@@ -90,7 +96,11 @@ abstract class MongoCluster(
         }
     */
     fun clean() {
-        baseDir.deleteTree()
+        clusterRoot.deleteTree()
+    }
+
+    override fun configure(update: Configuration) {
+        configuration = configuration.update(update)
     }
 
     fun getAdminClient(): MongoClient {
@@ -176,8 +186,8 @@ abstract class MongoCluster(
 
     fun generatePemFile() {
         val pem = File(pemFile)
-        val keyFile = File(baseDir, "rocket-pem.key")
-        val crtFile = File(baseDir, "rocket-pem.crt")
+        val keyFile = File(clusterRoot, "rocket-pem.key")
+        val crtFile = File(clusterRoot, "rocket-pem.crt")
         if (!pem.exists()) {
             val generator = KeyPairGenerator.getInstance("RSA", "BC")
             generator.initialize(1204)
@@ -220,16 +230,7 @@ abstract class MongoCluster(
         return version.greaterThanOrEqualTo(minVersion)
     }
 
-    fun configure(update: Configuration.() -> Unit) {
-        val configuration = Configuration()
-        configuration.update()
-
-        configure(configuration)
-    }
-
     abstract fun isAuthEnabled(): Boolean
-
-    abstract fun configure(update: Configuration)
 }
 
 fun File.deleteTree() {

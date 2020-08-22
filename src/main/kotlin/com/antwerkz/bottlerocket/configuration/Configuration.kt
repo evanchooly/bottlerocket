@@ -13,23 +13,69 @@ import com.antwerkz.bottlerocket.configuration.blocks.Snmp
 import com.antwerkz.bottlerocket.configuration.blocks.Storage
 import com.antwerkz.bottlerocket.configuration.blocks.SystemLog
 import com.antwerkz.bottlerocket.configuration.types.State
+import java.io.File
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.KProperty1
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.primaryConstructor
 
 class Configuration(
-    var auditLog: AuditLog = AuditLog(),
-    var cloud: Cloud = Cloud(),
-    var net: Net = Net(),
-    var operationProfiling: OperationProfiling = OperationProfiling(),
-    var processManagement: ProcessManagement = ProcessManagement(),
-    var replication: Replication = Replication(),
-    var security: Security = Security(),
-    var sharding: Sharding = Sharding(),
-    var snmp: Snmp = Snmp(),
-    var storage: Storage = Storage(),
-    var systemLog: SystemLog = SystemLog(),
-    var setParameter: SetParameter = SetParameter()
+    var auditLog: AuditLog? = null,
+    var cloud: Cloud? = null,
+    var net: Net? = null,
+    var operationProfiling: OperationProfiling? = null,
+    var processManagement: ProcessManagement? = null,
+    var replication: Replication? = null,
+    var security: Security? = null,
+    var sharding: Sharding? = null,
+    var snmp: Snmp? = null,
+    var storage: Storage? = null,
+    var systemLog: SystemLog? = null,
+    var setParameter: SetParameter? = null
 ) : ConfigBlock {
+    fun writeConfig(configFile: File, mode: ConfigMode) {
+        configFile.parentFile.mkdirs()
+        configFile.writeText(toYaml(mode))
+    }
+
+    fun update(updates: Configuration.() -> Unit): Configuration {
+        val configuration = Configuration()
+        configuration.updates()
+
+        return update(configuration)
+    }
+
+    fun update(updates: Configuration): Configuration {
+        val target = this::class.primaryConstructor!!.callBy(mapOf())
+        target.mergeValues(this)
+        target.mergeValues(updates)
+        return target as Configuration
+    }
+
+    private fun ConfigBlock.mergeValues(source: ConfigBlock) {
+        val sourceClass = source.javaClass.kotlin
+        val defaults: ConfigBlock = sourceClass.primaryConstructor!!.callBy(mapOf())
+        sourceClass.memberProperties.forEach { p: KProperty1<ConfigBlock, *> ->
+            var fieldValue = p.get(source)
+            if (fieldValue != null) {
+                if (fieldValue is ConfigBlock) {
+                    val copiedValue = fieldValue.javaClass.kotlin.primaryConstructor!!.callBy(mapOf())
+                    copiedValue.mergeValues(fieldValue)
+                    fieldValue = copiedValue
+                } else {
+                    if (fieldValue == p.get(defaults)) {
+                        fieldValue = null
+                    }
+                }
+                if (fieldValue != null) {
+                    (p as KMutableProperty<*>).setter.call(this, fieldValue)
+                }
+            }
+        }
+    }
+
     fun isAuthEnabled(): Boolean {
-        return security.authorization == State.ENABLED || security.keyFile != null
+        return security?.authorization == State.ENABLED || security?.keyFile != null
     }
 
     fun systemLog(init: SystemLog.() -> Unit) {
@@ -91,5 +137,6 @@ class Configuration(
 fun configuration(init: Configuration.() -> Unit): Configuration {
     val configuration = Configuration()
     configuration.init()
+
     return configuration
 }

@@ -8,8 +8,8 @@ class Ldap(
     var transportSecurity: String? = null,
     var userToDNMapping: String? = null,
     var validateLDAPServerConfig: Boolean? = null,
-    var authz: Authz = Authz(),
-    var bind: Bind = Bind()
+    var authz: Authz? = null,
+    var bind: Bind? = null
 ) : ConfigBlock {
     fun authz(init: Authz.() -> Unit) {
         authz = initConfigBlock(Authz(), init)

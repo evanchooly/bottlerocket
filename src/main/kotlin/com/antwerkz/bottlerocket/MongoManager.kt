@@ -1,13 +1,8 @@
 package com.antwerkz.bottlerocket
 
-import com.antwerkz.bottlerocket.configuration.ConfigMode
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.configuration.configuration
-import com.antwerkz.bottlerocket.configuration.managers.MongoManager36
-import com.antwerkz.bottlerocket.configuration.managers.MongoManager40
-import com.antwerkz.bottlerocket.configuration.managers.MongoManager42
-import com.antwerkz.bottlerocket.configuration.managers.MongoManager44
-import com.antwerkz.bottlerocket.executable.ConfigServer
+import com.antwerkz.bottlerocket.executable.MongoExecutable
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.github.zafarkhaja.semver.Version
@@ -26,12 +21,14 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.IOException
 import java.lang.String.format
+import java.lang.Thread.sleep
 import java.net.URL
 import java.util.Properties
 import java.util.zip.GZIPInputStream
 
-abstract class MongoManager(val version: Version, val windowsBaseUrl: String, val macBaseUrl: String, val linuxBaseUrl: String) {
+internal abstract class MongoManager(val version: Version, val windowsBaseUrl: String, val macBaseUrl: String, val linuxBaseUrl: String) {
     companion object {
         private val LOG = LoggerFactory.getLogger(MongoManager::class.java)
         internal fun linux(): String {
@@ -44,9 +41,9 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
                     val props = Properties()
                     File(etc, "os-release").inputStream().use {
                         props.load(it)
-                        val version = props["VERSION_ID"] as String
+                        val linux = Linux.get(props.getProperty("NAME") ?: "Fedora")
 
-                        "ubuntu" + version.replace(".", "").replace("\"", "")
+                        return linux.version(props)
                     }
                 }
                 else -> {
@@ -59,11 +56,7 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
             return version
         }
 
-        @JvmStatic
-        fun of(versionString: String) = of(Version.valueOf(versionString))
-
-        @JvmStatic
-        fun of(version: Version): MongoManager {
+        internal fun of(version: Version): MongoManager {
             return when ("${version.majorVersion}.${version.minorVersion}") {
                 "4.4" -> MongoManager44(version)
                 "4.2" -> MongoManager42(version)
@@ -72,25 +65,16 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
                 else -> throw IllegalArgumentException("Unsupported version $version")
             }
         }
+        internal fun extension() = if (SystemUtils.IS_OS_WINDOWS) ".exe" else ""
     }
 
-    var archive: File? = null
+    internal lateinit var archive: File
+    private val binDir: String by lazy { "${download()}/bin" }
     var downloadPath: File = File(BottleRocket.TEMP_DIR, "mongo-downloads")
-        internal set(value) {
-            field = value
-        }
-    val binDir: String by lazy { "${download()}/bin" }
-    val mongo: String by lazy { "$binDir/mongo$extension" }
-    val mongod: String by lazy { "$binDir/mongod$extension" }
-    val mongos: String by lazy { "$binDir/mongos$extension" }
-    private val extension = if (SystemUtils.IS_OS_WINDOWS) ".exe" else ""
-    fun configServer(name: String, port: Int, baseDir: File): ConfigServer {
-        return ConfigServer(this, name, port, baseDir)
-    }
 
-    fun writeConfig(configFile: File, config: Configuration, mode: ConfigMode) {
-        configFile.writeText(config.toYaml(mode))
-    }
+    internal fun mongo() = "$binDir/mongo${extension()}"
+    internal fun mongod() = "$binDir/mongod${extension()}"
+    internal fun mongos() = "$binDir/mongos${extension()}"
 
     fun initialConfig(baseDir: File, name: String, port: Int): Configuration {
         return configuration {
@@ -98,7 +82,7 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
                 this.port = port
             }
             processManagement {
-                pidFilePath = File(baseDir, "$name.pid").toString()
+                pidFilePath = File(baseDir, "$name.pid").absolutePath
             }
             storage {
                 dbPath = baseDir.absolutePath
@@ -146,25 +130,17 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
                 DatabaseRole("readWriteAnyDatabase", "admin")))
     }
 
-    fun mongod(name: String, port: Int, baseDir: File): Mongod {
-        return Mongod(this, name, port, baseDir)
+    internal fun mongod(baseDir: File, name: String, port: Int): Mongod {
+        return Mongod(this, baseDir, name, port)
     }
 
-    fun mongos(name: String, port: Int, baseDir: File, configServers: List<ConfigServer>): Mongos {
-        return Mongos(this, name, port, baseDir, configServers)
+    internal fun mongos(baseDir: File, name: String, port: Int): Mongos {
+        return Mongos(this, baseDir, name, port)
     }
 
-    internal fun macDownload(version: Version): String {
-        return "$macBaseUrl$version.tgz"
-    }
-
-    internal fun linuxDownload(version: Version): String {
-        return "$linuxBaseUrl$version.tgz"
-    }
-
-    internal fun windowsDownload(version: Version): String {
-        return "$windowsBaseUrl$version.zip"
-    }
+    internal fun macDownload(version: Version) = "$macBaseUrl$version.tgz"
+    internal fun linuxDownload(version: Version) = "$linuxBaseUrl$version.tgz"
+    internal fun windowsDownload(version: Version) = "$windowsBaseUrl$version.zip"
 
     private fun download(): File {
         val url = when {
@@ -177,77 +153,88 @@ abstract class MongoManager(val version: Version, val windowsBaseUrl: String, va
         return extractDownload(format(url, version))
     }
 
-    internal fun extractDownload(path: String): File {
-        var retry = 0
-        while (true) {
-            archive = downloadArchive(path)
+    fun retry(count: Int, message: String, delay: Long = 1000, function: () -> Unit) {
+        repeat(count) {
             try {
-                val file = archive?.extract()
-                file?.let {
-                    File(it, "bin").listFiles()
-                        ?.forEach { file ->
-                            file.setExecutable(true)
-                        }
-                    return it
-                }
+                return function()
             } catch (e: Throwable) {
-                archive?.delete()
-                retry++
-                if (retry > 5) {
-                    throw RuntimeException("Failed to extract file: ${e.message}", e)
+                e.printStackTrace()
+                sleep(delay)
+            }
+        }
+        throw RuntimeException(message)
+    }
+
+    internal fun extractDownload(path: String): File {
+        while (true) {
+            var file: File? = null
+            retry(5,  "Failed to extract file") {
+                    try {
+                        downloadArchive(path)
+                        file = archive.extract()
+                    } catch (e: IOException) {
+                        LOG.error(e.message, e)
+                        if (e.message?.contains("Truncated", true) ?: false) {
+                            archive.delete()
+                            downloadArchive(path)
+                        }
+                        sleep(1000)
+                    }
                 }
+
+            file?.let {
+                File(it, "bin").listFiles()
+                    ?.forEach { file ->
+                        file.setExecutable(true)
+                    }
+                return it
             }
         }
     }
 
     private fun File.extract(): File {
-        val root = if (GzipUtils.isCompressedFilename(name)) {
+        val destination = File(parentFile, "mongo-$version")
+        if (GzipUtils.isCompressedFilename(name)) {
             TarArchiveInputStream(GZIPInputStream(FileInputStream(this))).use { inputStream ->
-                extract(inputStream)
+                extract(inputStream, destination)
             }
         } else {
             ZipArchiveInputStream(FileInputStream(this)).use { inputStream ->
-                extract(inputStream)
+                extract(inputStream, destination)
             }
         }
-        return File(downloadPath, root)
+        return destination
     }
 
-    private fun extract(inputStream: ArchiveInputStream): String {
+    private fun extract(inputStream: ArchiveInputStream, destination: File) {
         var entry: ArchiveEntry? = inputStream.nextEntry
-        var root: String? = null
         while (entry != null) {
-            val file = File(downloadPath, entry.name)
-            if (entry.name.contains("/")) {
-                val base = entry.name.substringBefore("/")
-                when (root) {
-                    null -> root = base
-                    else -> if (base != root) throw IllegalStateException("Found conflicting root folders:  $root vs $base")
+            val file = File(destination, entry.name.substringAfter("/"))
+            file.parentFile.mkdirs()
+            if (!file.exists() || entry.size != file.length()) {
+                LOG.debug("Extracting archive entry to $file")
+                FileOutputStream(file).use {
+                    IOUtils.copy(inputStream, it)
                 }
             }
-            file.parentFile.mkdirs()
-            val out = FileOutputStream(file)
-            IOUtils.copy(inputStream, out)
-            out.close()
             entry = inputStream.nextEntry
         }
-
-        return root ?: throw IllegalStateException("No root folder found")
     }
 
-    internal fun downloadArchive(path: String): File {
-        val url = URL(path)
-        val downloadName = url.path.substringAfterLast('/')
-        val download = File(downloadPath, downloadName)
-        if (!download.exists()) {
-            LOG.info("$download does not exist.  Downloading binaries from $url")
-            download.parentFile.mkdirs()
-            Request.Get(path)
-                .userAgent("Mozilla/5.0 (compatible; bottlerocket; +https://github.com/evanchooly/bottlerocket)")
-                .execute()
-                .saveContent(download)
+    internal fun downloadArchive(path: String) {
+        retry(5, "Failed to download archive") {
+            val url = URL(path)
+            val downloadName = url.path.substringAfterLast('/')
+            archive = File(downloadPath, downloadName)
+            if (!archive.exists()) {
+                LOG.info("$archive does not exist.  Downloading binaries from $url")
+                archive.parentFile.mkdirs()
+                Request.Get(path)
+                    .userAgent("Mozilla/5.0 (compatible; bottlerocket; +https://github.com/evanchooly/bottlerocket)")
+                    .execute()
+                    .saveContent(archive)
+            }
         }
-        return download
     }
 }
 
@@ -257,5 +244,62 @@ fun MongoClient.runCommand(command: Document, readPreference: ReadPreference = R
             .runCommand(command, readPreference)
     } catch (e: Exception) {
         throw RuntimeException("command failed: $command with preference $readPreference", e)
+    }
+}
+
+internal class MongoManager36(version: Version) : MongoManager(
+    version,
+    linuxBaseUrl = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-",
+    macBaseUrl = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-",
+    windowsBaseUrl = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-"
+) {
+    companion object {
+        fun linux() = MongoManager.linux().replace("1804", "1604")
+    }
+}
+
+internal class MongoManager40(version: Version) : MongoManager(
+    version,
+    linuxBaseUrl = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-",
+    macBaseUrl = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-",
+    windowsBaseUrl = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-"
+)
+
+internal class MongoManager42(version: Version) : MongoManager(
+    version,
+    linuxBaseUrl = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-",
+    macBaseUrl = "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-",
+    windowsBaseUrl = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2012plus-"
+)
+
+internal class MongoManager44(version: Version) : MongoManager(version,
+    linuxBaseUrl = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-",
+    macBaseUrl = "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-",
+    windowsBaseUrl = "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-"
+)
+
+@Suppress("unused")
+enum class Linux {
+    FEDORA {
+        override fun version(props: Properties) = "rhel80"
+    },
+    UBUNTU {
+        override fun version(props: Properties): String {
+            val version = props.getProperty("VERSION_ID").replace(".", "").replace("\"", "")
+            return "ubuntu" + when (version) {
+                "1604", "1804" -> version
+                else -> "1804"
+            }
+        }
+    };
+
+    abstract fun version(props: Properties): String
+
+    companion object {
+        internal fun get(name: String) = try {
+            valueOf(name.toUpperCase())
+        } catch (e: IllegalArgumentException) {
+            FEDORA
+        }
     }
 }

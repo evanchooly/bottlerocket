@@ -10,55 +10,36 @@ import com.jayway.awaitility.Awaitility
 import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
 import org.bson.Document
-import org.slf4j.LoggerFactory
 import java.io.File
-import java.util.ArrayList
 import java.util.concurrent.TimeUnit.SECONDS
 
 class ReplicaSet @JvmOverloads constructor(
+    clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
     name: String = BottleRocket.DEFAULT_NAME,
-    port: Int = BottleRocket.DEFAULT_PORT,
     version: Version = BottleRocket.DEFAULT_VERSION,
-    baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
-    val size: Int = 3
-) : MongoCluster(name, port, version, baseDir) {
-    val nodes: MutableList<Mongod> = arrayListOf()
+    basePort: Int = BottleRocket.DEFAULT_PORT,
+    allocator: PortAllocator = PortAllocator(basePort)
+) : MongoCluster(clusterRoot, name, version, allocator) {
     private var nodeMap = hashMapOf<Int, Mongod>()
     var initialized: Boolean = false
 
-    companion object {
-        private val LOG = LoggerFactory.getLogger(ReplicaSet::class.java)
-
-        @JvmStatic
-        fun builder(): ReplicaSetBuilder {
-            return ReplicaSetBuilder()
-        }
-
-        @JvmStatic
-        fun build(init: ReplicaSetBuilder.() -> Unit = {}): ReplicaSet {
-            val builder = ReplicaSetBuilder()
-            builder.init()
-            return builder.build()
-        }
-    }
-
     init {
-        var basePort = this.port
-        for (i in 0..size - 1 /*step 3*/) {
-            val nodeName = "$name-$basePort"
-            val node = mongoManager.mongod(nodeName, basePort, File(baseDir, nodeName))
-            setReplicaSetName(node, name)
-            nodes.add(node)
-            basePort += 1
+        configure {
+            replication {
+                replSetName = name
+            }
         }
-        nodeMap.putAll(nodes.associateBy { it.port })
     }
 
     override
     fun start() {
         if (!isStarted()) {
-            for (node in nodes) {
-                node.start(name)
+            if(nodeMap.isEmpty()) {
+                addNode()
+            }
+
+            for (node in nodeMap.values) {
+                node.start()
             }
 
             initialize()
@@ -67,17 +48,22 @@ class ReplicaSet @JvmOverloads constructor(
     }
 
     override fun isStarted(): Boolean {
-        return nodes.filter { it.isAlive() }.count() != 0
+        return nodeMap.values.filter { it.isAlive() }.count() != 0
     }
 
-    fun addNode(node: Mongod) {
-        nodes.add(node)
+    fun addNode(config: Configuration = configuration {}) {
+        val port = allocator.next()
+        val nodeName = "$name-node${nodeMap.size}"
+        val node = mongoManager.mongod(File(clusterRoot, nodeName), nodeName, port)
+        node.configure(configuration.update(config))
+
         nodeMap.put(node.port, node)
     }
 
     fun getPrimary(): Mongod? {
         try {
-            nodes.filter { it.isAlive() }
+            nodeMap.values
+                .filter { it.isAlive() }
                 .forEach { mongod ->
                     val result = mongod.getClient()
                         .runCommand(Document("isMaster", null))
@@ -88,7 +74,7 @@ class ReplicaSet @JvmOverloads constructor(
                 }
             return null
         } catch (e: Exception) {
-            LOG.error(e.message, e)
+            logger.error(e.message, e)
             return null
         }
     }
@@ -98,7 +84,7 @@ class ReplicaSet @JvmOverloads constructor(
     }
 
     fun waitForPrimary(): Mongod? {
-        Awaitility.await("Waiting for primary in $baseDir")
+        Awaitility.await("Waiting for primary in $clusterRoot")
             .atMost(30, SECONDS)
             .until<Boolean>({
                 hasPrimary()
@@ -110,7 +96,7 @@ class ReplicaSet @JvmOverloads constructor(
     override
     fun shutdown() {
         val primary = getPrimary()
-        nodes
+        nodeMap.values
             .filter { it != primary }
             .forEach(Mongod::shutdown)
         primary?.shutdown()
@@ -125,23 +111,23 @@ class ReplicaSet @JvmOverloads constructor(
         }
     */
     fun initialize() {
-        val first = nodes.filter { it.isAlive() }.firstOrNull() ?: throw IllegalStateException("No servers found")
+        val first = nodeMap.values.filter { it.isAlive() }.firstOrNull() ?: throw IllegalStateException("No servers found")
         val replicaSetConfig = mongoManager.getReplicaSetConfig(first.getClient())
         if (!initialized && replicaSetConfig == null) {
             initiateReplicaSet()
-            LOG.info("replSet initiated.  waiting for primary.")
+            logger.info("replSet initiated.  waiting for primary.")
             waitForPrimary()
-            LOG.info("primary found.  adding other members.")
-            addMembers()
+            logger.info("primary found.  adding other members.")
+            addMemberNodes()
 
             waitForPrimary()
 
-            LOG.info("replica set $name started.")
+            logger.info("replica set $name started.")
         }
     }
 
     fun initiateReplicaSet() {
-        val primary = nodes.first()
+        val primary = nodeMap.values.first()
         val results = primary.getClient()
             .runCommand(Document("replSetInitiate", Document("_id", name)
                 .append("members", listOf(Document("_id", 1)
@@ -153,14 +139,14 @@ class ReplicaSet @JvmOverloads constructor(
         initialized = true
     }
 
-    private fun addMembers() {
+    private fun addMemberNodes() {
         val client = getAdminClient()
         val config = mongoManager.getReplicaSetConfig(client)
         if (config != null) {
             config.set("version", config.getInteger("version") + 1)
-            val members = config.get("members") as ArrayList<Document>
+            val members = config.getList("members", Document::class.java)
             var id = members[0].getInteger("_id")
-            nodes.asSequence().withIndex()
+            nodeMap.values.asSequence().withIndex()
                 .filter { it.index > 0 }
                 .map { Document("_id", ++id).append("host", "localhost:${it.value.port}") }
                 .toCollection(members)
@@ -174,43 +160,22 @@ class ReplicaSet @JvmOverloads constructor(
         }
     }
 
-    fun setReplicaSetName(node: Mongod, name: String) {
-        node.config.merge(configuration {
-            replication {
-                replSetName = name
-            }
-        })
-    }
-
     override fun configure(update: Configuration) {
-        nodes.forEach {
-            it.config.merge(update)
+        super.configure(update)
+        nodeMap.values.forEach {
+            it.configure(update)
         }
     }
 
     override fun getServerAddressList(): List<ServerAddress> {
-        return nodes.map { it.getServerAddress() }
+        return nodeMap.values.map { it.getServerAddress() }
     }
 
     override fun isAuthEnabled(): Boolean {
-        return nodes.map { it.isAuthEnabled() }.fold(true) { r, t -> r && t }
+        return nodeMap.values.map { it.isAuthEnabled() }.fold(true) { r, t -> r && t }
     }
 
     fun replicaSetUrl(): String {
-        return "$name/" + (nodes.map { "localhost:${it.port}" }.joinToString(","))
-    }
-}
-
-class ReplicaSetBuilder() : MongoClusterBuilder<ReplicaSetBuilder>() {
-    var size: Int = 3
-        private set
-
-    fun size(value: Int): ReplicaSetBuilder {
-        size = value
-        return this
-    }
-
-    fun build(): ReplicaSet {
-        return ReplicaSet(name, port, version, baseDir, size)
+        return "$name/" + (nodeMap.values.joinToString(",") { "localhost:${it.port}" })
     }
 }

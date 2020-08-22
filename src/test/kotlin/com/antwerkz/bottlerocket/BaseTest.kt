@@ -33,7 +33,7 @@ open class BaseTest {
     fun testClusterWrites() {
         startCluster()
         val client = cluster.getClient()
-        val names = client.listDatabaseNames().into(ArrayList<String>())
+        val names = client.listDatabaseNames().into(ArrayList())
         Assert.assertFalse(names.isEmpty(), names.toString())
         val db = client.getDatabase("rockettest")
         db.drop()
@@ -64,7 +64,7 @@ open class BaseTest {
 
         Assert.assertTrue(cluster.isAuthEnabled())
         val client = cluster.getClient()
-        val names = client.listDatabaseNames().into(ArrayList<String>())
+        val names = client.listDatabaseNames().into(ArrayList())
         Assert.assertFalse(names.isEmpty(), names.toString())
     }
 
@@ -85,11 +85,11 @@ open class BaseTest {
             .getDatabase("config")
             .getCollection("shards")
             .find()
-            .into(ArrayList<Document>())
+            .into(ArrayList())
         Assert.assertEquals(list.size, 1, "Should find 1 shard")
-        for (document in list ?: listOf<Document>()) {
+        for (document in list ?: listOf()) {
             when (document.getString("_id")) {
-                "rocket0" -> Assert.assertEquals(document["host"], "rocket0/localhost:30001,localhost:30002,localhost:30003")
+                "shard-0" -> Assert.assertEquals(document["host"], "shard-0/localhost:30001")
                 else -> Assert.fail("found unknown shard member: $document")
             }
         }

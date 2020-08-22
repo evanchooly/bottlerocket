@@ -30,9 +30,7 @@ public class JavaMongoClusterTest {
 
     @Test(enabled = false)
     void singleNode() throws InterruptedException, UnknownHostException {
-        final SingleNode cluster = SingleNode.builder()
-                                             .baseDir(new File(format("target/rocket-java/%s/singleNode", getTimestamp())).getAbsoluteFile())
-                                             .build();
+        final SingleNode cluster = new SingleNode(new File(format("target/rocket-java/%s/singleNode", getTimestamp())).getAbsoluteFile());
         try {
             startCluster(cluster);
             testWrites(cluster);
@@ -43,9 +41,7 @@ public class JavaMongoClusterTest {
 
     @Test(enabled = false)
     void replicaSet() {
-        final ReplicaSet cluster = ReplicaSet.builder()
-                                             .baseDir(new File(format("target/rocket-java/%s/replicaSet", getTimestamp())))
-                                             .build();
+        final ReplicaSet cluster = new ReplicaSet(new File(format("target/rocket-java/%s/replicaSet", getTimestamp())));
         try {
             startCluster(cluster);
 
@@ -63,9 +59,7 @@ public class JavaMongoClusterTest {
 
     @Test(enabled = false)
     void sharded() {
-        final ShardedCluster cluster = ShardedCluster.builder()
-                                                     .baseDir(new File(format("target/rocket-java/%s/sharded", getTimestamp())))
-                                                     .build();
+        final ShardedCluster cluster = new ShardedCluster(new File(format("target/rocket-java/%s/sharded", getTimestamp())));
         try {
             startCluster(cluster);
             testWrites(cluster);

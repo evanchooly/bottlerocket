@@ -1,12 +1,9 @@
 package com.antwerkz.bottlerocket.configuration
 
 import java.util.TreeMap
-import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.primaryConstructor
-import kotlin.reflect.jvm.javaSetter
 
 interface ConfigBlock {
     fun <T : ConfigBlock> initConfigBlock(configBlock: T, init: T.() -> Unit): T {
@@ -29,41 +26,25 @@ interface ConfigBlock {
             if (fieldValue is ConfigBlock) {
                 val fieldMap = fieldValue.toLookups()
                 fieldMap.forEach { (key, value) ->
-                    map.put("${it.name}.$key", value)
+                    map["${it.name}.$key"] = value
                 }
             } else {
-                map.put(it.name, it)
+                map[it.name] = it
             }
         }
 
         return map
     }
 
-    fun merge(update: ConfigBlock) {
-        val c = this.javaClass.kotlin
-        val comparison: ConfigBlock = c.primaryConstructor?.callBy(mapOf())!!
-        val target = this
-        c.memberProperties.forEach { p: KProperty1<ConfigBlock, *> ->
-            val fieldValue = p.get(update)
-            if (fieldValue != null) {
-                if (fieldValue is ConfigBlock) {
-                    (p.get(target) as ConfigBlock).merge(fieldValue)
-                } else {
-                    if (fieldValue != p.get(comparison)) {
-                        (p as KMutableProperty<*>).javaSetter?.invoke(target, fieldValue)
-                    }
-                }
-            }
-        }
-    }
-
     fun isSupportedMode(configMode: ConfigMode, property: KProperty1<ConfigBlock, *>): Boolean {
-        val mode = getAnnotation<Mode>(property) as Mode?
+        val mode = getAnnotation<Mode>(property)
         return mode == null || mode.value == configMode || configMode == ConfigMode.ALL
     }
 
-    private inline fun <reified T : Annotation> getAnnotation(property: KProperty1<ConfigBlock, *>): Annotation? {
-        return property.annotations.firstOrNull { it is T }
+    private inline fun <reified T : Annotation> getAnnotation(property: KProperty1<ConfigBlock, *>): T? {
+        return property.annotations
+            .filterIsInstance(T::class.java)
+            .firstOrNull()
     }
 
     fun toMap(mode: ConfigMode = ConfigMode.MONGOD, includeAll: Boolean = false): Map<String, Any> {
@@ -77,7 +58,7 @@ interface ConfigBlock {
                         map.putAll(fieldMap)
                     }
                 } else if (includeAll || fieldValue != null) {
-                    map.put(it.name, fieldValue.toString())
+                    map[it.name] = fieldValue.toString()
                 }
             }
         }
@@ -95,7 +76,7 @@ fun Map<*, *>.flatten(prefix: String = ""): Map<String, String> {
             map.putAll(((it.value as Map<*, *>).flatten(subPrefix)))
         } else {
             val subPrefix = if (prefix != "") prefix + "." else prefix
-            map.put("$subPrefix${it.key}", it.value.toString())
+            map["$subPrefix${it.key}"] = it.value.toString()
         }
     }
     return map

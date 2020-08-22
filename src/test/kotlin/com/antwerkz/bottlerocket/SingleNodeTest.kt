@@ -8,13 +8,13 @@ import java.io.File
 class SingleNodeTest : BaseTest() {
     @Test(dataProvider = "versions")
     fun singleNode(version: Version) {
-        cluster = SingleNode(baseDir = File("${basePath(version)}/singleNode").absoluteFile, version = version)
+        cluster = SingleNode(clusterRoot = File("${basePath(version)}/singleNode").absoluteFile, version = version)
         testClusterWrites()
     }
 
     @Test(dataProvider = "versions", enabled = false)
     fun singleNodeAuth(version: Version) {
-        cluster = SingleNode(baseDir = File("${basePath(version)}/singleNodeAuth").absoluteFile, version = version)
+        cluster = SingleNode(clusterRoot = File("${basePath(version)}/singleNodeAuth").absoluteFile, version = version)
         testClusterAuth()
         testClusterWrites()
     }

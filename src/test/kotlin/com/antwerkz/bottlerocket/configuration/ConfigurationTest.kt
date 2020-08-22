@@ -3,6 +3,7 @@ package com.antwerkz.bottlerocket.configuration
 import com.antwerkz.bottlerocket.configuration.types.Destination
 import com.antwerkz.bottlerocket.configuration.types.RotateBehavior
 import com.antwerkz.bottlerocket.configuration.types.State
+import com.antwerkz.bottlerocket.configuration.types.State.ENABLED
 import com.antwerkz.bottlerocket.configuration.types.Verbosity
 import org.testng.Assert
 import org.testng.annotations.Test
@@ -177,8 +178,44 @@ systemLog:
     }
 
     @Test
+    fun smallMerges() {
+        var config = configuration {
+            auditLog {
+                filter  = "filter value"
+            }
+        }
+
+        var update: Configuration = config.update {
+            auditLog {
+                filter = "updated"
+            }
+        }
+
+        Assert.assertEquals(config.auditLog?.filter, "filter value")
+        Assert.assertEquals(update.auditLog?.filter, "updated")
+
+        config = configuration {
+            net {
+                port = 12345
+            }
+        }
+
+        update = config.update {
+            net {
+                port = 49152
+            }
+        }
+
+        Assert.assertEquals(config.net?.port, 12345)
+        Assert.assertEquals(update.net?.port, 49152)
+    }
+
+    @Test
     fun mergeConfig() {
         val config = configuration {
+            auditLog {
+                filter  = "filter value"
+            }
             storage {
                 dbPath = "/var/lib/mongo/noodle"
             }
@@ -186,21 +223,35 @@ systemLog:
                 port = 12345
             }
         }
-        val update = configuration {
-            processManagement {
-                operationProfiling {
-                    slowOpThresholdMs = 50
-                }
+
+        Assert.assertEquals(config.auditLog?.filter, "filter value")
+        Assert.assertEquals(config.storage?.dbPath, "/var/lib/mongo/noodle")
+        Assert.assertEquals(config.net?.port, 12345)
+        Assert.assertNull(config.operationProfiling?.slowOpThresholdMs)
+        Assert.assertNull(config.security?.authorization)
+
+        val updated: Configuration = config.update {
+            net {
+                port = 49152
+            }
+            operationProfiling {
+                slowOpThresholdMs = 50
             }
             security {
-                authorization = State.ENABLED
+                authorization = ENABLED
             }
         }
 
-        Assert.assertNull(config.security.authorization)
-        config.merge(update)
-        Assert.assertEquals(config.security.authorization, State.ENABLED)
-        Assert.assertEquals(config.operationProfiling.slowOpThresholdMs, 50)
-        Assert.assertNotEquals(update.storage.dbPath, "/var/lib/mongo/noodle")
+        Assert.assertEquals(config.auditLog?.filter, "filter value")
+        Assert.assertEquals(config.storage?.dbPath, "/var/lib/mongo/noodle")
+        Assert.assertEquals(config.net?.port, 12345)
+        Assert.assertNull(config.operationProfiling?.slowOpThresholdMs)
+        Assert.assertNull(config.security?.authorization)
+
+        Assert.assertEquals(updated.auditLog?.filter, "filter value")
+        Assert.assertEquals(updated.storage?.dbPath, "/var/lib/mongo/noodle")
+        Assert.assertEquals(updated.net?.port, 49152)
+        Assert.assertEquals(updated.security?.authorization, State.ENABLED)
+        Assert.assertEquals(updated.operationProfiling?.slowOpThresholdMs, 50)
     }
 }

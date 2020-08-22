@@ -11,9 +11,9 @@ class Security(
     var clusterAuthMode: ClusterAuthMode? = null,
     @Mode(ConfigMode.MONGOD)
     var authorization: State? = null,
-    var ldap: Ldap = Ldap(),
-    var sasl: Sasl = Sasl(),
-    var kmip: Kmip = Kmip(),
+    var ldap: Ldap? = null,
+    var sasl: Sasl? = null,
+    var kmip: Kmip? = null,
     var javascriptEnabled: Boolean? = null,
     var enableEncryption: Boolean? = null,
     var encryptionCipherMode: String? = null,

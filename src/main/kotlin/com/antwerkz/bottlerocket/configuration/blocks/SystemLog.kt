@@ -16,7 +16,7 @@ class SystemLog(
     var logRotate: RotateBehavior? = null,
     var destination: Destination? = null,
     var timeStampFormat: TimestampFormat? = null,
-    var component: Component = Component()
+    var component: Component? = null
 ) : ConfigBlock {
     fun component(init: Component.() -> Unit) {
         component = initConfigBlock(Component(), init)
