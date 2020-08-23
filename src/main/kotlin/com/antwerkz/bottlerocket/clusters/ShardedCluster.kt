@@ -55,7 +55,6 @@ class ShardedCluster @JvmOverloads constructor(
             configServer.isStarted() &&
             shards.filter { it.isStarted() }.count() != 0
     }
-
 /*
     override
     fun enableAuth() {
@@ -67,7 +66,6 @@ class ShardedCluster @JvmOverloads constructor(
         mongoses.forEach { mongoManager.enableAuth(it, keyFile) }
     }
 */
-
     override fun configure(update: Configuration) {
         super.configure(update)
         shards.forEach {
@@ -86,7 +84,6 @@ class ShardedCluster @JvmOverloads constructor(
         for (replicaSet in shards) {
             replicaSet.start()
         }
-
     }
 
     fun addShard(shard: ReplicaSet = ReplicaSet(File(clusterRoot, "shard-${shards.size}"), "shard-${shards.size}", allocator = allocator)) {
@@ -130,7 +127,7 @@ class ShardedCluster @JvmOverloads constructor(
         }
     }
 
-    fun addMongos(config: Configuration = configuration {  }) {
+    fun addMongos(config: Configuration = configuration { }) {
         val port = allocator.next()
         val nodeName = "$name-$port"
         val mongos = mongoManager.mongos(File(clusterRoot, nodeName), nodeName, port)

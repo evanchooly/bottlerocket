@@ -19,6 +19,7 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
+@Suppress("UNCHECKED_CAST", "unused", "MemberVisibilityCanBePrivate")
 class Configuration(
     var auditLog: AuditLog? = null,
     var cloud: Cloud? = null,
@@ -49,7 +50,7 @@ class Configuration(
         val target = this::class.primaryConstructor!!.callBy(mapOf())
         target.mergeValues(this)
         target.mergeValues(updates)
-        return target as Configuration
+        return target
     }
 
     private fun ConfigBlock.mergeValues(source: ConfigBlock) {
@@ -121,6 +122,7 @@ class Configuration(
     fun snmp(init: Snmp.() -> Unit) {
         snmp = initConfigBlock(Snmp(), init)
     }
+
     fun setParameter(init: SetParameter.() -> Unit) {
         setParameter = initConfigBlock(SetParameter(), init)
     }

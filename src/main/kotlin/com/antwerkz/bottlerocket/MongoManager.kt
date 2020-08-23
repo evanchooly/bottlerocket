@@ -65,17 +65,16 @@ internal abstract class MongoManager(val version: Version, val windowsBaseUrl: S
                 else -> throw IllegalArgumentException("Unsupported version $version")
             }
         }
+
         internal fun extension() = if (SystemUtils.IS_OS_WINDOWS) ".exe" else ""
     }
 
     internal lateinit var archive: File
     private val binDir: String by lazy { "${download()}/bin" }
     var downloadPath: File = File(BottleRocket.TEMP_DIR, "mongo-downloads")
-
     internal fun mongo() = "$binDir/mongo${extension()}"
     internal fun mongod() = "$binDir/mongod${extension()}"
     internal fun mongos() = "$binDir/mongos${extension()}"
-
     fun initialConfig(baseDir: File, name: String, port: Int): Configuration {
         return configuration {
             net {
@@ -141,7 +140,6 @@ internal abstract class MongoManager(val version: Version, val windowsBaseUrl: S
     internal fun macDownload(version: Version) = "$macBaseUrl$version.tgz"
     internal fun linuxDownload(version: Version) = "$linuxBaseUrl$version.tgz"
     internal fun windowsDownload(version: Version) = "$windowsBaseUrl$version.zip"
-
     private fun download(): File {
         val url = when {
             SystemUtils.IS_OS_LINUX -> linuxDownload(version)
@@ -168,19 +166,19 @@ internal abstract class MongoManager(val version: Version, val windowsBaseUrl: S
     internal fun extractDownload(path: String): File {
         while (true) {
             var file: File? = null
-            retry(5,  "Failed to extract file") {
-                    try {
+            retry(5, "Failed to extract file") {
+                try {
+                    downloadArchive(path)
+                    file = archive.extract()
+                } catch (e: IOException) {
+                    LOG.error(e.message, e)
+                    if (e.message?.contains("Truncated", true) ?: false) {
+                        archive.delete()
                         downloadArchive(path)
-                        file = archive.extract()
-                    } catch (e: IOException) {
-                        LOG.error(e.message, e)
-                        if (e.message?.contains("Truncated", true) ?: false) {
-                            archive.delete()
-                            downloadArchive(path)
-                        }
-                        sleep(1000)
                     }
+                    sleep(1000)
                 }
+            }
 
             file?.let {
                 File(it, "bin").listFiles()

@@ -34,7 +34,7 @@ class ReplicaSet @JvmOverloads constructor(
     override
     fun start() {
         if (!isStarted()) {
-            if(nodeMap.isEmpty()) {
+            if (nodeMap.isEmpty()) {
                 addNode()
             }
 

@@ -44,7 +44,7 @@ abstract class MongoCluster(
     val name: String = BottleRocket.DEFAULT_NAME,
     val version: Version = BottleRocket.DEFAULT_VERSION,
     val allocator: PortAllocator = PortAllocator(BottleRocket.DEFAULT_PORT)
-): Configurable {
+) : Configurable {
     companion object {
         val perms = EnumSet.of(OWNER_READ, OWNER_WRITE)
     }
@@ -132,7 +132,7 @@ abstract class MongoCluster(
                     it.hosts(getServerAddressList())
                 }
             credentials?.let {
-                builder.credential(credentials)
+                builder.credential(it)
             }
             client = MongoClients.create(builder.build())
         }

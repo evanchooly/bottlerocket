@@ -12,7 +12,7 @@ class ConfigurationTest {
     companion object {
         @JvmStatic
         val complexConfig: String =
-                """net:
+            """net:
   bindIp: 127.0.0.1
   port: 27017
 processManagement:
@@ -38,19 +38,19 @@ systemLog:
     @Test
     fun testYaml() {
         val configuration =
-                configuration {
-                    systemLog {
-                        destination = Destination.SYSLOG
-                        component {
-                            systemLog { }
-                            accessControl {
-                                verbosity = Verbosity.FIVE
-                            }
+            configuration {
+                systemLog {
+                    destination = Destination.SYSLOG
+                    component {
+                        systemLog { }
+                        accessControl {
+                            verbosity = Verbosity.FIVE
                         }
                     }
                 }
+            }
         val target =
-                """net:
+            """net:
   bindIp: 127.0.0.1
   port: 27017
 replication:
@@ -88,7 +88,7 @@ systemLog:
             }
         }
         val target =
-                """net:
+            """net:
   bindIp: 127.0.0.1
   port: 27017
 processManagement:
@@ -121,7 +121,7 @@ systemLog:
             }
         }
         Assert.assertEquals(config.toYaml(),
-                """net:
+            """net:
   bindIp: 127.0.0.1
   port: 27017
 replication:
@@ -171,7 +171,6 @@ systemLog:
                 dbPath = path
             }
         }
-
         val yaml = configuration.toYaml(mode = ConfigMode.MONGOS)
         Assert.assertTrue(-1 == yaml.indexOf(path), "Found '$path' in \n$yaml")
         Assert.assertTrue(-1 == yaml.indexOf("oplogSizeMB"), "Found 'oplogSizeMB' in \n$yaml")
@@ -181,10 +180,9 @@ systemLog:
     fun smallMerges() {
         var config = configuration {
             auditLog {
-                filter  = "filter value"
+                filter = "filter value"
             }
         }
-
         var update: Configuration = config.update {
             auditLog {
                 filter = "updated"
@@ -214,7 +212,7 @@ systemLog:
     fun mergeConfig() {
         val config = configuration {
             auditLog {
-                filter  = "filter value"
+                filter = "filter value"
             }
             storage {
                 dbPath = "/var/lib/mongo/noodle"
@@ -229,7 +227,6 @@ systemLog:
         Assert.assertEquals(config.net?.port, 12345)
         Assert.assertNull(config.operationProfiling?.slowOpThresholdMs)
         Assert.assertNull(config.security?.authorization)
-
         val updated: Configuration = config.update {
             net {
                 port = 49152

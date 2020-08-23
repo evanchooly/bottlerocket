@@ -17,7 +17,6 @@ import org.bson.Document
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream.of
 import org.zeroturnaround.process.PidProcess
 import org.zeroturnaround.process.Processes
 import java.io.File

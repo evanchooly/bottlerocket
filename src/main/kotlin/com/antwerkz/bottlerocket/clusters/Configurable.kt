@@ -11,5 +11,4 @@ interface Configurable {
 
         configure(configuration)
     }
-
 }
