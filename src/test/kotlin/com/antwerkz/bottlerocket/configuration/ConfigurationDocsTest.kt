@@ -7,11 +7,25 @@ import org.testng.Assert
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.io.File
+import java.lang.reflect.Field
 import java.net.URI
-import kotlin.reflect.KProperty
+import java.util.TreeMap
+import kotlin.math.min
 import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.jvm.kotlinProperty
 
 class ConfigurationDocsTest {
+    @ExperimentalStdlibApi
+    @Test(dataProvider = "urls")
+    fun checkDocs(version: Version) {
+        val elements = loadLinks(version.docsUrl(), version)
+        val properties = propertyMap(Configuration::class.java)
+        val missing = check(version, properties, elements, version.docsUrl())
+        Assert.assertTrue(elements.isEmpty(), "found ${elements.size} extra items in ${version.docsUrl()}: \n${elements.joinToString
+        ("\n")}")
+        Assert.assertTrue(missing.isEmpty(), "found ${missing.size} extra items in ${version.docsUrl()}: \n${missing.joinToString("\n")}")
+    }
+
     private fun loadLinks(url: String, version: Version): MutableList<String> {
         val uri = URI(url)
         val file = File("target", "$version-configuration-options.html")
@@ -29,17 +43,24 @@ class ConfigurationDocsTest {
             .toMutableList()
     }
 
-    @Test(dataProvider = "urls")
-    fun checkDocs(version: Version, url: String) {
-        val elements = loadLinks(url, version)
-        val properties = configuration {
-        }.toLookups()
-        val missing = check(version, properties, elements, url)
-        Assert.assertTrue(elements.isEmpty(), "found ${elements.size} extra items in $url: \n${elements.joinToString("\n")}")
-        Assert.assertTrue(missing.isEmpty(), "found ${missing.size} extra items in $url: \n${missing.joinToString("\n")}")
+    @ExperimentalStdlibApi
+    fun propertyMap(type: Class<*>): Map<String, Field> {
+        val map = TreeMap<String, Field>()
+        type.declaredFields.forEach { field ->
+            if (ConfigBlock::class.java.isAssignableFrom(field.type)) {
+                val fieldMap = propertyMap(field.type)
+                fieldMap.forEach { (key, value) ->
+                    map["${field.name}.$key"] = value
+                }
+            } else {
+                map[field.name] = field
+            }
+        }
+
+        return map
     }
 
-    private fun check(version: Version, map: Map<String, KProperty<*>>, elements: MutableList<String>, url: String): MutableList<String> {
+    private fun check(version: Version, map: Map<String, Field>, elements: MutableList<String>, url: String): MutableList<String> {
         val outdated = mutableListOf<String>()
         map.forEach { (key, value) ->
             val present = elements.remove(key)
@@ -55,24 +76,27 @@ class ConfigurationDocsTest {
         return outdated
     }
 
-    private fun wasAdded(value: KProperty<*>, version: Version): Boolean {
-        return value.findAnnotation<Added>()?.run {
-            Version.valueOf(this.value).greaterThanOrEqualTo(version)
+    private fun wasAdded(field: Field, version: Version): Boolean {
+        return field.kotlinProperty?.findAnnotation<Added>()?.run {
+            Version.valueOf(value).greaterThanOrEqualTo(version)
         } ?: false
     }
 
-    private fun wasRemoved(value: KProperty<*>, version: Version): Boolean {
-        return value.findAnnotation<Removed>()?.run {
-            Version.valueOf(this.value).lessThanOrEqualTo(version)
+    private fun wasRemoved(field: Field, version: Version): Boolean {
+        return field.kotlinProperty?.findAnnotation<Removed>()?.run {
+            Version.valueOf(value).lessThanOrEqualTo(version)
         } ?: false
     }
 
     @DataProvider(name = "urls")
     fun urls(): Array<Array<Any>> {
         return arrayOf(
-            arrayOf<Any>(Version.forIntegers(4, 2), "http://docs.mongodb.org/v4.2/reference/configuration-options/"),
-            arrayOf<Any>(Version.forIntegers(4, 0), "http://docs.mongodb.org/v4.0/reference/configuration-options/"),
-            arrayOf<Any>(Version.forIntegers(3, 6), "http://docs.mongodb.org/v3.6/reference/configuration-options/")
+            arrayOf(Version.forIntegers(4, 4)),
+            arrayOf(Version.forIntegers(4, 2)),
+            arrayOf(Version.forIntegers(4, 0)),
+            arrayOf(Version.forIntegers(3, 6))
         )
     }
+
+    fun Version.docsUrl() = "http://docs.mongodb.org/v${majorVersion}.${minorVersion}/reference/configuration-options/"
 }

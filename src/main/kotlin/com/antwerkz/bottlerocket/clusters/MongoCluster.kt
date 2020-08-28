@@ -58,7 +58,7 @@ abstract class MongoCluster(
     private var adminClient: MongoClient? = null
     private var client: MongoClient? = null
     private var credentials: MongoCredential? = null
-    var configuration = configuration { }
+    var configuration = Configuration()
 
     init {
         clusterRoot.mkdirs()

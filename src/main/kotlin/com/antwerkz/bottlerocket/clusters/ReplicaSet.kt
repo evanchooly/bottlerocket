@@ -51,11 +51,12 @@ class ReplicaSet @JvmOverloads constructor(
         return nodeMap.values.filter { it.isAlive() }.count() != 0
     }
 
-    fun addNode(config: Configuration = configuration {}) {
-        val port = allocator.next()
+    fun addNode(config: Configuration = Configuration()) {
+        val port = config.net?.port ?: allocator.next()
         val nodeName = "$name-node${nodeMap.size}"
         val node = mongoManager.mongod(File(clusterRoot, nodeName), nodeName, port)
-        node.configure(configuration.update(config))
+        val update = configuration.update(config)
+        node.configure(update)
 
         nodeMap.put(node.port, node)
     }

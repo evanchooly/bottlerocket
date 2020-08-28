@@ -12,13 +12,8 @@ class ConfigurationTest {
     companion object {
         @JvmStatic
         val complexConfig: String =
-            """net:
-  bindIp: 127.0.0.1
-  port: 27017
-processManagement:
+            """processManagement:
   fork: true
-replication:
-  oplogSizeMB: 10
 storage:
   dbPath: /var/lib/mongodb
   repairPath: /var/lib/mongodb_tmp
@@ -50,12 +45,7 @@ systemLog:
                 }
             }
         val target =
-            """net:
-  bindIp: 127.0.0.1
-  port: 27017
-replication:
-  oplogSizeMB: 10
-systemLog:
+            """systemLog:
   component:
     accessControl:
       verbosity: 5
@@ -90,11 +80,8 @@ systemLog:
         val target =
             """net:
   bindIp: 127.0.0.1
-  port: 27017
 processManagement:
   fork: true
-replication:
-  oplogSizeMB: 10
 storage:
   dbPath: /var/lib/mongodb
 systemLog:
@@ -121,12 +108,7 @@ systemLog:
             }
         }
         Assert.assertEquals(config.toYaml(),
-            """net:
-  bindIp: 127.0.0.1
-  port: 27017
-replication:
-  oplogSizeMB: 10
-systemLog:
+            """systemLog:
   component:
     accessControl:
       verbosity: 5

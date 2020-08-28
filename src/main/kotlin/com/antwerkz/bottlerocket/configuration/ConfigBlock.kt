@@ -4,6 +4,7 @@ import java.util.TreeMap
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.primaryConstructor
 
 interface ConfigBlock {
     fun <T : ConfigBlock> initConfigBlock(configBlock: T, init: T.() -> Unit): T {
@@ -17,23 +18,6 @@ interface ConfigBlock {
 
     fun toYaml(mode: ConfigMode = ConfigMode.MONGOD, includeAll: Boolean = false): String {
         return toMap(mode, includeAll).toYaml()
-    }
-
-    fun toLookups(): Map<String, KProperty<*>> {
-        val map = TreeMap<String, KProperty<*>>()
-        javaClass.kotlin.memberProperties.forEach {
-            val fieldValue = it.get(this)
-            if (fieldValue is ConfigBlock) {
-                val fieldMap = fieldValue.toLookups()
-                fieldMap.forEach { (key, value) ->
-                    map["${it.name}.$key"] = value
-                }
-            } else {
-                map[it.name] = it
-            }
-        }
-
-        return map
     }
 
     fun isSupportedMode(configMode: ConfigMode, property: KProperty1<ConfigBlock, *>): Boolean {

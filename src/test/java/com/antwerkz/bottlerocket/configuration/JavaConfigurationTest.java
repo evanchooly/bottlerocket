@@ -27,11 +27,6 @@ public class JavaConfigurationTest {
             return null;
         });
         final String target =
-            "net:\n" +
-            "  bindIp: 127.0.0.1\n" +
-            "  port: 27017\n" +
-            "replication:\n" +
-            "  oplogSizeMB: 10\n" +
             "systemLog:\n" +
             "  component:\n" +
             "    accessControl:\n" +
@@ -73,13 +68,8 @@ public class JavaConfigurationTest {
             });
 
         final String target =
-            "net:\n" +
-            "  bindIp: 127.0.0.1\n" +
-            "  port: 27017\n" +
             "processManagement:\n" +
             "  fork: true\n" +
-            "replication:\n" +
-            "  oplogSizeMB: 10\n" +
             "storage:\n" +
             "  dbPath: /var/lib/mongodb\n" +
             "  repairPath: /var/lib/mongodb_tmp\n" +

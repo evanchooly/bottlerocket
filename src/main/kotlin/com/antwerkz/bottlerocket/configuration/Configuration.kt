@@ -47,32 +47,32 @@ class Configuration(
     }
 
     fun update(updates: Configuration): Configuration {
-        val target = this::class.primaryConstructor!!.callBy(mapOf())
-        target.mergeValues(this)
-        target.mergeValues(updates)
+        val target = empty<Configuration>()
         return target
+            .mergeValues(this)
+            .mergeValues(updates) as Configuration
     }
 
-    private fun ConfigBlock.mergeValues(source: ConfigBlock) {
-        val sourceClass = source.javaClass.kotlin
-        val defaults: ConfigBlock = sourceClass.primaryConstructor!!.callBy(mapOf())
-        sourceClass.memberProperties.forEach { p: KProperty1<ConfigBlock, *> ->
-            var fieldValue = p.get(source)
-            if (fieldValue != null) {
-                if (fieldValue is ConfigBlock) {
-                    val copiedValue = fieldValue.javaClass.kotlin.primaryConstructor!!.callBy(mapOf())
-                    copiedValue.mergeValues(fieldValue)
-                    fieldValue = copiedValue
-                } else {
-                    if (fieldValue == p.get(defaults)) {
-                        fieldValue = null
+    internal fun <T : ConfigBlock> ConfigBlock.empty(): T {
+        return this::class.primaryConstructor!!.callBy(mapOf()) as T
+    }
+
+
+    private fun ConfigBlock.mergeValues(source: ConfigBlock): ConfigBlock {
+        source.javaClass.kotlin.memberProperties
+            .forEach { p: KProperty1<ConfigBlock, *> ->
+                var fieldValue = p.get(source)
+                if (fieldValue != null) {
+                    if (fieldValue is ConfigBlock) {
+                        fieldValue = fieldValue.empty<ConfigBlock>()
+                            .mergeValues(fieldValue)
+                    }
+                    if (fieldValue != null) {
+                        (p as KMutableProperty<*>).setter.call(this, fieldValue)
                     }
                 }
-                if (fieldValue != null) {
-                    (p as KMutableProperty<*>).setter.call(this, fieldValue)
-                }
             }
-        }
+        return this
     }
 
     fun isAuthEnabled(): Boolean {

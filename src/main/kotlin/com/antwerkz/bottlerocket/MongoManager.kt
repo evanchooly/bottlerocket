@@ -78,10 +78,14 @@ internal abstract class MongoManager(val version: Version, val windowsBaseUrl: S
     fun initialConfig(baseDir: File, name: String, port: Int): Configuration {
         return configuration {
             net {
+                bindIp = "127.0.0.1"
                 this.port = port
             }
             processManagement {
                 pidFilePath = File(baseDir, "$name.pid").absolutePath
+            }
+            replication {
+                oplogSizeMB = 10
             }
             storage {
                 dbPath = baseDir.absolutePath
