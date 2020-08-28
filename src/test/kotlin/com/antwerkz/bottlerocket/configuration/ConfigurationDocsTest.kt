@@ -10,7 +10,6 @@ import java.io.File
 import java.lang.reflect.Field
 import java.net.URI
 import java.util.TreeMap
-import kotlin.math.min
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.kotlinProperty
 
@@ -21,8 +20,10 @@ class ConfigurationDocsTest {
         val elements = loadLinks(version.docsUrl(), version)
         val properties = propertyMap(Configuration::class.java)
         val missing = check(version, properties, elements, version.docsUrl())
-        Assert.assertTrue(elements.isEmpty(), "found ${elements.size} extra items in ${version.docsUrl()}: \n${elements.joinToString
-        ("\n")}")
+        Assert.assertTrue(elements.isEmpty(), "found ${elements.size} extra items in ${version.docsUrl()}: \n${
+            elements.joinToString
+            ("\n")
+        }")
         Assert.assertTrue(missing.isEmpty(), "found ${missing.size} extra items in ${version.docsUrl()}: \n${missing.joinToString("\n")}")
     }
 
@@ -98,5 +99,5 @@ class ConfigurationDocsTest {
         )
     }
 
-    fun Version.docsUrl() = "http://docs.mongodb.org/v${majorVersion}.${minorVersion}/reference/configuration-options/"
+    private fun Version.docsUrl() = "http://docs.mongodb.org/v$majorVersion.$minorVersion/reference/configuration-options/"
 }

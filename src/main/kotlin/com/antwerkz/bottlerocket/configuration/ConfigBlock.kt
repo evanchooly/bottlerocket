@@ -1,10 +1,7 @@
 package com.antwerkz.bottlerocket.configuration
 
-import java.util.TreeMap
-import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.primaryConstructor
 
 interface ConfigBlock {
     fun <T : ConfigBlock> initConfigBlock(configBlock: T, init: T.() -> Unit): T {

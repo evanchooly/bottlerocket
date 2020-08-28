@@ -57,7 +57,6 @@ class Configuration(
         return this::class.primaryConstructor!!.callBy(mapOf()) as T
     }
 
-
     private fun ConfigBlock.mergeValues(source: ConfigBlock): ConfigBlock {
         source.javaClass.kotlin.memberProperties
             .forEach { p: KProperty1<ConfigBlock, *> ->
