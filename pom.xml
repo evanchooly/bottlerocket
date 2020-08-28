@@ -25,8 +25,8 @@
 
     <properties>
         <kotlin.version>1.4.0</kotlin.version>
-        <slf4j.version>1.7.25</slf4j.version>
-        <testng.version>6.11</testng.version>
+        <slf4j.version>1.7.30</slf4j.version>
+        <testng.version>7.1.0</testng.version>
         <jacoco.version>0.8.1</jacoco.version>
         <dokka.version>0.10.0</dokka.version>
 
@@ -46,15 +46,9 @@
             <version>${kotlin.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-reflect-jvm</artifactId>
-            <version>${kotlin.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.51</version>
+            <version>1.64</version>
         </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>
@@ -89,7 +83,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.30</version>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.yaml</groupId>
@@ -171,7 +165,6 @@
                             <jvmTarget>11</jvmTarget>
                             <sourceDirs>
                                 <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
-                                <sourceDir>${project.basedir}/src/main/java</sourceDir>
                             </sourceDirs>
                         </configuration>
                     </execution>
