@@ -7,6 +7,7 @@ import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.runCommand
 import com.jayway.awaitility.Awaitility
 import com.jayway.awaitility.Duration
+import com.jayway.awaitility.Duration.*
 import com.mongodb.MongoClientSettings
 import com.mongodb.MongoCommandException
 import com.mongodb.MongoSocketReadException
@@ -64,15 +65,15 @@ abstract class MongoExecutable
         Awaitility
             .await()
             .atMost(30, TimeUnit.SECONDS)
-            .pollInterval(Duration.ONE_SECOND)
-            .until<Boolean>({ !process.isAlive })
+            .pollInterval(ONE_SECOND)
+            .until<Boolean> { !process.isAlive }
         File(baseDir, "mongod.lock").delete()
         client.close()
     }
 
     fun shutdownWithDriver() {
         if (isAlive()) {
-            LOG.info("Shutting down service on port $port")
+            LOG.debug("Shutting down service on port $port")
             try {
                 getClient().runCommand(Document("shutdown", 1))
             } catch (e: Exception) {
@@ -88,7 +89,7 @@ abstract class MongoExecutable
 
     fun shutdownWithKill() {
         if (isAlive()) {
-            LOG.info("Shutting down service on port $port")
+            logger.info("Starting ${this::class.java.simpleName.toLowerCase()} $name")
             process?.destroy(true)
         }
     }

@@ -6,6 +6,7 @@ import com.antwerkz.bottlerocket.executable.MongoExecutable
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.github.zafarkhaja.semver.Version
+import com.mongodb.MongoNotPrimaryException
 import com.mongodb.ReadPreference
 import com.mongodb.client.MongoClient
 import org.apache.commons.compress.archivers.ArchiveEntry

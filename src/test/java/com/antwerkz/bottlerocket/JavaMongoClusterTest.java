@@ -18,7 +18,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.antwerkz.bottlerocket.BaseTest.getTimestamp;
 import static com.antwerkz.bottlerocket.configuration.ConfigurationKt.configuration;
 import static java.lang.String.format;
 
@@ -28,9 +27,9 @@ public class JavaMongoClusterTest {
         Thread.sleep(1000);
     }
 
-    @Test(enabled = false)
+    @Test
     void singleNode() throws InterruptedException, UnknownHostException {
-        final SingleNode cluster = new SingleNode(new File(format("target/rocket-java/%s/singleNode", getTimestamp())).getAbsoluteFile());
+        final SingleNode cluster = new SingleNode(new File("target/rocket-java/singleNode").getAbsoluteFile());
         try {
             startCluster(cluster);
             testWrites(cluster);
@@ -39,9 +38,9 @@ public class JavaMongoClusterTest {
         }
     }
 
-    @Test(enabled = false)
+    @Test
     void replicaSet() {
-        final ReplicaSet cluster = new ReplicaSet(new File(format("target/rocket-java/%s/replicaSet", getTimestamp())));
+        final ReplicaSet cluster = new ReplicaSet(new File("target/rocket-java/replicaSet"));
         try {
             startCluster(cluster);
 
@@ -57,9 +56,9 @@ public class JavaMongoClusterTest {
         }
     }
 
-    @Test(enabled = false)
+    @Test
     void sharded() {
-        final ShardedCluster cluster = new ShardedCluster(new File(format("target/rocket-java/%s/sharded", getTimestamp())));
+        final ShardedCluster cluster = new ShardedCluster(new File("target/rocket-java/sharded"));
         try {
             startCluster(cluster);
             testWrites(cluster);

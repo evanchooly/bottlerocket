@@ -53,7 +53,7 @@ class Configuration(
             .mergeValues(updates) as Configuration
     }
 
-    internal fun <T : ConfigBlock> ConfigBlock.empty(): T {
+    private fun <T : ConfigBlock> ConfigBlock.empty(): T {
         return this::class.primaryConstructor!!.callBy(mapOf()) as T
     }
 
@@ -66,9 +66,7 @@ class Configuration(
                         fieldValue = fieldValue.empty<ConfigBlock>()
                             .mergeValues(fieldValue)
                     }
-                    if (fieldValue != null) {
-                        (p as KMutableProperty<*>).setter.call(this, fieldValue)
-                    }
+                    (p as KMutableProperty<*>).setter.call(this, fieldValue)
                 }
             }
         return this

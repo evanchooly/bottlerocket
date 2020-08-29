@@ -2,11 +2,10 @@ package com.antwerkz.bottlerocket.clusters
 
 import com.antwerkz.bottlerocket.BottleRocket
 import com.antwerkz.bottlerocket.DatabaseRole
-import com.antwerkz.bottlerocket.executable.MongoExecutable
-import com.antwerkz.bottlerocket.executable.MongoExecutable.Companion.SUPER_USER_PASSWORD
 import com.antwerkz.bottlerocket.MongoManager
 import com.antwerkz.bottlerocket.configuration.Configuration
-import com.antwerkz.bottlerocket.configuration.configuration
+import com.antwerkz.bottlerocket.executable.MongoExecutable
+import com.antwerkz.bottlerocket.executable.MongoExecutable.Companion.SUPER_USER_PASSWORD
 import com.github.zafarkhaja.semver.Version
 import com.mongodb.MongoClientSettings
 import com.mongodb.MongoCredential
@@ -37,7 +36,7 @@ import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.Base64
 import java.util.EnumSet
-import java.util.concurrent.TimeUnit.MILLISECONDS
+import java.util.concurrent.TimeUnit.SECONDS
 
 abstract class MongoCluster(
     val clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
@@ -107,7 +106,7 @@ abstract class MongoCluster(
         if (adminClient == null) {
             val builder = MongoClientSettings.builder()
                 .applyToConnectionPoolSettings {
-                    it.maxWaitTime(30, MILLISECONDS)
+                    it.maxWaitTime(30, SECONDS)
                 }
                 .applyToClusterSettings {
                     it.hosts(getServerAddressList())
@@ -126,7 +125,7 @@ abstract class MongoCluster(
         if (client == null) {
             builder
                 .applyToConnectionPoolSettings {
-                    it.maxWaitTime(30, MILLISECONDS)
+                    it.maxWaitTime(30, SECONDS)
                 }
                 .applyToClusterSettings {
                     it.hosts(getServerAddressList())
