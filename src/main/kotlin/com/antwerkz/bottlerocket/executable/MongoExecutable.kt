@@ -6,8 +6,7 @@ import com.antwerkz.bottlerocket.clusters.deleteTree
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.runCommand
 import com.jayway.awaitility.Awaitility
-import com.jayway.awaitility.Duration
-import com.jayway.awaitility.Duration.*
+import com.jayway.awaitility.Duration.ONE_SECOND
 import com.mongodb.MongoClientSettings
 import com.mongodb.MongoCommandException
 import com.mongodb.MongoSocketReadException
