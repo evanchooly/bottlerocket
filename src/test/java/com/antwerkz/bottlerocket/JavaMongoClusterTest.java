@@ -19,23 +19,37 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.antwerkz.bottlerocket.configuration.ConfigurationKt.configuration;
-import static java.lang.String.format;
 
 public class JavaMongoClusterTest {
-    @AfterMethod
-    void sleep() throws InterruptedException {
-        Thread.sleep(1000);
+    private void startCluster(final MongoCluster cluster) {
+        cluster.clean();
+        cluster.configure(configuration(c -> {
+            c.storage(s -> {
+                s.mmapv1(m -> {
+                    m.setPreallocDataFiles(false);
+                    m.setSmallFiles(true);
+                    return null;
+                });
+                return null;
+            });
+            return null;
+        }));
+        cluster.start();
     }
 
-    @Test(enabled = false)
-    void singleNode() throws InterruptedException, UnknownHostException {
-        final SingleNode cluster = new SingleNode(new File("target/rocket-java/singleNode").getAbsoluteFile());
-        try {
-            startCluster(cluster);
-            testWrites(cluster);
-        } finally {
-            cluster.shutdown();
-        }
+    private void testWrites(final MongoCluster cluster) {
+        final MongoClient client = cluster.getClient();
+
+        final List<String> names = client.listDatabaseNames().into(new ArrayList<>());
+        Assert.assertFalse(names.isEmpty(), names.toString());
+
+        final MongoDatabase db = client.getDatabase("bottlerocket");
+        db.drop();
+        final MongoCollection<Document> collection = db.getCollection("testcollection");
+        final Document document = new Document("key", "value");
+        collection.insertOne(document);
+
+        Assert.assertEquals(collection.find().first(), document);
     }
 
     @Test(enabled = false)
@@ -82,35 +96,20 @@ public class JavaMongoClusterTest {
         }
     }
 
-    private void startCluster(final MongoCluster cluster) {
-        cluster.clean();
-        cluster.configure(configuration(c -> {
-            c.storage(s -> {
-                s.mmapv1(m -> {
-                    m.preallocDataFiles = false;
-                    m.setSmallFiles(true);
-                    return null;
-                });
-                return null;
-            });
-            return null;
-        }));
-        cluster.start();
+    @Test(enabled = false)
+    void singleNode() throws InterruptedException, UnknownHostException {
+        final SingleNode cluster = new SingleNode(new File("target/rocket-java/singleNode").getAbsoluteFile());
+        try {
+            startCluster(cluster);
+            testWrites(cluster);
+        } finally {
+            cluster.shutdown();
+        }
     }
 
-    private void testWrites(final MongoCluster cluster) {
-        final MongoClient client = cluster.getClient();
-
-        final List<String> names = client.listDatabaseNames().into(new ArrayList<>());
-        Assert.assertFalse(names.isEmpty(), names.toString());
-
-        final MongoDatabase db = client.getDatabase("bottlerocket");
-        db.drop();
-        final MongoCollection<Document> collection = db.getCollection("testcollection");
-        final Document document = new Document("key", "value");
-        collection.insertOne(document);
-
-        Assert.assertEquals(collection.find().first(), document);
+    @AfterMethod
+    void sleep() throws InterruptedException {
+        Thread.sleep(1000);
     }
 
 /*

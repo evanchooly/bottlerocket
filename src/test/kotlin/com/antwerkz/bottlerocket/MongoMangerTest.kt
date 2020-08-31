@@ -12,23 +12,23 @@ class MongoMangerTest {
     fun downloads() {
         for (os in listOf("windows", "linux", "osx")) {
             for (version in Versions.list()) {
-                val manager = MongoManager.of(version)
-                manager.downloadPath = File("target")
+                val distribution = MongoDistribution.of(version)
+                distribution.downloadPath = File("target")
                 val url = when (os) {
-                    "linux" -> manager.linuxDownload(version)
-                    "osx" -> manager.macDownload(version)
-                    "windows" -> manager.windowsDownload(version)
+                    "linux" -> distribution.linuxDownload(version)
+                    "osx" -> distribution.macDownload(version)
+                    "windows" -> distribution.windowsDownload(version)
                     else -> TODO()
                 }
 
-                manager.downloadArchive(url)
+                distribution.downloadArchive(url)
 
-                Assert.assertTrue(manager.archive.exists(), "Failed to download $url")
-                Assert.assertTrue(manager.archive.length() > 0, "Failed to download $url")
-                val baseDir = manager.extractDownload(url)
+                Assert.assertTrue(distribution.archive.exists(), "Failed to download $url")
+                Assert.assertTrue(distribution.archive.length() > 0, "Failed to download $url")
+                val baseDir = distribution.extractDownload(url)
                 Assert.assertTrue(baseDir.exists(), "Failed to extract $url")
                 Assert.assertTrue(baseDir.listFiles()?.isNotEmpty() ?: false, "Failed to extract $url")
-                manager.archive.delete()
+                distribution.archive.delete()
                 baseDir.deleteRecursively()
             }
         }

@@ -50,7 +50,7 @@ abstract class MongoCluster(
     }
 
     internal val logger: Logger = LoggerFactory.getLogger("${this::class.simpleName}-$name")
-    internal val mongoManager: MongoManager = MongoManager.of(version)
+    internal val mongoManager: MongoManager = MongoManager(version)
     var adminAdded: Boolean = false
     val keyFile: String = File(clusterRoot, "rocket.key").absolutePath
     val pemFile: String = File(clusterRoot, "rocket.pem").absolutePath
