@@ -20,7 +20,7 @@ object BottleRocket {
     val DEFAULT_PORT = 30000
 
     @JvmField
-    val DEFAULT_VERSION = Version.forIntegers(4, 2, 8)
+    val DEFAULT_VERSION = Version.forIntegers(4, 2, 9)
 
     @JvmField
     val DEFAULT_BASE_DIR = File(if (File("build").exists()) "build" else "target", DEFAULT_NAME)
