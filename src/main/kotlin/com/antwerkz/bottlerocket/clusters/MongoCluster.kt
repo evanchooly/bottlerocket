@@ -8,6 +8,7 @@ import com.antwerkz.bottlerocket.executable.MongoExecutable
 import com.antwerkz.bottlerocket.executable.MongoExecutable.Companion.SUPER_USER_PASSWORD
 import com.github.zafarkhaja.semver.Version
 import com.mongodb.MongoClientSettings
+import com.mongodb.MongoClientSettings.Builder
 import com.mongodb.MongoCredential
 import com.mongodb.MongoCredential.createCredential
 import com.mongodb.ServerAddress
@@ -49,7 +50,6 @@ abstract class MongoCluster(
     }
 
     internal val logger: Logger = LoggerFactory.getLogger("${this::class.simpleName}-$name")
-
     internal val mongoManager: MongoManager = MongoManager.of(version)
     var adminAdded: Boolean = false
     val keyFile: String = File(clusterRoot, "rocket.key").absolutePath
@@ -65,7 +65,6 @@ abstract class MongoCluster(
 
     abstract fun getServerAddressList(): List<ServerAddress>
     abstract fun isStarted(): Boolean
-
     fun restart() {
         shutdown()
         start()
@@ -105,12 +104,7 @@ abstract class MongoCluster(
     fun getAdminClient(): MongoClient {
         if (adminClient == null) {
             val builder = MongoClientSettings.builder()
-                .applyToConnectionPoolSettings {
-                    it.maxWaitTime(30, SECONDS)
-                }
-                .applyToClusterSettings {
-                    it.hosts(getServerAddressList())
-                }
+            configure(builder)
             if (isAuthEnabled()) {
                 builder.credential(createCredential(MongoExecutable.SUPER_USER, "admin", SUPER_USER_PASSWORD.toCharArray()))
             }
@@ -123,13 +117,7 @@ abstract class MongoCluster(
     @JvmOverloads
     fun getClient(builder: MongoClientSettings.Builder = MongoClientSettings.builder()): MongoClient {
         if (client == null) {
-            builder
-                .applyToConnectionPoolSettings {
-                    it.maxWaitTime(30, SECONDS)
-                }
-                .applyToClusterSettings {
-                    it.hosts(getServerAddressList())
-                }
+            configure(builder)
             credentials?.let {
                 builder.credential(it)
             }
@@ -137,6 +125,16 @@ abstract class MongoCluster(
         }
 
         return client!!
+    }
+
+    private fun configure(builder: Builder) {
+        builder
+            .applyToConnectionPoolSettings {
+                it.maxWaitTime(30, SECONDS)
+            }
+            .applyToClusterSettings {
+                it.hosts(getServerAddressList())
+            }
     }
 
     fun generateKeyFile() {

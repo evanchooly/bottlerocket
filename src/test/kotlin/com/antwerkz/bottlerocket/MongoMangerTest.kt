@@ -36,7 +36,7 @@ class MongoMangerTest {
 
     @Test
     fun addUsers() {
-        val node = SingleNode()
+        val node = SingleNode(File("target/rocket/addUsersTest"))
 
         node.start()
 

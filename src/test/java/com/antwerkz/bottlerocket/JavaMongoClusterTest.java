@@ -27,7 +27,7 @@ public class JavaMongoClusterTest {
         Thread.sleep(1000);
     }
 
-    @Test
+    @Test(enabled = false)
     void singleNode() throws InterruptedException, UnknownHostException {
         final SingleNode cluster = new SingleNode(new File("target/rocket-java/singleNode").getAbsoluteFile());
         try {
@@ -38,7 +38,7 @@ public class JavaMongoClusterTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     void replicaSet() {
         final ReplicaSet cluster = new ReplicaSet(new File("target/rocket-java/replicaSet"));
         try {
@@ -56,7 +56,7 @@ public class JavaMongoClusterTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     void sharded() {
         final ShardedCluster cluster = new ShardedCluster(new File("target/rocket-java/sharded"));
         try {
@@ -82,12 +82,12 @@ public class JavaMongoClusterTest {
         }
     }
 
-    void startCluster(final MongoCluster cluster) {
+    private void startCluster(final MongoCluster cluster) {
         cluster.clean();
         cluster.configure(configuration(c -> {
             c.storage(s -> {
                 s.mmapv1(m -> {
-                    m.setPreallocDataFiles(false);
+                    m.preallocDataFiles = false;
                     m.setSmallFiles(true);
                     return null;
                 });
@@ -98,7 +98,7 @@ public class JavaMongoClusterTest {
         cluster.start();
     }
 
-    void testWrites(final MongoCluster cluster) {
+    private void testWrites(final MongoCluster cluster) {
         final MongoClient client = cluster.getClient();
 
         final List<String> names = client.listDatabaseNames().into(new ArrayList<>());
@@ -106,7 +106,7 @@ public class JavaMongoClusterTest {
 
         final MongoDatabase db = client.getDatabase("bottlerocket");
         db.drop();
-        final MongoCollection<Document> collection = db.getCollection("singlenode");
+        final MongoCollection<Document> collection = db.getCollection("testcollection");
         final Document document = new Document("key", "value");
         collection.insertOne(document);
 

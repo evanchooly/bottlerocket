@@ -2,7 +2,6 @@ package com.antwerkz.bottlerocket.clusters
 
 import com.antwerkz.bottlerocket.BottleRocket
 import com.antwerkz.bottlerocket.configuration.Configuration
-import com.antwerkz.bottlerocket.configuration.configuration
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.runCommand
 import com.github.zafarkhaja.semver.Version
@@ -26,6 +25,7 @@ class ReplicaSet @JvmOverloads constructor(
     init {
         configure {
             replication {
+                oplogSizeMB = 10
                 replSetName = name
             }
         }
@@ -55,8 +55,7 @@ class ReplicaSet @JvmOverloads constructor(
         val port = config.net?.port ?: allocator.next()
         val nodeName = "$name-node${nodeMap.size}"
         val node = mongoManager.mongod(File(clusterRoot, nodeName), nodeName, port)
-        val update = configuration.update(config)
-        node.configure(update)
+        node.configure(configuration.update(config))
 
         nodeMap.put(node.port, node)
     }

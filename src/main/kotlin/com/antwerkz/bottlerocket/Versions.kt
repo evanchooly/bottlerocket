@@ -10,12 +10,12 @@ enum class Versions {
 //    },
     Version42 {
         override fun version(): Version {
-            return Version.forIntegers(4, 2, 8)
+            return Version.forIntegers(4, 2, 9)
         }
     },
     Version40 {
         override fun version(): Version {
-            return Version.forIntegers(4, 0, 19)
+            return Version.forIntegers(4, 0, 20)
         }
     },
     Version36 {

@@ -25,35 +25,15 @@ import java.io.IOException
 import java.lang.String.format
 import java.lang.Thread.sleep
 import java.net.URL
-import java.util.Properties
 import java.util.zip.GZIPInputStream
 
-internal abstract class MongoManager(val version: Version, val windowsBaseUrl: String, val macBaseUrl: String, val linuxBaseUrl: String) {
+internal abstract class MongoManager(val version: Version) {
     companion object {
         private val LOG = LoggerFactory.getLogger(MongoManager::class.java)
         internal fun linux(): String {
-            val etc = File("/etc")
-            val version = when {
-                File(etc, "redhat-release").exists() -> {
-                    "rhel80"
-                }
-                File(etc, "os-release").exists() -> {
-                    val props = Properties()
-                    File(etc, "os-release").inputStream().use {
-                        props.load(it)
-                        val linux = Linux.get(props.getProperty("NAME") ?: "Fedora")
-
-                        return linux.version(props)
-                    }
-                }
-                else -> {
-                    "rhel80"
-                }
-            }
-            if (SystemUtils.IS_OS_LINUX) {
-                LOG.info("Linux version detected: $version")
-            }
-            return version
+            val distribution = LinuxDistribution.parse(File("/etc/os-release"))
+            LOG.debug("Linux distribution detected: $distribution")
+            return distribution.mongoVersion()
         }
 
         internal fun of(version: Version): MongoManager {
@@ -83,9 +63,6 @@ internal abstract class MongoManager(val version: Version, val windowsBaseUrl: S
             }
             processManagement {
                 pidFilePath = File(baseDir, "$name.pid").absolutePath
-            }
-            replication {
-                oplogSizeMB = 10
             }
             storage {
                 dbPath = baseDir.absolutePath
@@ -141,9 +118,9 @@ internal abstract class MongoManager(val version: Version, val windowsBaseUrl: S
         return Mongos(this, baseDir, name, port)
     }
 
-    internal fun macDownload(version: Version) = "$macBaseUrl$version.tgz"
-    internal fun linuxDownload(version: Version) = "$linuxBaseUrl$version.tgz"
-    internal fun windowsDownload(version: Version) = "$windowsBaseUrl$version.zip"
+    internal fun macDownload(version: Version) = "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-$version.tgz"
+    internal open fun linuxDownload(version: Version) = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-$version.tgz"
+    internal abstract fun windowsDownload(version: Version): String
     private fun download(): File {
         val url = when {
             SystemUtils.IS_OS_LINUX -> linuxDownload(version)
@@ -249,59 +226,23 @@ fun MongoClient.runCommand(command: Document, readPreference: ReadPreference = R
     }
 }
 
-internal class MongoManager36(version: Version) : MongoManager(
-    version,
-    linuxBaseUrl = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-",
-    macBaseUrl = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-",
-    windowsBaseUrl = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-"
-) {
+internal class MongoManager36(version: Version) : MongoManager(version) {
     companion object {
         fun linux() = MongoManager.linux().replace("1804", "1604")
     }
+
+    override fun linuxDownload(version: Version) = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-$version.tgz"
+    override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-$version.zip"
 }
 
-internal class MongoManager40(version: Version) : MongoManager(
-    version,
-    linuxBaseUrl = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-",
-    macBaseUrl = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-",
-    windowsBaseUrl = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-"
-)
+internal class MongoManager40(version: Version) : MongoManager(version) {
+    override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-$version.zip"
+}
 
-internal class MongoManager42(version: Version) : MongoManager(
-    version,
-    linuxBaseUrl = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-",
-    macBaseUrl = "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-",
-    windowsBaseUrl = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2012plus-"
-)
+internal class MongoManager42(version: Version) : MongoManager(version) {
+    override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2012plus-$version.zip"
+}
 
-internal class MongoManager44(version: Version) : MongoManager(version,
-    linuxBaseUrl = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-",
-    macBaseUrl = "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-",
-    windowsBaseUrl = "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-"
-)
-
-@Suppress("unused")
-enum class Linux {
-    FEDORA {
-        override fun version(props: Properties) = "rhel80"
-    },
-    UBUNTU {
-        override fun version(props: Properties): String {
-            val version = props.getProperty("VERSION_ID").replace(".", "").replace("\"", "")
-            return "ubuntu" + when (version) {
-                "1604", "1804" -> version
-                else -> "1804"
-            }
-        }
-    };
-
-    abstract fun version(props: Properties): String
-
-    companion object {
-        internal fun get(name: String) = try {
-            valueOf(name.toUpperCase())
-        } catch (e: IllegalArgumentException) {
-            FEDORA
-        }
-    }
+internal class MongoManager44(version: Version) : MongoManager(version) {
+    override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-$version.zip"
 }
