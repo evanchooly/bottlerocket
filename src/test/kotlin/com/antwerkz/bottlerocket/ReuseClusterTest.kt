@@ -10,7 +10,8 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.Test
 import java.io.File
 
-class ClusterTest {
+@Test(enabled = false)
+class ReuseClusterTest {
     var cluster: MongoCluster? = null
     val rootDir = File("target/reuse")
 
@@ -19,21 +20,18 @@ class ClusterTest {
         cluster?.shutdown()
     }
 
-    @Test
     fun reuseSingleNode() {
         reuseDirectory {
             SingleNode(rootDir)
         }
     }
 
-    @Test
     fun reuseReplicaSet() {
         reuseDirectory {
             ReplicaSet(rootDir)
         }
     }
 
-    @Test
     fun reuseShardedCluster() {
         reuseDirectory {
             ShardedCluster(rootDir)

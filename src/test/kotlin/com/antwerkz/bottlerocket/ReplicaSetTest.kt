@@ -1,14 +1,15 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.BottleRocket.DEFAULT_VERSION
 import com.antwerkz.bottlerocket.clusters.ReplicaSet
 import com.github.zafarkhaja.semver.Version
 import org.testng.annotations.Test
 import java.io.File
 
 class ReplicaSetTest : BaseTest() {
-    @Test(dataProvider = "versions")
-    fun replicaSet(version: Version) {
-        cluster = ReplicaSet(clusterRoot = File("${basePath(version)}/replicaSet").absoluteFile, version = version)
+    @Test // (dataProvider = "versions")
+    fun replicaSet() {
+        cluster = ReplicaSet(clusterRoot = File("${basePath(DEFAULT_VERSION)}/replicaSet").absoluteFile)
         testClusterWrites()
         assertPrimary(30000)
     }
