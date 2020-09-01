@@ -8,7 +8,6 @@ import java.util.Properties
 internal sealed class LinuxDistribution(private val meta: Properties) {
     companion object {
         private val LOG = LoggerFactory.getLogger(LinuxDistribution::class.java)
-
         internal fun parse(osRelease: File): LinuxDistribution {
             return if (osRelease.exists()) {
                 val props = Properties()
@@ -30,7 +29,6 @@ internal sealed class LinuxDistribution(private val meta: Properties) {
     open fun name(): String = meta.getProperty("ID")
     open fun version(): String = meta.getProperty("VERSION_ID").replace("\"", "")
     abstract fun mongoVersion(): String
-
     override fun toString(): String {
         return "${this::class.simpleName} ${version()} [MongoDB qualifier: ${mongoVersion()}]"
     }
@@ -40,16 +38,15 @@ internal sealed class LinuxDistribution(private val meta: Properties) {
     }
 
     class Ubuntu(props: Properties) : LinuxDistribution(props) {
-        override fun mongoVersion(): String =  "ubuntu" + when (version()) {
-            "16.04", "18.04" -> version().replace(".", "")
+        override fun mongoVersion(): String = "ubuntu" + when (version()) {
+            "16.04", "18.04", "20.04" -> version().replace(".", "")
             else -> "1804"
         }
     }
 
-    internal class TestDistro(val name: String, val version: String, val mongoVersion: String): LinuxDistribution(Properties()) {
+    internal class TestDistro(val name: String, val version: String, val mongoVersion: String) : LinuxDistribution(Properties()) {
         override fun name() = name
         override fun mongoVersion() = mongoVersion
         override fun version() = version
     }
-
 }

@@ -34,7 +34,7 @@ sealed class MongoDistribution(val version: Version) {
     internal lateinit var archive: File
     internal val binDir: String by lazy { "${download()}/bin" }
     internal var downloadPath: File = File(BottleRocket.TEMP_DIR, "mongo-downloads")
-    internal fun macDownload(version: Version) = "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-$version.tgz"
+    internal open fun macDownload(version: Version) = "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-$version.tgz"
     internal open fun linuxDownload(version: Version) = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-$version.tgz"
     internal abstract fun windowsDownload(version: Version): String
     internal open fun linux(): String {
@@ -142,10 +142,12 @@ sealed class MongoDistribution(val version: Version) {
 internal class MongoDistribution36(version: Version) : MongoDistribution(version) {
     override fun linux() = super.linux().replace("1804", "1604")
     override fun linuxDownload(version: Version) = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-$version.tgz"
+    override fun macDownload(version: Version) = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-$version.tgz"
     override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-$version.zip"
 }
 
 internal class MongoDistribution40(version: Version) : MongoDistribution(version) {
+    override fun macDownload(version: Version) = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-$version.tgz"
     override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-$version.zip"
 }
 

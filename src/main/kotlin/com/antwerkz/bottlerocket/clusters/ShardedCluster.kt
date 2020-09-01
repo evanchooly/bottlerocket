@@ -15,8 +15,9 @@ class ShardedCluster @JvmOverloads constructor(
     baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
     name: String = BottleRocket.DEFAULT_NAME,
     version: Version = BottleRocket.DEFAULT_VERSION,
-    port: Int = BottleRocket.DEFAULT_PORT
-) : MongoCluster(baseDir, name, version, PortAllocator(port)) {
+    basePort: Int = BottleRocket.DEFAULT_PORT,
+    allocator: PortAllocator = PortAllocator(basePort)
+) : MongoCluster(baseDir, name, version, allocator) {
     val shards = arrayListOf<ReplicaSet>()
     val mongoses = arrayListOf<Mongos>()
     lateinit var configServer: ReplicaSet

@@ -1,6 +1,7 @@
 package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.MongoCluster
+import com.antwerkz.bottlerocket.clusters.PortAllocator
 import com.antwerkz.bottlerocket.clusters.ReplicaSet
 import com.github.zafarkhaja.semver.Version
 import org.bson.Document
@@ -19,10 +20,13 @@ open class BaseTest {
     }
 
     lateinit var cluster: MongoCluster
+    val portAllocator = PortAllocator(BottleRocket.DEFAULT_PORT)
 
     @AfterMethod
     fun stopCluster() {
-        cluster.shutdown()
+        if (this::cluster.isInitialized) {
+            cluster.shutdown()
+        }
     }
 
     @DataProvider(name = "versions")

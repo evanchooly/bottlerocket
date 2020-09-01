@@ -11,30 +11,29 @@ import org.testng.annotations.Test
 import java.io.File
 
 @Test(enabled = false)
-class ReuseClusterTest {
-    var cluster: MongoCluster? = null
+class ReuseClusterTest: BaseTest() {
     val rootDir = File("target/reuse")
 
     @AfterMethod
     fun stop() {
-        cluster?.shutdown()
+        cluster.shutdown()
     }
 
     fun reuseSingleNode() {
         reuseDirectory {
-            SingleNode(rootDir)
+            SingleNode(rootDir, allocator = portAllocator)
         }
     }
 
     fun reuseReplicaSet() {
         reuseDirectory {
-            ReplicaSet(rootDir)
+            ReplicaSet(rootDir, allocator = portAllocator)
         }
     }
 
     fun reuseShardedCluster() {
         reuseDirectory {
-            ShardedCluster(rootDir)
+            ShardedCluster(rootDir, allocator = portAllocator)
         }
     }
 
@@ -42,8 +41,8 @@ class ReuseClusterTest {
         rootDir.deleteRecursively()
         cluster = create()
 
-        cluster?.start()
-        var client = cluster?.getClient() ?: throw RuntimeException("Should have found a client")
+        cluster.start()
+        var client = cluster.getClient()
         var collection = client.getDatabase("reuse")
             .getCollection("testing")
 
@@ -51,12 +50,12 @@ class ReuseClusterTest {
 
         Assert.assertEquals(1, collection.countDocuments())
 
-        cluster?.shutdown()
+        cluster.shutdown()
 
         cluster = create()
 
-        cluster?.start()
-        client = cluster?.getClient() ?: throw RuntimeException("Should have found a client")
+        cluster.start()
+        client = cluster.getClient()
         collection = client.getDatabase("reuse")
             .getCollection("testing")
 
