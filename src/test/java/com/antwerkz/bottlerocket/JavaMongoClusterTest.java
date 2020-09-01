@@ -98,7 +98,7 @@ public class JavaMongoClusterTest {
 
     @Test(enabled = false)
     void singleNode() throws InterruptedException, UnknownHostException {
-        final SingleNode cluster = new SingleNode(new File("target/rocket-java/singleNode").getAbsoluteFile());
+        final SingleNode cluster = new SingleNode(new File("target/rocket-java/singleNode"));
         try {
             startCluster(cluster);
             testWrites(cluster);

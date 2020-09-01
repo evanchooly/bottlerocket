@@ -5,7 +5,7 @@ import java.io.File
 import java.util.Properties
 
 @Suppress("unused")
-internal sealed class LinuxDistribution(private val meta: Properties) {
+sealed class LinuxDistribution(private val meta: Properties) {
     companion object {
         private val LOG = LoggerFactory.getLogger(LinuxDistribution::class.java)
         internal fun parse(osRelease: File): LinuxDistribution {

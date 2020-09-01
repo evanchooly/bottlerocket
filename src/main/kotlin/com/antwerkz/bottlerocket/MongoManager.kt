@@ -25,10 +25,10 @@ internal class MongoManager(val version: Version) {
                 this.port = port
             }
             processManagement {
-                pidFilePath = File(baseDir, "$name.pid").absolutePath
+                pidFilePath = File(baseDir, "$name.pid").path
             }
             storage {
-                dbPath = baseDir.absolutePath
+                dbPath = baseDir.path
             }
         }
     }

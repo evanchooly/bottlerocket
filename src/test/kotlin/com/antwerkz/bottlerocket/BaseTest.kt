@@ -100,6 +100,6 @@ open class BaseTest {
     }
 
     protected fun basePath(version: Version): File {
-        return File("target/rocket/$timestamp/$version").absoluteFile
+        return File("target/rocket/$timestamp/$version")
     }
 }
