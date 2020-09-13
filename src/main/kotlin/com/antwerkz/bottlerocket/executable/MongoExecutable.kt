@@ -59,6 +59,7 @@ abstract class MongoExecutable
 
     fun shutdown() {
 //        shutdownWithDriver()
+        client.close()
         shutdownWithKill()
         val process = process!!
         Awaitility
@@ -67,7 +68,6 @@ abstract class MongoExecutable
             .pollInterval(ONE_SECOND)
             .until<Boolean> { !process.isAlive }
         File(baseDir, "mongod.lock").delete()
-        client.close()
     }
 
     fun shutdownWithDriver() {
@@ -88,7 +88,7 @@ abstract class MongoExecutable
 
     fun shutdownWithKill() {
         if (isAlive()) {
-            logger.info("Starting ${this::class.java.simpleName.toLowerCase()} $name")
+            logger.info("Stopping ${this::class.java.simpleName.toLowerCase()} $name")
             process?.destroy(true)
         }
     }
@@ -139,6 +139,9 @@ abstract class MongoExecutable
         process = Processes.newPidProcess(processResult?.process)
 
         waitForStartUp()
+        if (process == null || !(process?.isAlive ?: false)) {
+            throw IllegalStateException("process should be alive: $process")
+        }
     }
 
     override fun toString(): String {

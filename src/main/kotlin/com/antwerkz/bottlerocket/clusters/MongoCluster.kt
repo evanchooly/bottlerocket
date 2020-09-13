@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.lang.Thread.sleep
 import java.nio.file.FileVisitResult
 import java.nio.file.FileVisitResult.CONTINUE
 import java.nio.file.Files
@@ -78,6 +79,7 @@ abstract class MongoCluster(
     }
 
     open fun shutdown() {
+        sleep(1000)  // make sure the processes are gone
         adminClient?.close()
         adminClient = null
         client?.close()
@@ -94,6 +96,7 @@ abstract class MongoCluster(
         }
     */
     fun clean() {
+        println("cleaning cluster root: $clusterRoot")
         clusterRoot.deleteTree()
     }
 

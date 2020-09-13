@@ -61,22 +61,17 @@ class ReplicaSet @JvmOverloads constructor(
     }
 
     fun getPrimary(): Mongod? {
-        try {
-            nodeMap.values
-                .filter { it.isAlive() }
-                .forEach { mongod ->
-                    val result = mongod.getClient()
-                        .runCommand(Document("isMaster", null))
+        nodeMap.values
+            .filter { it.isAlive() }
+            .forEach { mongod ->
+                val result = mongod.getClient()
+                    .runCommand(Document("isMaster", null))
 
-                    if (result.containsKey("primary")) {
-                        return nodeMap[result.getString("primary").substringAfter(":").toInt()]
-                    }
+                if (result.containsKey("primary")) {
+                    return nodeMap[result.getString("primary").substringAfter(":").toInt()]
                 }
-            return null
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-            return null
-        }
+            }
+        return null
     }
 
     fun hasPrimary(): Boolean {
@@ -119,9 +114,11 @@ class ReplicaSet @JvmOverloads constructor(
             waitForPrimary()
             logger.info("primary found.  adding other members.")
             addMemberNodes()
+            val waitForPrimary = waitForPrimary()
 
-            waitForPrimary()
-
+            if (getPrimary() == null) {
+                throw IllegalStateException("Should have found a primary node.")
+            }
             logger.info("replica set $name started.")
         }
     }

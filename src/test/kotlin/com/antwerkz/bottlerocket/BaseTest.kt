@@ -17,10 +17,10 @@ open class BaseTest {
     companion object {
         @JvmStatic
         val timestamp = LocalTime.now().format(DateTimeFormatter.ofPattern("HH_mm"))
+        val portAllocator = PortAllocator(BottleRocket.DEFAULT_PORT)
     }
 
     lateinit var cluster: MongoCluster
-    val portAllocator = PortAllocator(BottleRocket.DEFAULT_PORT)
 
     @AfterMethod
     fun stopCluster() {
@@ -31,7 +31,7 @@ open class BaseTest {
 
     @DataProvider(name = "versions")
     fun versions(): Array<Version> {
-        return Versions.values().map { it.version() }.toTypedArray()
+        return Versions.values().map { it.version() }.toTypedArray().reversedArray()
     }
 
     fun testClusterWrites() {
@@ -50,7 +50,7 @@ open class BaseTest {
 
     private fun startCluster(enableAuth: Boolean = false) {
         if (!cluster.isStarted()) {
-            cluster.clean()
+//            cluster.clean()
             cluster.start()
             if (false && enableAuth) {
                 cluster.addUser("rockettest", "rocket", "cluster",
@@ -70,18 +70,6 @@ open class BaseTest {
         val client = cluster.getClient()
         val names = client.listDatabaseNames().into(ArrayList())
         Assert.assertFalse(names.isEmpty(), names.toString())
-    }
-
-    fun assertPrimary(port: Int) {
-        if (cluster is ReplicaSet) {
-            val replicaSet = cluster as ReplicaSet
-            Assert.assertTrue(replicaSet.hasPrimary())
-            Assert.assertTrue(replicaSet.waitForPrimary() != null)
-            val primary = replicaSet.getPrimary()
-            Assert.assertEquals(primary?.port, port, "$port should be the primary at startup")
-        } else {
-            Assert.fail("$cluster is not a replica set cluster")
-        }
     }
 
     fun validateShards() {

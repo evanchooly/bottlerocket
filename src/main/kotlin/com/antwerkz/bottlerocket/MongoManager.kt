@@ -54,7 +54,8 @@ internal class MongoManager(val version: Version) {
     */
     fun addUser(client: MongoClient, database: String, userName: String, password: String, roles: List<DatabaseRole>) {
         if (!hasUser(client, database, userName)) {
-            client.getDatabase(database).runCommand(Document("createUser", userName)
+            client.getDatabase(database)
+                .runCommand(Document("createUser", userName)
                 .append("pwd", password)
                 .append("roles", roles.map { it.toDB() }))
         }
