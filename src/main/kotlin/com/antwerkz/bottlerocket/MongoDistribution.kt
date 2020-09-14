@@ -84,10 +84,8 @@ sealed class MongoDistribution(val version: Version) {
                     file = archive.extract()
                 } catch (e: IOException) {
                     LOG.error(e.message, e)
-                    if (e.message?.contains("Truncated", true) ?: false) {
-                        archive.delete()
-                        downloadArchive(path)
-                    }
+                    archive.delete()
+                    downloadArchive(path)
                     Thread.sleep(1000)
                 }
             }
