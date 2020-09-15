@@ -1,7 +1,7 @@
 package com.antwerkz.bottlerocket.configuration
 
 import com.github.zafarkhaja.semver.Version
-import org.apache.http.client.fluent.Request
+import org.apache.hc.client5.http.fluent.Request
 import org.jsoup.Jsoup
 import org.testng.Assert
 import org.testng.annotations.DataProvider
@@ -32,7 +32,7 @@ class ConfigurationDocsTest {
         val file = File("target", "$version-configuration-options.html")
 
         if (!file.exists()) {
-            Request.Get(uri)
+            Request.get(uri)
                 .execute()
                 .saveContent(file)
         }

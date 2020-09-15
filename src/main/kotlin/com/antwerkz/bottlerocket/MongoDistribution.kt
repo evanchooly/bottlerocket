@@ -9,7 +9,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipUtils
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.SystemUtils
-import org.apache.http.client.fluent.Request
+import org.apache.hc.client5.http.fluent.Request
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
@@ -86,7 +86,6 @@ sealed class MongoDistribution(val version: Version) {
                     LOG.error(e.message, e)
                     archive.delete()
                     downloadArchive(path)
-                    Thread.sleep(1000)
                 }
             }
 
@@ -108,7 +107,7 @@ sealed class MongoDistribution(val version: Version) {
             if (!archive.exists()) {
                 LOG.info("$archive does not exist.  Downloading binaries from $url")
                 archive.parentFile.mkdirs()
-                Request.Get(path)
+                Request.get(path)
                     .userAgent("Mozilla/5.0 (compatible; bottlerocket; +https://github.com/evanchooly/bottlerocket)")
                     .execute()
                     .saveContent(archive)

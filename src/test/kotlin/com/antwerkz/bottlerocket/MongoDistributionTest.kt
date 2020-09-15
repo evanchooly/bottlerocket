@@ -8,7 +8,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.io.File
 
-class MongoMangerTest: BaseTest() {
+class MongoDistributionTest: BaseTest() {
     @Test
     fun addUsers() {
         val node = SingleNode(File("target/rocket/addUsersTest"), allocator = portAllocator)
