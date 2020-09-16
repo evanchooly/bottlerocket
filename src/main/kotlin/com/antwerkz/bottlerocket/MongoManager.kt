@@ -6,6 +6,7 @@ import com.antwerkz.bottlerocket.executable.MongoExecutable
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.github.zafarkhaja.semver.Version
+import com.mongodb.MongoNotPrimaryException
 import com.mongodb.client.MongoClient
 import org.apache.commons.lang3.SystemUtils
 import org.bson.Document
@@ -54,10 +55,16 @@ internal class MongoManager(val version: Version) {
     */
     fun addUser(client: MongoClient, database: String, userName: String, password: String, roles: List<DatabaseRole>) {
         if (!hasUser(client, database, userName)) {
-            client.getDatabase(database)
-                .runCommand(Document("createUser", userName)
-                .append("pwd", password)
-                .append("roles", roles.map { it.toDB() }))
+            try {
+                client.getDatabase(database)
+                    .runCommand(Document("createUser", userName)
+                    .append("pwd", password)
+                    .append("roles", roles.map { it.toDB() }))
+            } catch (e: MongoNotPrimaryException) {
+                val serverDescriptions = client.clusterDescription.serverDescriptions
+                println("serverDescriptions = ${serverDescriptions}")
+                throw e
+            }
         }
     }
 
