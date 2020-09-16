@@ -10,9 +10,13 @@ import com.mongodb.MongoNotPrimaryException
 import com.mongodb.client.MongoClient
 import org.apache.commons.lang3.SystemUtils
 import org.bson.Document
+import org.slf4j.LoggerFactory
 import java.io.File
 
 internal class MongoManager(val version: Version) {
+    companion object {
+        val log = LoggerFactory.getLogger(MongoManager::class.java)
+    }
     internal val extension = if (SystemUtils.IS_OS_WINDOWS) ".exe" else ""
     private val mongoDistribution = MongoDistribution.of(version)
     private val binDir = mongoDistribution.binDir
@@ -61,8 +65,7 @@ internal class MongoManager(val version: Version) {
                     .append("pwd", password)
                     .append("roles", roles.map { it.toDB() }))
             } catch (e: MongoNotPrimaryException) {
-                val serverDescriptions = client.clusterDescription.serverDescriptions
-                println("serverDescriptions = ${serverDescriptions}")
+                log.error("serverDescriptions = ${client.clusterDescription.serverDescriptions}")
                 throw e
             }
         }
