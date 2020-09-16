@@ -9,9 +9,11 @@ import java.io.File
 class ReplicaSetTest : BaseTest() {
     @Test(dataProvider = "versions")
     fun replicaSet(version: Version) {
-        cluster = ReplicaSet(clusterRoot = File("${basePath(version)}/replicaSet"), version = version, allocator = portAllocator)
-        testClusterWrites()
-        assertHasPrimary(30000)
+        if (version.greaterThanOrEqualTo(Version.forIntegers(4))) {
+            cluster = ReplicaSet(clusterRoot = File("${basePath(version)}/replicaSet"), version = version, allocator = portAllocator)
+            testClusterWrites()
+            assertHasPrimary(30000)
+        }
     }
 
     @Test(dataProvider = "versions", enabled = false)
