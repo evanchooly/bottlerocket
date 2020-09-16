@@ -64,7 +64,7 @@ internal class MongoManager(val version: Version) {
                     .runCommand(Document("createUser", userName)
                     .append("pwd", password)
                     .append("roles", roles.map { it.toDB() }))
-            } catch (e: MongoNotPrimaryException) {
+            } catch (e: Exception) {
                 log.error("serverDescriptions = ${client.clusterDescription.serverDescriptions}")
                 throw e
             }
