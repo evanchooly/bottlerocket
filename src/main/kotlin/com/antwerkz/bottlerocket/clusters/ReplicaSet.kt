@@ -16,8 +16,7 @@ class ReplicaSet @JvmOverloads constructor(
     clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
     name: String = BottleRocket.DEFAULT_NAME,
     version: Version = BottleRocket.DEFAULT_VERSION,
-    basePort: Int = BottleRocket.DEFAULT_PORT,
-    allocator: PortAllocator = PortAllocator(basePort)
+    allocator: PortAllocator = PortAllocator(),
 ) : MongoCluster(clusterRoot, name, version, allocator) {
     private var nodeMap = hashMapOf<Int, Mongod>()
     var initialized: Boolean = false

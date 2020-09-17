@@ -1,5 +1,7 @@
 package com.antwerkz.bottlerocket.clusters
 
-data class PortAllocator(private var port: Int) {
+import com.antwerkz.bottlerocket.BottleRocket
+
+data class PortAllocator(private var port: Int = BottleRocket.DEFAULT_PORT) {
     fun next() = port++
 }
