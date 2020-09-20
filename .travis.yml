@@ -10,7 +10,7 @@ notifications:
 os:
   - linux
   - osx
-  - windows
+#  - windows
 
 jdk:
   - openjdk11
