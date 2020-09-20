@@ -14,16 +14,16 @@ object BottleRocket {
     val TEMP_DIR = System.getProperty("java.io.tmpdir")
 
     @JvmField
-    val DEFAULT_NAME = "rocket"
+    var DEFAULT_NAME = "rocket"
 
     @JvmField
-    val DEFAULT_PORT = 30000
+    var DEFAULT_PORT = 30000
 
     @JvmField
-    val DEFAULT_VERSION = Version.forIntegers(4, 2, 9)
+    var DEFAULT_VERSION = Version.forIntegers(4, 4, 1)
 
     @JvmField
-    val DEFAULT_BASE_DIR = File(if (File("build").exists()) "build" else "target", DEFAULT_NAME)
+    var DEFAULT_BASE_DIR = File(if (File("build").exists()) "build" else "target", DEFAULT_NAME)
 }
 
 internal fun MongoClient.runCommand(command: Document, readPreference: ReadPreference = ReadPreference.primary()): Document {
