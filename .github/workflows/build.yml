@@ -10,6 +10,9 @@ on:
 jobs:
   BottleRocket:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 11
