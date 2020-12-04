@@ -13,7 +13,7 @@ import org.testng.SkipException
 import java.io.File
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-open class TestBase {
+open class BottleRocketTest {
     val mongoClient: MongoClient by lazy {
         startMongo()
     }
