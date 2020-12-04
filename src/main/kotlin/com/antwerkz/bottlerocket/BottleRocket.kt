@@ -20,7 +20,7 @@ object BottleRocket {
     var DEFAULT_PORT = 30000
 
     @JvmField
-    var DEFAULT_VERSION = Version.forIntegers(4, 4, 1)
+    var DEFAULT_VERSION = Versions.latest()
 
     @JvmField
     var DEFAULT_BASE_DIR = File(if (File("build").exists()) "build" else "target", DEFAULT_NAME)

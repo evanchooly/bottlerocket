@@ -7,8 +7,8 @@ import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.executable.MongoExecutable
 import com.antwerkz.bottlerocket.executable.MongoExecutable.Companion.SUPER_USER_PASSWORD
 import com.github.zafarkhaja.semver.Version
-import com.mongodb.MongoClientSettings
 import com.mongodb.MongoClientSettings.Builder
+import com.mongodb.MongoClientSettings.builder
 import com.mongodb.MongoCredential
 import com.mongodb.MongoCredential.createCredential
 import com.mongodb.ServerAddress
@@ -102,7 +102,7 @@ abstract class MongoCluster(
 
     fun getAdminClient(): MongoClient {
         if (adminClient == null) {
-            val builder = MongoClientSettings.builder()
+            val builder = builder()
             configure(builder)
             if (isAuthEnabled()) {
                 builder.credential(createCredential(MongoExecutable.SUPER_USER, "admin", SUPER_USER_PASSWORD.toCharArray()))
@@ -114,7 +114,7 @@ abstract class MongoCluster(
     }
 
     @JvmOverloads
-    fun getClient(builder: MongoClientSettings.Builder = MongoClientSettings.builder()): MongoClient {
+    fun getClient(builder: Builder = builder()): MongoClient {
         if (client == null) {
             configure(builder)
             credentials?.let {
