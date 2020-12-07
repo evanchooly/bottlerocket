@@ -9,16 +9,19 @@ class SingleNodeTest : BaseTest() {
     @Test(dataProvider = "versions")
     fun singleNode(version: Version) {
         if (version.greaterThanOrEqualTo(Version.forIntegers(4, 0, 0))) {
-            cluster = SingleNode(clusterRoot = File("${basePath(version)}/singleNode"), version = version,
-                port = portAllocator.next())
-            testClusterWrites()
+            SingleNode(clusterRoot = File("${basePath(version)}/singleNode"), version = version).use {
+                startCluster(it)
+                testClusterWrites(it)
+            }
         }
     }
 
     @Test(dataProvider = "versions", enabled = false)
     fun singleNodeAuth(version: Version) {
-        cluster = SingleNode(clusterRoot = File("${basePath(version)}/singleNodeAuth"), version = version)
-        testClusterAuth()
-        testClusterWrites()
+        SingleNode(clusterRoot = File("${basePath(version)}/singleNodeAuth"), version = version).use {
+            startCluster(it)
+            testClusterAuth(it)
+            testClusterWrites(it)
+        }
     }
 }

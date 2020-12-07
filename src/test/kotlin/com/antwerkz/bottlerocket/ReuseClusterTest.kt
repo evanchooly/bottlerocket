@@ -6,7 +6,6 @@ import com.antwerkz.bottlerocket.clusters.ShardedCluster
 import com.antwerkz.bottlerocket.clusters.SingleNode
 import org.bson.Document
 import org.testng.Assert
-import org.testng.annotations.AfterMethod
 import org.testng.annotations.Test
 import java.io.File
 
@@ -14,32 +13,27 @@ import java.io.File
 class ReuseClusterTest: BaseTest() {
     val rootDir = File("target/reuse")
 
-    @AfterMethod
-    fun stop() {
-        cluster.shutdown()
-    }
-
     fun reuseSingleNode() {
         reuseDirectory {
-            SingleNode(rootDir, allocator = portAllocator)
+            SingleNode(rootDir)
         }
     }
 
     fun reuseReplicaSet() {
         reuseDirectory {
-            ReplicaSet(rootDir, allocator = portAllocator)
+            ReplicaSet(rootDir)
         }
     }
 
     fun reuseShardedCluster() {
         reuseDirectory {
-            ShardedCluster(rootDir, allocator = portAllocator)
+            ShardedCluster(rootDir)
         }
     }
 
     private fun reuseDirectory(create: () -> MongoCluster) {
         rootDir.deleteRecursively()
-        cluster = create()
+        var cluster = create()
 
         cluster.start()
         var client = cluster.getClient()

@@ -9,7 +9,7 @@ class Mongod internal constructor(manager: MongoManager, baseDir: File, name: St
 
     fun start() {
         if (!isAlive()) {
-            logger.info("Starting mongod $name")
+            logger.info("Starting mongod $name (${manager.version})")
 
             val configFile = File(baseDir, "mongod.conf")
             config.writeConfig(configFile, MONGOD)

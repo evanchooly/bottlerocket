@@ -16,7 +16,7 @@ class ReplicaSet @JvmOverloads constructor(
     clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
     name: String = BottleRocket.DEFAULT_NAME,
     version: Version = BottleRocket.DEFAULT_VERSION,
-    allocator: PortAllocator = PortAllocator(),
+    allocator: PortAllocator = BottleRocket.PORTS,
 ) : MongoCluster(clusterRoot, name, version, allocator) {
     private var nodeMap = hashMapOf<Int, Mongod>()
     var initialized: Boolean = false
@@ -113,7 +113,7 @@ class ReplicaSet @JvmOverloads constructor(
             waitForPrimary()
             logger.info("primary found.  adding other members.")
             addMemberNodes()
-            val waitForPrimary = waitForPrimary()
+            waitForPrimary()
 
             if (getPrimary() == null) {
                 throw IllegalStateException("Should have found a primary node.")

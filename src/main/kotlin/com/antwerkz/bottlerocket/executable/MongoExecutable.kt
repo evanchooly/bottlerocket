@@ -61,12 +61,11 @@ abstract class MongoExecutable
 //        shutdownWithDriver()
         client.close()
         shutdownWithKill()
-        val process = process!!
         Awaitility
             .await()
             .atMost(30, TimeUnit.SECONDS)
             .pollInterval(ONE_SECOND)
-            .until<Boolean> { !process.isAlive }
+            .until<Boolean> { !isAlive() }
         File(baseDir, "mongod.lock").delete()
     }
 
@@ -140,7 +139,7 @@ abstract class MongoExecutable
 
         waitForStartUp()
         if (process == null || !(process?.isAlive ?: false)) {
-            throw IllegalStateException("process should be alive: $process")
+            throw IllegalStateException("process for ${manager.version} on $port should be alive: $process")
         }
     }
 

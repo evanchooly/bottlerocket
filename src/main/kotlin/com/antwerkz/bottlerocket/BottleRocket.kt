@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket
 
+import com.antwerkz.bottlerocket.clusters.PortAllocator
 import com.github.zafarkhaja.semver.Version
 import com.mongodb.ReadPreference
 import com.mongodb.client.MongoClient
@@ -24,6 +25,9 @@ object BottleRocket {
 
     @JvmField
     var DEFAULT_BASE_DIR = File(if (File("build").exists()) "build" else "target", DEFAULT_NAME)
+
+    @JvmField
+    var PORTS = PortAllocator(DEFAULT_PORT)
 }
 
 internal fun MongoClient.runCommand(command: Document, readPreference: ReadPreference = ReadPreference.primary()): Document {

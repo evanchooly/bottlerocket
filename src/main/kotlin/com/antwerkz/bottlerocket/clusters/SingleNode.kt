@@ -11,9 +11,8 @@ class SingleNode @JvmOverloads constructor(
     clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
     name: String = BottleRocket.DEFAULT_NAME,
     version: Version = BottleRocket.DEFAULT_VERSION,
-    port: Int = BottleRocket.DEFAULT_PORT,
-    allocator: PortAllocator = PortAllocator(port)
-) : MongoCluster(clusterRoot, name, version, allocator) {
+    port: Int = BottleRocket.PORTS.next()
+) : MongoCluster(clusterRoot, name, version) {
 
     private val mongod: Mongod = mongoManager.mongod(clusterRoot, name, port)
 

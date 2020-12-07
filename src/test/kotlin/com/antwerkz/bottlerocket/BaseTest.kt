@@ -1,41 +1,22 @@
 package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.MongoCluster
-import com.antwerkz.bottlerocket.clusters.PortAllocator
-import com.antwerkz.bottlerocket.clusters.ReplicaSet
 import com.github.zafarkhaja.semver.Version
 import org.bson.Document
 import org.testng.Assert
-import org.testng.annotations.AfterMethod
 import org.testng.annotations.DataProvider
 import java.io.File
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import java.util.ArrayList
 
 open class BaseTest {
-    companion object {
-        @JvmStatic
-        val timestamp = LocalTime.now().format(DateTimeFormatter.ofPattern("HH_mm"))
-        val portAllocator = PortAllocator(BottleRocket.DEFAULT_PORT)
-    }
-
-    lateinit var cluster: MongoCluster
-
-    @AfterMethod
-    fun stopCluster() {
-        if (this::cluster.isInitialized) {
-            cluster.shutdown()
-        }
-    }
-
     @DataProvider(name = "versions")
     fun versions(): Array<Version> {
-        return Versions.values().map { it.version() }.toTypedArray().reversedArray()
+        return Versions.values()
+            .map { it.version() }
+            .toTypedArray()
     }
 
-    fun testClusterWrites() {
-        startCluster()
+    fun testClusterWrites(cluster: MongoCluster) {
         val client = cluster.getClient()
         val names = client.listDatabaseNames().into(ArrayList())
         Assert.assertFalse(names.isEmpty(), names.toString())
@@ -48,13 +29,15 @@ open class BaseTest {
         Assert.assertEquals(collection.find().first(), document)
     }
 
-    private fun startCluster(enableAuth: Boolean = false) {
+    fun startCluster(cluster: MongoCluster, enableAuth: Boolean = false) {
         if (!cluster.isStarted()) {
-//            cluster.clean()
+            cluster.clean()
             cluster.start()
-            if (false && enableAuth) {
-                cluster.addUser("rockettest", "rocket", "cluster",
-                    listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin")))
+            if (enableAuth) {
+                cluster.addUser(
+                    "rockettest", "rocket", "cluster",
+                    listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin"))
+                )
 
                 cluster.shutdown()
 //                cluster.enableAuth()
@@ -63,8 +46,8 @@ open class BaseTest {
         }
     }
 
-    fun testClusterAuth() {
-        startCluster(true)
+    fun testClusterAuth(cluster: MongoCluster) {
+        startCluster(cluster, true)
 
         Assert.assertTrue(cluster.isAuthEnabled())
         val client = cluster.getClient()
@@ -72,7 +55,7 @@ open class BaseTest {
         Assert.assertFalse(names.isEmpty(), names.toString())
     }
 
-    fun validateShards() {
+    fun validateShards(cluster: MongoCluster) {
         val list = cluster.getAdminClient()
             .getDatabase("config")
             .getCollection("shards")
@@ -88,6 +71,6 @@ open class BaseTest {
     }
 
     protected fun basePath(version: Version): File {
-        return File("target/rocket/$timestamp/$version")
+        return File("target/rocket/$version")
     }
 }

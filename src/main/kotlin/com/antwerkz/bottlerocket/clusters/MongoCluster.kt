@@ -17,6 +17,7 @@ import com.mongodb.client.MongoClients
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.Closeable
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -44,8 +45,8 @@ abstract class MongoCluster(
     val clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
     val name: String = BottleRocket.DEFAULT_NAME,
     val version: Version = BottleRocket.DEFAULT_VERSION,
-    val allocator: PortAllocator = PortAllocator(BottleRocket.DEFAULT_PORT)
-) : Configurable {
+    val allocator: PortAllocator = BottleRocket.PORTS
+) : Configurable, Closeable {
     companion object {
         val perms = EnumSet.of(OWNER_READ, OWNER_WRITE)
     }
@@ -65,6 +66,7 @@ abstract class MongoCluster(
 
     abstract fun getServerAddressList(): List<ServerAddress>
     abstract fun isStarted(): Boolean
+
     fun restart() {
         shutdown()
         start()
@@ -82,6 +84,8 @@ abstract class MongoCluster(
         client = null
         mongoManager.deleteBinaries()
     }
+
+    override fun close() = shutdown()
 
     /*
         open fun enableAuth() {
@@ -251,38 +255,5 @@ fun File.deleteTree() {
         } else {
             throw RuntimeException("deleteTree() can only be called on directories:  $this")
         }
-    }
-}
-
-abstract class MongoClusterBuilder<out T>() {
-    var name: String = BottleRocket.DEFAULT_NAME
-        private set
-    var port: Int = BottleRocket.DEFAULT_PORT
-        private set
-    var version: Version = BottleRocket.DEFAULT_VERSION
-        private set
-    var baseDir: File = BottleRocket.DEFAULT_BASE_DIR
-        private set
-
-    open fun name(value: String): T {
-        name = value
-        baseDir = if (baseDir == BottleRocket.DEFAULT_BASE_DIR) File(
-            "${BottleRocket.TEMP_DIR}/$name") else baseDir
-        return this as T
-    }
-
-    fun port(value: Int): T {
-        port = value
-        return this as T
-    }
-
-    fun version(value: Version): T {
-        version = value
-        return this as T
-    }
-
-    fun baseDir(value: File): T {
-        baseDir = value
-        return this as T
     }
 }

@@ -7,19 +7,22 @@ import org.testng.annotations.Test
 import java.io.File
 
 class ShardedClusterTest : BaseTest() {
-
     @Test(dataProvider = "versions", enabled = false)
     fun sharded(version: Version) {
-        cluster = ShardedCluster(baseDir = File("${basePath(DEFAULT_VERSION)}/sharded"), version = version)
-        testClusterWrites()
-        validateShards()
+        ShardedCluster(baseDir = File("${basePath(DEFAULT_VERSION)}/sharded"), version = version).use {
+            startCluster(it)
+            testClusterWrites(it)
+            validateShards(it)
+        }
     }
 
     @Test(dataProvider = "versions", enabled = false)
     fun shardedAuth(version: Version) {
-        cluster = ShardedCluster(baseDir = File("${basePath(version)}/shardedAuth"), version = version)
-        testClusterAuth()
-        validateShards()
-        testClusterWrites()
+        ShardedCluster(baseDir = File("${basePath(version)}/shardedAuth"), version = version).use {
+            startCluster(it)
+            testClusterAuth(it)
+            validateShards(it)
+            testClusterWrites(it)
+        }
     }
 }

@@ -8,21 +8,18 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.io.File
 
-class MongoDistributionTest: BaseTest() {
+class MongoDistributionTest : BaseTest() {
     @Test
     fun addUsers() {
-        val node = SingleNode(File("target/rocket/addUsersTest"), allocator = portAllocator)
-
-        node.start()
-
-        node.addUser("test", "rocket-user", "i'm a dummy", listOf())
-
-        try {
+        SingleNode(File("target/rocket/addUsersTest")).use { node ->
+            node.start()
             node.addUser("test", "rocket-user", "i'm a dummy", listOf())
-        } catch (e: Exception) {
-            fail("Adding a duplicate user should not have failed.", e)
-        } finally {
-            node.shutdown()
+
+            try {
+                node.addUser("test", "rocket-user", "i'm a dummy", listOf())
+            } catch (e: Exception) {
+                fail("Adding a duplicate user should not have failed.", e)
+            }
         }
     }
 
@@ -72,7 +69,6 @@ class MongoDistributionTest: BaseTest() {
             .toTypedArray()
 
         return matrix
-
     }
 
     private fun validate(distribution: MongoDistribution, url: String) {
