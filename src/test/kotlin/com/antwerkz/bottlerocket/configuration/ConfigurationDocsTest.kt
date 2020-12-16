@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket.configuration
 
+import com.antwerkz.bottlerocket.BaseTest
 import com.github.zafarkhaja.semver.Version
 import org.apache.hc.client5.http.fluent.Request
 import org.jsoup.Jsoup
@@ -13,9 +14,9 @@ import java.util.TreeMap
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.kotlinProperty
 
-class ConfigurationDocsTest {
+class ConfigurationDocsTest: BaseTest() {
     @ExperimentalStdlibApi
-    @Test(dataProvider = "urls")
+    @Test(dataProvider = "versions")
     fun checkDocs(version: Version) {
         val elements = loadLinks(version.docsUrl(), version)
         val properties = propertyMap(Configuration::class.java)
@@ -87,16 +88,6 @@ class ConfigurationDocsTest {
         return field.kotlinProperty?.findAnnotation<Removed>()?.run {
             Version.valueOf(value).lessThanOrEqualTo(version)
         } ?: false
-    }
-
-    @DataProvider(name = "urls")
-    fun urls(): Array<Array<Any>> {
-        return arrayOf(
-            arrayOf(Version.forIntegers(4, 4)),
-            arrayOf(Version.forIntegers(4, 2)),
-            arrayOf(Version.forIntegers(4, 0)),
-            arrayOf(Version.forIntegers(3, 6))
-        )
     }
 
     private fun Version.docsUrl() = "http://docs.mongodb.org/v$majorVersion.$minorVersion/reference/configuration-options/"
