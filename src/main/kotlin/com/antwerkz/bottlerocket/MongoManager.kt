@@ -65,7 +65,6 @@ internal class MongoManager(val version: Version) {
                     .append("pwd", password)
                     .append("roles", roles.map { it.toDB() }))
             } catch (e: Exception) {
-                log.error("serverDescriptions = ${client.clusterDescription.serverDescriptions}")
                 throw e
             }
         }

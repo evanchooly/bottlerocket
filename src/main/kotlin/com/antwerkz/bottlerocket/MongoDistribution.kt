@@ -62,7 +62,7 @@ sealed class MongoDistribution(val version: Version) {
         return extractDownload(String.format(url, version))
     }
 
-    fun retry(count: Int, delay: Long = 1000, function: () -> Unit) {
+    private fun retry(count: Int, delay: Long = 1000, function: () -> Unit) {
         var lastFailure: Throwable? = null
         repeat(count) {
             try {

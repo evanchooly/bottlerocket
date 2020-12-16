@@ -8,11 +8,9 @@ import java.io.File
 class SingleNodeTest : BaseTest() {
     @Test(dataProvider = "versions")
     fun singleNode(version: Version) {
-        if (version.greaterThanOrEqualTo(Version.forIntegers(4, 0, 0))) {
-            SingleNode(clusterRoot = File("${basePath(version)}/singleNode"), version = version).use {
-                startCluster(it)
-                testClusterWrites(it)
-            }
+        SingleNode(clusterRoot = File("${basePath(version)}/singleNode"), version = version).use {
+            startCluster(it)
+            testClusterWrites(it)
         }
     }
 

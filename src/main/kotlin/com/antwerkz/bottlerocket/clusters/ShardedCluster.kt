@@ -8,7 +8,6 @@ import com.antwerkz.bottlerocket.configuration.types.ClusterRole.shardsvr
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.github.zafarkhaja.semver.Version
 import com.mongodb.ServerAddress
-import org.bson.Document
 import java.io.File
 
 class ShardedCluster @JvmOverloads constructor(
@@ -43,7 +42,7 @@ class ShardedCluster @JvmOverloads constructor(
     private fun addMember(replicaSet: ReplicaSet) {
         replicaSet.configure(configuration)
         val replSetUrl = replicaSet.replicaSetUrl()
-        val results = mongoses.first().runCommand(Document("addShard", replSetUrl))
+        val results = mongoses.first().runCommand("{ addShard: $replSetUrl }")
 
         if (results.getDouble("ok").toInt() != 1) {
             throw RuntimeException("Failed to add ${replicaSet.name} to cluster:  $results")

@@ -14,31 +14,11 @@ import com.mongodb.MongoCredential.createCredential
 import com.mongodb.ServerAddress
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 import java.lang.Thread.sleep
-import java.nio.file.FileVisitResult
-import java.nio.file.FileVisitResult.CONTINUE
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
-import java.nio.file.attribute.BasicFileAttributes
-import java.nio.file.attribute.PosixFilePermission.OWNER_READ
-import java.nio.file.attribute.PosixFilePermission.OWNER_WRITE
-import java.security.Key
-import java.security.KeyPair
-import java.security.KeyPairGenerator
-import java.security.SecureRandom
-import java.security.Security
-import java.security.interfaces.RSAPrivateKey
-import java.security.interfaces.RSAPublicKey
-import java.util.Base64
-import java.util.EnumSet
 import java.util.concurrent.TimeUnit.SECONDS
 
 abstract class MongoCluster(
@@ -47,14 +27,16 @@ abstract class MongoCluster(
     val version: Version = BottleRocket.DEFAULT_VERSION,
     val allocator: PortAllocator = BottleRocket.PORTS
 ) : Configurable, Closeable {
+/*
     companion object {
         val perms = EnumSet.of(OWNER_READ, OWNER_WRITE)
     }
+*/
 
     internal val logger: Logger = LoggerFactory.getLogger("${this::class.simpleName}-$name")
     internal val mongoManager: MongoManager = MongoManager(version)
-    val keyFile: String = File(clusterRoot, "rocket.key").absolutePath
-    val pemFile: String = File(clusterRoot, "rocket.pem").absolutePath
+//    val keyFile: String = File(clusterRoot, "rocket.key").absolutePath
+//    val pemFile: String = File(clusterRoot, "rocket.pem").absolutePath
     private var adminClient: MongoClient? = null
     private var client: MongoClient? = null
     private var credentials: MongoCredential? = null
@@ -97,7 +79,7 @@ abstract class MongoCluster(
     */
     fun clean() {
         println("cleaning cluster root: $clusterRoot")
-        clusterRoot.deleteTree()
+        clusterRoot.deleteRecursively()
     }
 
     override fun configure(update: Configuration) {
@@ -140,6 +122,7 @@ abstract class MongoCluster(
             }
     }
 
+/*
     fun generateKeyFile() {
         val key = File(keyFile)
         if (!key.exists()) {
@@ -157,7 +140,9 @@ abstract class MongoCluster(
         } catch (ignored: UnsupportedOperationException) {
         }
     }
+*/
 
+/*
     fun pem() {
         val LOGGER = LoggerFactory.getLogger(MongoCluster::class.java)
         val KEY_SIZE = 1024
@@ -183,7 +168,9 @@ abstract class MongoCluster(
         writePemFile(priv, "RSA PRIVATE KEY", "id_rsa")
         writePemFile(pub, "RSA PUBLIC KEY", "id_rsa.pub")
     }
+*/
 
+/*
     fun generatePemFile() {
         val pem = File(pemFile)
         val keyFile = File(clusterRoot, "rocket-pem.key")
@@ -200,6 +187,7 @@ abstract class MongoCluster(
 //                    .redirectError(of(getLogger(javaClass)).asError())
 //                    .execute()
             val pemStream = FileOutputStream(pem.absolutePath)
+*/
 /*
             try {
                 ProcessExecutor()
@@ -211,7 +199,8 @@ abstract class MongoCluster(
             } finally {
                 pemStream.close()
             }
-*/
+*//*
+
         }
         try {
             Files.setPosixFilePermissions(pem.toPath(), perms)
@@ -220,40 +209,12 @@ abstract class MongoCluster(
         } catch (ignored: UnsupportedOperationException) {
         }
     }
+*/
 
     fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
         mongoManager.addUser(getAdminClient(), database, userName, password, roles)
         credentials = createCredential(userName, database, password.toCharArray())
     }
 
-    fun versionAtLeast(minVersion: Version): Boolean {
-        return version.greaterThanOrEqualTo(minVersion)
-    }
-
     abstract fun isAuthEnabled(): Boolean
-}
-
-fun File.deleteTree() {
-    if (exists()) {
-        if (isDirectory) {
-            Files.walkFileTree(toPath(), object : SimpleFileVisitor<Path>() {
-                override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
-                    Files.delete(file)
-                    return CONTINUE
-                }
-
-                override fun postVisitDirectory(dir: Path, e: IOException?): FileVisitResult {
-                    if (e == null) {
-                        Files.delete(dir)
-                        return CONTINUE
-                    } else {
-                        // directory iteration failed
-                        throw e
-                    }
-                }
-            })
-        } else {
-            throw RuntimeException("deleteTree() can only be called on directories:  $this")
-        }
-    }
 }

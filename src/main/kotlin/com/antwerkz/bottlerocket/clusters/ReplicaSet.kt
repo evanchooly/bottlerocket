@@ -6,7 +6,6 @@ import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.runCommand
 import com.github.zafarkhaja.semver.Version
 import com.jayway.awaitility.Awaitility
-import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
 import org.bson.Document
 import java.io.File
@@ -64,7 +63,7 @@ class ReplicaSet @JvmOverloads constructor(
             .filter { it.isAlive() }
             .forEach { mongod ->
                 val result = mongod.getClient()
-                    .runCommand(Document("isMaster", null))
+                    .runCommand("{ isMaster: null }")
 
                 if (result.containsKey("primary")) {
                     return nodeMap[result.getString("primary").substringAfter(":").toInt()]
@@ -118,17 +117,29 @@ class ReplicaSet @JvmOverloads constructor(
             if (getPrimary() == null) {
                 throw IllegalStateException("Should have found a primary node.")
             }
+            if(version.lessThan(Version.forIntegers(4))) {
+                logger.info("Waiting a moment to let the cluster settle.")
+                Thread.sleep(3000)
+            }
             logger.info("replica set $name started.")
         }
     }
 
-    fun initiateReplicaSet() {
+    private fun initiateReplicaSet() {
         val primary = nodeMap.values.first()
         val results = primary.getClient()
-            .runCommand(Document("replSetInitiate", Document("_id", name)
-                .append("members", listOf(Document("_id", 1)
-                    .append("host", "localhost:${primary.port}"))
-                )), ReadPreference.primaryPreferred())
+            .runCommand(
+                """{
+                'replSetInitiate': {
+                '_id': '$name', 
+                'members': [ 
+                    { 
+                        '_id': 0,
+                        'host': 'localhost:${primary.port}'
+                    } ],
+                }
+            }"""
+            )
         if (!(results.getDouble("ok")?.toInt()?.equals(1) ?: false)) {
             throw IllegalStateException("Failed to initiate replica set: $results")
         }
@@ -136,23 +147,25 @@ class ReplicaSet @JvmOverloads constructor(
     }
 
     private fun addMemberNodes() {
-        val client = getAdminClient()
-        val config = mongoManager.getReplicaSetConfig(client)
-        if (config != null) {
-            config.set("version", config.getInteger("version") + 1)
-            val members = config.getList("members", Document::class.java)
-            var id = members[0].getInteger("_id")
-            nodeMap.values.asSequence().withIndex()
-                .filter { it.index > 0 }
-                .map { Document("_id", ++id).append("host", "localhost:${it.value.port}") }
-                .toCollection(members)
-            val results = client.runCommand(Document("replSetReconfig", config))
+        if (nodeMap.size > 1) {
+            val client = getAdminClient()
+            val config = mongoManager.getReplicaSetConfig(client)
+            if (config != null) {
+                config.set("version", config.getInteger("version") + 1)
+                val members = config.getList("members", Document::class.java)
+                var id = members[0].getInteger("_id")
+                nodeMap.values.asSequence().withIndex()
+                    .filter { it.index > 0 }
+                    .map { Document("_id", ++id).append("host", "localhost:${it.value.port}") }
+                    .toCollection(members)
+                val results = client.runCommand(Document("replSetReconfig", config))
 
-            if (results.getDouble("ok").toInt() != 1) {
-                throw RuntimeException("Failed to add members to replica set:  $results")
+                if (results.getDouble("ok").toInt() != 1) {
+                    throw RuntimeException("Failed to add members to replica set:  $results")
+                }
+            } else {
+                throw IllegalStateException("No replica set configuration found")
             }
-        } else {
-            throw IllegalStateException("No replica set configuration found")
         }
     }
 

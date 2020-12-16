@@ -1,16 +1,12 @@
 package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.PortAllocator
-import com.github.zafarkhaja.semver.Version
 import com.mongodb.ReadPreference
 import com.mongodb.client.MongoClient
 import org.bson.Document
-import org.slf4j.LoggerFactory
 import java.io.File
 
 object BottleRocket {
-    private val LOG = LoggerFactory.getLogger(BottleRocket::class.java)
-
     @JvmField
     val TEMP_DIR = System.getProperty("java.io.tmpdir")
 
@@ -30,11 +26,12 @@ object BottleRocket {
     var PORTS = PortAllocator(DEFAULT_PORT)
 }
 
+internal fun MongoClient.runCommand(command: String): Document {
+    return getDatabase("admin")
+        .runCommand(Document.parse(command))
+}
+
 internal fun MongoClient.runCommand(command: Document, readPreference: ReadPreference = ReadPreference.primary()): Document {
-    try {
-        return getDatabase("admin")
-            .runCommand(command, readPreference)
-    } catch (e: Exception) {
-        throw RuntimeException("command failed: $command with preference $readPreference", e)
-    }
+    return getDatabase("admin")
+        .runCommand(command, readPreference)
 }

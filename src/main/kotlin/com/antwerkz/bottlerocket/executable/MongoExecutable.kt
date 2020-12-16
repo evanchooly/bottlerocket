@@ -2,7 +2,6 @@ package com.antwerkz.bottlerocket.executable
 
 import com.antwerkz.bottlerocket.MongoManager
 import com.antwerkz.bottlerocket.clusters.Configurable
-import com.antwerkz.bottlerocket.clusters.deleteTree
 import com.antwerkz.bottlerocket.configuration.Configuration
 import com.antwerkz.bottlerocket.runCommand
 import com.jayway.awaitility.Awaitility
@@ -54,7 +53,7 @@ abstract class MongoExecutable
     }
 
     fun clean() {
-        baseDir.deleteTree()
+        baseDir.deleteRecursively()
     }
 
     fun shutdown() {
@@ -73,7 +72,7 @@ abstract class MongoExecutable
         if (isAlive()) {
             LOG.debug("Shutting down service on port $port")
             try {
-                getClient().runCommand(Document("shutdown", 1))
+                getClient().runCommand("{ shutdown: 1 }")
             } catch (e: Exception) {
                 if (e.cause !is MongoSocketReadException) {
                     LOG.warn("Failed to shutdown server.  Forcibly killing instead.", e)
@@ -92,7 +91,7 @@ abstract class MongoExecutable
         }
     }
 
-    fun runCommand(command: Document): Document {
+    fun runCommand(command: String): Document {
         return getClient().runCommand(command)
     }
 
