@@ -1,15 +1,8 @@
-name: Tests
-
-on:
-  push:
-  pull_request:
+name: Publish a Release
 
 jobs:
   BottleRocket:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os: [ ubuntu-20.04, ubuntu-18.04, ubuntu-16.04, windows-latest, macos-latest ]
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 11
@@ -22,6 +15,11 @@ jobs:
           path: ~/.m2
           key: \${{ runner.os }}-m2-\${{ hashFiles('**/pom.xml') }}
           restore-keys: \${{ runner.os }}-m2
-      - name: Build with Maven
-        run: mvn -B verify --file pom.xml
+      - name: Configure the job
+        run: |
+          rm -vf maven-release.sh
+          curl -o maven-release.sh https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/maven-release.sh
+          ls -al
+#      - name: Build with Maven
+#        run: mvn -B verify --file pom.xml
 
