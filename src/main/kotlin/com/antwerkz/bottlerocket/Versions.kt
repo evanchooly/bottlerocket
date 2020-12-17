@@ -25,12 +25,11 @@ enum class Versions {
     };
 
     companion object {
-        fun latest() = Version44.version()
+        fun latest() = values().first().version()
         fun list() = values()
             .map { it.version() }
             .toList()
     }
 
     abstract fun version(): Version
-
 }

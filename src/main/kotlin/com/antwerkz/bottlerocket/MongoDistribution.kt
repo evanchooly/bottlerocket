@@ -145,7 +145,7 @@ sealed class MongoDistribution(val version: Version) {
     }
 }
 
-private fun maxUbuntu(max: String, proposed: String): String {
+private fun maxUbuntu(proposed: String, max: String): String {
     return if(proposed.contains("ubuntu") && proposed.substring(6).toInt() > max.substring(6).toInt()) {
         max
     } else {
@@ -154,20 +154,20 @@ private fun maxUbuntu(max: String, proposed: String): String {
 }
 
 internal class MongoDistribution36(version: Version) : MongoDistribution(version) {
-    override fun linux() = maxUbuntu("ubuntu1604", super.linux())
+    override fun linux() = maxUbuntu(super.linux(), "ubuntu1804")
     override fun linuxDownload(version: Version) = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-$version.tgz"
     override fun macDownload(version: Version) = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-$version.tgz"
     override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-$version.zip"
 }
 
 internal class MongoDistribution40(version: Version) : MongoDistribution(version) {
-    override fun linux() = maxUbuntu("ubuntu1804", super.linux())
+    override fun linux() = maxUbuntu(super.linux(), "ubuntu1804")
     override fun macDownload(version: Version) = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-$version.tgz"
     override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-$version.zip"
 }
 
 internal class MongoDistribution42(version: Version) : MongoDistribution(version) {
-    override fun linux() = maxUbuntu("ubuntu1804", super.linux())
+    override fun linux() = maxUbuntu(super.linux(), "ubuntu1804")
     override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2012plus-$version.zip"
 }
 
