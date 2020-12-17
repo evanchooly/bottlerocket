@@ -18,11 +18,8 @@ jobs:
           path: ~/.m2
           key: \${{ runner.os }}-m2-\${{ hashFiles('**/pom.xml') }}
           restore-keys: \${{ runner.os }}-m2
-      - name: Configure the job
+      - name: Perform the release
         run: |
           rm -vf maven-release.sh
           curl -o maven-release.sh https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/maven-release.sh
-          ./maven-release.sh
-#      - name: Build with Maven
-#        run: mvn -B verify --file pom.xml
-
+          sh maven-release.sh
