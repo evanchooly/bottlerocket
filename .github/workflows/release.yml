@@ -22,4 +22,5 @@ jobs:
         run: |
           rm -vf maven-release.sh
           curl -o maven-release.sh https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/maven-release.sh
+          file maven-release.sh
           sh maven-release.sh
