@@ -21,6 +21,7 @@ jobs:
       - name: Install sdkman
         run: |
           curl -s "https://get.sdkman.io" | bash
+          ls -al ~
       - name: Perform the release
         run: |
           rm -vf maven-release.sh
