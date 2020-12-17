@@ -8,19 +8,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-#      - name: Set up JDK 11
-#        uses: actions/setup-java@v1
-#        with:
-#          java-version: 11
-#      - name: Cache Maven packages
-#        uses: actions/cache@v1
-#        with:
-#          path: ~/.m2
-#          key: \${{ runner.os }}-m2-\${{ hashFiles('**/pom.xml') }}
-#          restore-keys: \${{ runner.os }}-m2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Cache Maven packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: \${{ runner.os }}-m2-\${{ hashFiles('**/pom.xml') }}
+          restore-keys: \${{ runner.os }}-m2
       - name: Perform the release
         run: |
-          rm -vf maven-release.sh
           curl -o maven-release.sh https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/maven-release.sh
-          file maven-release.sh
+          curl -o VersionBump.java https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/VersionBump.java
+          ls -al
           sh maven-release.sh
