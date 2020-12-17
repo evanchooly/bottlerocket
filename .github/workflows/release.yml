@@ -22,7 +22,7 @@ jobs:
         run: |
           rm -vf maven-release.sh
           curl -o maven-release.sh https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/maven-release.sh
-          ls -al
+          ./maven-release.sh
 #      - name: Build with Maven
 #        run: mvn -B verify --file pom.xml
 
