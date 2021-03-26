@@ -20,7 +20,6 @@ class LinuxDistributionTest {
         return arrayOf(
             arrayOf(TestDistro("ubuntu", "20.04", "ubuntu2004"), File("target/test-classes/releases/ubuntu2004.release")),
             arrayOf(TestDistro("ubuntu", "18.04", "ubuntu1804"), File("target/test-classes/releases/ubuntu1804.release")),
-            arrayOf(TestDistro("ubuntu", "16.04", "ubuntu1604"), File("target/test-classes/releases/ubuntu1604.release")),
             arrayOf(TestDistro("fedora", "31", "rhel80"), File("target/test-classes/releases/fedora31.release"))
         )
     }

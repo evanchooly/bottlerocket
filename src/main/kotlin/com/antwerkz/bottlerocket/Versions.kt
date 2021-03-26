@@ -5,22 +5,22 @@ import com.github.zafarkhaja.semver.Version
 enum class Versions {
     Version44 {
         override fun version(): Version {
-            return Version.forIntegers(4, 4, 2)
+            return Version.forIntegers(4, 4, 4)
         }
     },
     Version42 {
         override fun version(): Version {
-            return Version.forIntegers(4, 2, 11)
+            return Version.forIntegers(4, 2, 13)
         }
     },
     Version40 {
         override fun version(): Version {
-            return Version.forIntegers(4, 0, 21)
+            return Version.forIntegers(4, 0, 23)
         }
     },
     Version36 {
         override fun version(): Version {
-            return Version.forIntegers(3, 6, 21)
+            return Version.forIntegers(3, 6, 23)
         }
     };
 

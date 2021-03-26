@@ -39,7 +39,7 @@ sealed class LinuxDistribution(private val meta: Properties) {
 
     class Ubuntu(props: Properties) : LinuxDistribution(props) {
         override fun mongoVersion(): String = "ubuntu" + when (version()) {
-            "16.04", "18.04", "20.04" -> version().replace(".", "")
+            "18.04", "20.04" -> version().replace(".", "")
             else -> "1804"
         }
     }
