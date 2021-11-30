@@ -3,19 +3,24 @@ package com.antwerkz.bottlerocket
 import com.github.zafarkhaja.semver.Version
 
 enum class Versions {
+    Version50 {
+        override fun version(): Version {
+            return Version.forIntegers(5, 0, 4)
+        }
+    },
     Version44 {
         override fun version(): Version {
-            return Version.forIntegers(4, 4, 4)
+            return Version.forIntegers(4, 4, 10)
         }
     },
     Version42 {
         override fun version(): Version {
-            return Version.forIntegers(4, 2, 13)
+            return Version.forIntegers(4, 2, 17)
         }
     },
     Version40 {
         override fun version(): Version {
-            return Version.forIntegers(4, 0, 23)
+            return Version.forIntegers(4, 0, 27)
         }
     },
     Version36 {

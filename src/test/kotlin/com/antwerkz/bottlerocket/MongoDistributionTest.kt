@@ -63,7 +63,7 @@ class MongoDistributionTest : BaseTest() {
     private fun matrix(): Array<Array<Any>> {
         val matrix = Versions.list()
             .flatMap { version: Version ->
-                listOf("osx", "windows")
+                listOf("osx", "windows", "linux")
                     .map { os -> arrayOf<Any>(version, os) }
             }
             .toTypedArray()

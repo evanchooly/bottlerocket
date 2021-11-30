@@ -16,7 +16,7 @@ import kotlin.reflect.jvm.kotlinProperty
 
 class ConfigurationDocsTest: BaseTest() {
     @ExperimentalStdlibApi
-    @Test(dataProvider = "versions")
+    @Test(dataProvider = "versions", enabled = false)
     fun checkDocs(version: Version) {
         val elements = loadLinks(version.docsUrl(), version)
         val properties = propertyMap(Configuration::class.java)
