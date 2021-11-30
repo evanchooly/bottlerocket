@@ -1,11 +1,10 @@
 name: Tests
 
-on:
-  push:
-  pull_request:
+on: [ push, pull_request, workflow_dispatch ]
 
 jobs:
   BottleRocket:
+    if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
