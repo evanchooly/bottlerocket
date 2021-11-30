@@ -28,7 +28,7 @@
         <slf4j.version>1.7.30</slf4j.version>
         <testng.version>7.1.0</testng.version>
         <jacoco.version>0.8.1</jacoco.version>
-        <dokka.version>0.10.0</dokka.version>
+        <dokka.version>1.6.0</dokka.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <downloadSources>true</downloadSources>
