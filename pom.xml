@@ -128,22 +128,6 @@
         </repository>
     </repositories>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <id>jcenter</id>
-            <name>JCenter</name>
-            <url>https://jcenter.bintray.com/</url>
-        </pluginRepository>
-        <pluginRepository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-gantsign-maven</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/gantsign/maven</url>
-        </pluginRepository>
-    </pluginRepositories>
-
     <build>
         <defaultGoal>install</defaultGoal>
         <sourceDirectory>src/main/kotlin</sourceDirectory>

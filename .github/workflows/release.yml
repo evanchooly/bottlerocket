@@ -24,7 +24,7 @@ jobs:
           git config user.email jlee@antwerkz.com
       - name: Perform the release
         run: |
-          curl -o maven-release.sh https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/maven-release.sh
+          curl -o github-maven-release.sh https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/maven-release.sh
           curl -o VersionBump.java https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/VersionBump.java
           ls -al
-          sh maven-release.sh
+          sh github-maven-release.sh
