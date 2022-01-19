@@ -25,9 +25,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build
-        run: |
-          chmod +x mvnw
-          ./mvnw -B verify --file pom.xml
+        run: mvn -B verify --file pom.xml
 
       - name: Set up Maven Central
         uses: actions/setup-java@v1
