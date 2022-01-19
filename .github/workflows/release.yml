@@ -3,32 +3,26 @@ name: Release
 on:
   push:
     tags:
-      - r[0-9]*
+      - v*
 
 jobs:
-  Release:
+  release:
+    name: Release
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: 11
+        uses: actions/checkout@v2.3.4
 
       - name: Cache Maven
-        uses: actions/cache@v1
+        uses: actions/cache@v2.1.4
         with:
-          path: ~/.m2
+          path: ~/.m2/repository
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Build
-        run: mvn -B verify --file pom.xml
-
-      - name: Set up Maven Central
-        uses: actions/setup-java@v1
+      - name: Setup Java
+        uses: actions/setup-java@v1.4.3
         with:
           java-version: 11
           server-id: central
@@ -43,6 +37,7 @@ jobs:
           MAVEN_CENTRAL_TOKEN: ${{ secrets.SONATYPE_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          git config user.name "${{ github.event.head_commit.committer.name }}"
-          git config user.email "${{ github.event.head_commit.committer.email }}"
-          mvn -B --file pom.xml release:prepare release:perform -Drepository.url=https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git
+          export GPG_TTY=$(tty)
+          mvn --no-transfer-progress -B --file pom.xml \
+            -Drepository.url=https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git \
+            -Dmaven.site.skip=true -Drelease=true deploy
