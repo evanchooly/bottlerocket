@@ -33,7 +33,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <downloadSources>true</downloadSources>
         <nexus.url>https://oss.sonatype.org</nexus.url>
-    </properties>
+        <project.repository>evanchooly/bottlerocket</project.repository>
+        <repository.url>git@github.com:${project.repository}.git</repository.url>    </properties>
 
     <dependencies>
         <dependency>
@@ -241,6 +242,28 @@
                </executions>
            </plugin>
 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.0.0-M1</version>
+                <configuration>
+                    <useReleaseProfile>false</useReleaseProfile>
+                    <releaseProfiles>publication,gpg</releaseProfiles>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.8</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>central</serverId>
+                    <nexusUrl>${nexus.url}</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -261,6 +284,17 @@
             </plugin>
         </plugins>
     </reporting>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>${nexus.url}/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>${nexus.url}/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <profiles>
         <profile>
@@ -330,9 +364,7 @@
         <profile>
             <id>gpg</id>
             <activation>
-                <property>
-                    <name>release</name>
-                </property>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <build>
                 <plugins>
@@ -342,12 +374,11 @@
                         <version>1.6</version>
                         <executions>
                             <execution>
+                                <phase>verify</phase>
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
-                                <phase>verify</phase>
                                 <configuration>
-                                    <passphrase>${env.GPG_PASSPHRASE}</passphrase>
                                     <gpgArguments>
                                         <arg>--pinentry-mode</arg>
                                         <arg>loopback</arg>
@@ -359,7 +390,6 @@
                 </plugins>
             </build>
         </profile>
-
         <profile>
             <id>remote-deploy</id>
             <activation>
@@ -389,11 +419,17 @@
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
-            <properties>
-                <altDeploymentRepository>local::default::${local.repository.path}</altDeploymentRepository>
-            </properties>
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>local-snapshot</id>
+                    <url>file://${local.repository.path}/snapshot</url>
+                </snapshotRepository>
+                <repository>
+                    <id>local-release</id>
+                    <url>file://${local.repository.path}/release</url>
+                </repository>
+            </distributionManagement>
             <build>
-                <defaultGoal>deploy</defaultGoal>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -407,6 +443,27 @@
                                 </fileset>
                             </filesets>
                         </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <inherited>false</inherited>
+                        <executions>
+                            <execution>
+                                <id>generate-repository-directories</id>
+                                <phase>generate-sources</phase>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="${local.repository.path}/snapshot" />
+                                        <mkdir dir="${local.repository.path}/release" />
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
