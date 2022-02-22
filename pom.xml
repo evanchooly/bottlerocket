@@ -11,7 +11,7 @@
 
     <groupId>com.antwerkz.bottlerocket</groupId>
     <artifactId>bottlerocket</artifactId>
-    <version>0.30.1-SNAPSHOT</version>
+    <version>0.31.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>bottlerocket</name>
