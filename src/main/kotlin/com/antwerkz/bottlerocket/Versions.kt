@@ -3,30 +3,20 @@ package com.antwerkz.bottlerocket
 import com.github.zafarkhaja.semver.Version
 
 enum class Versions {
+    Version60 {
+        override fun version(): Version = Version.valueOf("6.0.0-rc11")
+    },
     Version50 {
-        override fun version(): Version {
-            return Version.forIntegers(5, 0, 4)
-        }
+        override fun version(): Version = Version.forIntegers(5, 0, 9)
     },
     Version44 {
-        override fun version(): Version {
-            return Version.forIntegers(4, 4, 10)
-        }
+        override fun version(): Version = Version.forIntegers(4, 4, 15)
     },
     Version42 {
-        override fun version(): Version {
-            return Version.forIntegers(4, 2, 17)
-        }
+        override fun version(): Version = Version.forIntegers(4, 2, 21)
     },
     Version40 {
-        override fun version(): Version {
-            return Version.forIntegers(4, 0, 27)
-        }
-    },
-    Version36 {
-        override fun version(): Version {
-            return Version.forIntegers(3, 6, 23)
-        }
+        override fun version(): Version = Version.forIntegers(4, 0, 28)
     };
 
     companion object {

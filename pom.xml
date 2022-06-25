@@ -24,17 +24,16 @@
     </scm>
 
     <properties>
-        <kotlin.version>1.6.0</kotlin.version>
-        <slf4j.version>1.7.32</slf4j.version>
-        <testng.version>7.1.0</testng.version>
+        <kotlin.version>1.7.0</kotlin.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <testng.version>7.6.0</testng.version>
         <jacoco.version>0.8.1</jacoco.version>
-        <dokka.version>1.6.0</dokka.version>
+        <dokka.version>1.6.21</dokka.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <downloadSources>true</downloadSources>
         <nexus.url>https://oss.sonatype.org</nexus.url>
-        <project.repository>evanchooly/bottlerocket</project.repository>
-        <repository.url>git@github.com:${project.repository}.git</repository.url>    </properties>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -243,21 +242,9 @@
            </plugin>
 -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>3.0.0-M1</version>
-                <configuration>
-                    <useReleaseProfile>false</useReleaseProfile>
-                    <releaseProfiles>publication,gpg</releaseProfiles>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <tagNameFormat>v@{project.version}</tagNameFormat>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.8</version>
-                <extensions>true</extensions>
+                <version>1.6.13</version>
                 <configuration>
                     <serverId>central</serverId>
                     <nexusUrl>${nexus.url}</nexusUrl>
@@ -287,11 +274,11 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
+            <id>central</id>
             <url>${nexus.url}/content/repositories/snapshots</url>
         </snapshotRepository>
         <repository>
-            <id>ossrh</id>
+            <id>central</id>
             <url>${nexus.url}/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
@@ -304,8 +291,38 @@
                     <name>release</name>
                 </property>
             </activation>
+            <properties>
+                <skipTests>true</skipTests>
+            </properties>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>enforce-environment-variable-is-set</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireEnvironmentVariable>
+                                            <variableName>MAVEN_USERNAME</variableName>
+                                        </requireEnvironmentVariable>
+                                        <requireEnvironmentVariable>
+                                            <variableName>MAVEN_CENTRAL_TOKEN</variableName>
+                                        </requireEnvironmentVariable>
+                                        <requireEnvironmentVariable>
+                                            <variableName>MAVEN_GPG_PASSPHRASE</variableName>
+                                        </requireEnvironmentVariable>
+                                    </rules>
+                                    <fail>true</fail>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>com.coderplus.maven.plugins</groupId>
                         <artifactId>copy-rename-maven-plugin</artifactId>
@@ -319,7 +336,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <sourceFile>${session.executionRootDirectory}/LICENSE</sourceFile>
-                                    <destinationFile>${project.build.outputDirectory}/META-INF/LICENSE-${project.identifier}
+                                    <destinationFile>${project.build.outputDirectory}/META-INF/LICENSE-${project.artifactId}
                                     </destinationFile>
                                 </configuration>
                             </execution>
@@ -328,7 +345,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.3.1</version>
+                        <version>3.4.0</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -405,7 +422,7 @@
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.8</version>
+                        <version>1.6.13</version>
                         <extensions>true</extensions>
                         <configuration>
                             <serverId>central</serverId>
@@ -436,7 +453,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-clean-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <version>3.2.0</version>
                         <inherited>false</inherited>
                         <configuration>
                             <filesets>
@@ -449,7 +466,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-antrun-plugin</artifactId>
-                        <version>3.0.0</version>
+                        <version>3.1.0</version>
                         <inherited>false</inherited>
                         <executions>
                             <execution>
@@ -457,8 +474,8 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <target>
-                                        <mkdir dir="${local.repository.path}/snapshot" />
-                                        <mkdir dir="${local.repository.path}/release" />
+                                        <mkdir dir="${local.repository.path}/snapshot"/>
+                                        <mkdir dir="${local.repository.path}/release"/>
                                     </target>
                                 </configuration>
                                 <goals>

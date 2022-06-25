@@ -23,8 +23,6 @@ open class MongoDistribution(val version: Version) {
         private val LOG = LoggerFactory.getLogger(MongoDistribution::class.java)
         internal fun of(version: Version): MongoDistribution {
             return when ("${version.majorVersion}.${version.minorVersion}") {
-                "5.0" -> MongoDistribution(version)
-                "4.4" -> MongoDistribution(version)
                 "4.2" -> object: MongoDistribution(version) {
                     override fun linux() = maxUbuntu(super.linux(), "ubuntu1804")
                     override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2012plus-$version.zip"
@@ -34,13 +32,7 @@ open class MongoDistribution(val version: Version) {
                     override fun macDownload(version: Version) = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-$version.tgz"
                     override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-$version.zip"
                 }
-                "3.6" -> object : MongoDistribution(version) {
-                    override fun linux() = maxUbuntu(super.linux(), "ubuntu1804")
-                    override fun linuxDownload(version: Version) = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-$version.tgz"
-                    override fun macDownload(version: Version) = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-$version.tgz"
-                    override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-$version.zip"
-                }
-                else -> throw IllegalArgumentException("Unsupported version $version")
+                else -> MongoDistribution(version)
             }
         }
     }

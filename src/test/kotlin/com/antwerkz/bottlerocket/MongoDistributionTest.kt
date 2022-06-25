@@ -23,8 +23,7 @@ class MongoDistributionTest : BaseTest() {
         }
     }
 
-    // disabled by default to avoid churn. let OS failures get picked up on travis first
-    @Test(dataProvider = "version-matrix", enabled = false)
+    @Test(dataProvider = "version-matrix")
     fun downloads(version: Version, os: String) {
         val distribution = MongoDistribution.of(version)
 
@@ -32,6 +31,7 @@ class MongoDistributionTest : BaseTest() {
         val url = when (os) {
             "osx" -> distribution.macDownload(version)
             "windows" -> distribution.windowsDownload(version)
+            "linux" -> distribution.linuxDownload(version)
             else -> TODO()
         }
 
