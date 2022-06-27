@@ -7,7 +7,7 @@ import org.testng.Assert.assertNotNull
 import org.testng.annotations.Test
 
 class Tester: BottleRocketTest() {
-    override fun version(): Version? {
+    override fun version(): Version {
         return BottleRocket.DEFAULT_VERSION
     }
 

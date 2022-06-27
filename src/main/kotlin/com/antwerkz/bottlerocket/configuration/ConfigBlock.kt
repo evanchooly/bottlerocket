@@ -1,5 +1,6 @@
 package com.antwerkz.bottlerocket.configuration
 
+import java.util.Locale
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
@@ -84,5 +85,5 @@ fun Map<*, *>.toYaml(indent: String = ""): String {
 }
 
 fun String.toCamelCase(): String {
-    return if (length > 1) this[0].toLowerCase() + substring(1) else toLowerCase()
+    return if (length > 1) this[0].lowercaseChar() + substring(1) else lowercase(Locale.getDefault())
 }

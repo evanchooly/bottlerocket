@@ -27,7 +27,6 @@ class MongoDistributionTest : BaseTest() {
     fun downloads(version: Version, os: String) {
         val distribution = MongoDistribution.of(version)
 
-        distribution.downloadPath = File("target")
         val url = when (os) {
             "osx" -> distribution.macDownload(version)
             "windows" -> distribution.windowsDownload(version)
@@ -42,17 +41,16 @@ class MongoDistributionTest : BaseTest() {
     fun linux(version: Version, linuxDistribution: LinuxDistribution) {
         val distribution = MongoDistribution.of(version)
         distribution.linux = linuxDistribution
-        distribution.downloadPath = File("target")
 
         validate(distribution, distribution.linuxDownload(version))
     }
 
-    @DataProvider(name = "linuxDownloads")
+    @DataProvider(name = "linuxDownloads", parallel = true)
     fun linuxDownloads(): Array<Array<Any>> {
         val downloads = Versions.list()
             .flatMap { version: Version ->
                 File("src/test/resources/releases")
-                    .listFiles { dir, name -> name.endsWith("release") }!!
+                    .listFiles { _, name -> name.endsWith("release") }!!
                     .map { arrayOf(version, LinuxDistribution.parse(it)) }
             }
             .toTypedArray()

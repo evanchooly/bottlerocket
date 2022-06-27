@@ -1,5 +1,7 @@
 package com.antwerkz.bottlerocket.configuration.types
 
+import java.util.Locale
+
 enum class ProfilingMode {
     OFF,
     ALL,
@@ -10,6 +12,6 @@ enum class ProfilingMode {
     };
 
     override fun toString(): String {
-        return name.toLowerCase()
+        return name.lowercase(Locale.getDefault())
     }
 }

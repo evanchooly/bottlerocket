@@ -20,6 +20,7 @@ import org.zeroturnaround.process.PidProcess
 import org.zeroturnaround.process.Processes
 import java.io.File
 import java.io.FileOutputStream
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 abstract class MongoExecutable
@@ -86,7 +87,7 @@ abstract class MongoExecutable
 
     fun shutdownWithKill() {
         if (isAlive()) {
-            logger.info("Stopping ${this::class.java.simpleName.toLowerCase()} $name")
+            logger.info("Stopping ${this::class.java.simpleName.lowercase(Locale.getDefault())} $name")
             process?.destroy(true)
         }
     }

@@ -1,9 +1,11 @@
 package com.antwerkz.bottlerocket.configuration.types
 
+import java.util.Locale
+
 enum class SslMode {
     DISABLED {
         override fun toString(): String {
-            return name.toLowerCase()
+            return name.lowercase(Locale.getDefault())
         }
     },
     ALLOW,
@@ -11,6 +13,6 @@ enum class SslMode {
     REQUIRE;
 
     override fun toString(): String {
-        return name.toLowerCase() + "SSL"
+        return name.lowercase(Locale.getDefault()) + "SSL"
     }
 }

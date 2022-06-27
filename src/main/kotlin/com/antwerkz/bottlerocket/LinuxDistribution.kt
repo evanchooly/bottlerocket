@@ -21,7 +21,10 @@ sealed class LinuxDistribution(private val meta: Properties) {
                     else -> throw UnsupportedOperationException("Unknown distribution:  $name")
                 }
             } else {
-                throw IllegalArgumentException("release file does not exist:  $osRelease")
+                LOG.warn("No /etc/os-release file found.  Assuming Ubuntu.")
+                val props = Properties()
+                props["VERSION_ID"] = "20.04"
+                Ubuntu(props)
             }
         }
     }
