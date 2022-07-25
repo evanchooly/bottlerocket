@@ -39,6 +39,7 @@ class ConfigurationDocsTest: BaseTest() {
         }
         val doc = Jsoup.parse(file, "UTF-8")
         return doc.select("a[class=headerlink]")
+            .toList()
             .filter { it.attr("href").contains('.') }
             .map { it.attr("href").substring(1) }
             .sorted()
