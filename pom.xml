@@ -24,11 +24,11 @@
     </scm>
 
     <properties>
-        <kotlin.version>1.7.0</kotlin.version>
+        <kotlin.version>1.7.10</kotlin.version>
         <slf4j.version>1.7.36</slf4j.version>
         <testng.version>7.6.0</testng.version>
         <jacoco.version>0.8.1</jacoco.version>
-        <dokka.version>1.6.21</dokka.version>
+        <dokka.version>1.7.10</dokka.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <downloadSources>true</downloadSources>
@@ -114,6 +114,12 @@
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>1.14.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.13.3</version>
             <scope>test</scope>
         </dependency>
 
