@@ -7,10 +7,10 @@ import org.apache.commons.compress.archivers.ArchiveInputStream
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipUtils
-import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.SystemUtils
 import org.apache.hc.client5.http.fluent.Request
 import org.slf4j.LoggerFactory
+import org.testng.CommandLineArgs.LOG
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -123,30 +123,29 @@ open class MongoDistribution(val version: Version) {
 
     private fun File.extract(): File {
         val destination = File(parentFile, "mongo-$version")
-        if (GzipUtils.isCompressedFilename(name)) {
-            TarArchiveInputStream(GZIPInputStream(FileInputStream(this))).use { inputStream ->
-                extract(inputStream, destination)
-            }
+        val stream = if (GzipUtils.isCompressedFilename(name)) {
+            TarArchiveInputStream(GZIPInputStream(FileInputStream(this)))
         } else {
-            ZipArchiveInputStream(FileInputStream(this)).use { inputStream ->
-                extract(inputStream, destination)
-            }
+            ZipArchiveInputStream(FileInputStream(this))
         }
+        stream.extractTo(destination)
         return destination
     }
 
-    private fun extract(inputStream: ArchiveInputStream, destination: File) {
-        var entry: ArchiveEntry? = inputStream.nextEntry
-        while (entry != null) {
-            val file = File(destination, entry.name.substringAfter("/"))
-            file.parentFile.mkdirs()
-            if (!file.exists() || entry.size != file.length()) {
-                LOG.debug("Extracting archive entry to $file")
-                FileOutputStream(file).use {
-                    IOUtils.copy(inputStream, it)
+    private fun ArchiveInputStream.extractTo(destination: File) {
+        use { inputStream ->
+            var entry: ArchiveEntry? = inputStream.nextEntry
+            while (entry != null) {
+                val file = File(destination, entry.name.substringAfter("/"))
+                file.parentFile.mkdirs()
+                if (!file.exists() || entry.size != file.length()) {
+                    LOG.debug("Extracting archive entry to $file")
+                    FileOutputStream(file).use {
+                        inputStream.copyTo(it)
+                    }
                 }
+                entry = inputStream.nextEntry
             }
-            entry = inputStream.nextEntry
         }
     }
 }
