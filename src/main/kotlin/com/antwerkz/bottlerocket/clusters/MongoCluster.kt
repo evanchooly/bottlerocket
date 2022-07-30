@@ -37,7 +37,14 @@ abstract class MongoCluster(
     internal val mongoManager: MongoManager = MongoManager(version)
 //    val keyFile: String = File(clusterRoot, "rocket.key").absolutePath
 //    val pemFile: String = File(clusterRoot, "rocket.pem").absolutePath
-    private var adminClient: MongoClient? = null
+val adminClient: MongoClient by lazy {
+        val builder = builder()
+        configure(builder)
+        if (isAuthEnabled()) {
+            builder.credential(createCredential(MongoExecutable.SUPER_USER, "admin", SUPER_USER_PASSWORD.toCharArray()))
+        }
+        MongoClients.create(builder.build())
+    }
     private var client: MongoClient? = null
     private var credentials: MongoCredential? = null
     var configuration = Configuration()
@@ -55,13 +62,12 @@ abstract class MongoCluster(
     }
 
     open fun start() {
-        mongoManager.addAdminUser(getAdminClient())
+        mongoManager.addAdminUser(adminClient)
     }
 
     open fun shutdown() {
         sleep(1000)  // make sure the processes are gone
-        adminClient?.close()
-        adminClient = null
+        adminClient.close()
         client?.close()
         client = null
         mongoManager.deleteBinaries()
@@ -78,25 +84,16 @@ abstract class MongoCluster(
         }
     */
     fun clean() {
-        println("cleaning cluster root: $clusterRoot")
-        clusterRoot.deleteRecursively()
+        if (clusterRoot.exists()) {
+            println("cleaning cluster root: $clusterRoot")
+            if (!clusterRoot.deleteRecursively()) {
+                throw java.lang.RuntimeException("Failed to clean ${clusterRoot}")
+            }
+        }
     }
 
     override fun configure(update: Configuration) {
         configuration = configuration.update(update)
-    }
-
-    fun getAdminClient(): MongoClient {
-        if (adminClient == null) {
-            val builder = builder()
-            configure(builder)
-            if (isAuthEnabled()) {
-                builder.credential(createCredential(MongoExecutable.SUPER_USER, "admin", SUPER_USER_PASSWORD.toCharArray()))
-            }
-            adminClient = MongoClients.create(builder.build())
-        }
-
-        return adminClient!!
     }
 
     @JvmOverloads
@@ -212,7 +209,7 @@ abstract class MongoCluster(
 */
 
     fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
-        mongoManager.addUser(getAdminClient(), database, userName, password, roles)
+        mongoManager.addUser(adminClient, database, userName, password, roles)
         credentials = createCredential(userName, database, password.toCharArray())
     }
 

@@ -56,18 +56,12 @@ open class BaseTest {
     }
 
     fun validateShards(cluster: MongoCluster) {
-        val list = cluster.getAdminClient()
+        val list = cluster.adminClient
             .getDatabase("config")
             .getCollection("shards")
             .find()
             .into(ArrayList())
         Assert.assertEquals(list.size, 1, "Should find 1 shard")
-        for (document in list ?: listOf()) {
-            when (document.getString("_id")) {
-                "shard-0" -> Assert.assertEquals(document["host"], "shard-0/localhost:30001")
-                else -> Assert.fail("found unknown shard member: $document")
-            }
-        }
     }
 
     protected fun basePath(version: Version): File {

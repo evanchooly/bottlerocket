@@ -18,18 +18,35 @@ class ShardedCluster @JvmOverloads constructor(
 ) : MongoCluster(baseDir, name, version, allocator) {
     val shards = arrayListOf<ReplicaSet>()
     val mongoses = arrayListOf<Mongos>()
-    lateinit var configServer: ReplicaSet
+    val configServer: ReplicaSet
     var initialized = false
+
+    init {
+        configServer = ReplicaSet(File(clusterRoot, "configserver"), "configserver", version, allocator = allocator)
+        configServer.configure {
+                sharding {
+                    clusterRole = configsvr
+                }
+            }
+        addShard()
+        addMongos()
+    }
 
     override
     fun start() {
         if (!isStarted()) {
-            startConfigServer()
-            startShards()
-            startMongoses()
+            configServer.start()
 
-            mongoses.forEach { it.start() }
             shards.forEach { it.start() }
+
+            mongoses.forEach {
+                it.configure {
+                    sharding {
+                        configDB = configServer.replicaSetUrl()
+                    }
+                }
+                it.start()
+            }
 
             if (!initialized) {
                 shards.forEach { addMember(it) }
@@ -42,18 +59,18 @@ class ShardedCluster @JvmOverloads constructor(
     private fun addMember(replicaSet: ReplicaSet) {
         replicaSet.configure(configuration)
         val replSetUrl = replicaSet.replicaSetUrl()
-        val results = mongoses.first().runCommand("{ addShard: $replSetUrl }")
+        val results = mongoses.first().runCommand("{ addShard: '$replSetUrl' }")
 
         if (results.getDouble("ok").toInt() != 1) {
             throw RuntimeException("Failed to add ${replicaSet.name} to cluster:  $results")
         }
     }
-
     override fun isStarted(): Boolean {
-        return mongoses.filter { it.isAlive() }.count() != 0 &&
+        return mongoses.any { it.isAlive() } &&
             configServer.isStarted() &&
-            shards.filter { it.isStarted() }.count() != 0
+            shards.any { it.isStarted() }
     }
+
 /*
     override
     fun enableAuth() {
@@ -76,16 +93,8 @@ class ShardedCluster @JvmOverloads constructor(
         configServer.configure(update)
     }
 
-    private fun startShards() {
-        if (shards.isEmpty()) {
-            addShard()
-        }
-        for (replicaSet in shards) {
-            replicaSet.start()
-        }
-    }
-
-    fun addShard(shard: ReplicaSet = ReplicaSet(File(clusterRoot, "shard-${shards.size}"), "shard-${shards.size}", allocator = allocator)) {
+    fun addShard(shard: ReplicaSet = ReplicaSet(File(clusterRoot, "shard${shards.size}"),
+        "shard-${shards.size}", version, allocator)) {
         shard.configure(configuration)
         shard.configure {
             sharding {
@@ -96,40 +105,10 @@ class ShardedCluster @JvmOverloads constructor(
         shards += shard
     }
 
-    private fun startConfigServer() {
-        if (!::configServer.isInitialized) {
-            addConfigServer()
-        }
-        configServer.start()
-    }
-
-    fun addConfigServer(replSet: ReplicaSet = ReplicaSet(File(clusterRoot, "configserver"), "configserver", version, allocator = allocator)) {
-        replSet.configure {
-            sharding {
-                clusterRole = configsvr
-            }
-        }
-        configServer = replSet
-    }
-
-    private fun startMongoses() {
-        if (mongoses.isEmpty()) {
-            addMongos()
-        }
-        for (mongos in mongoses) {
-            mongos.configure {
-                sharding {
-                    configDB = configServer.replicaSetUrl()
-                }
-            }
-            mongos.start()
-        }
-    }
-
     fun addMongos(config: Configuration = configuration { }) {
         val port = allocator.next()
         val nodeName = "$name-$port"
-        val mongos = mongoManager.mongos(File(clusterRoot, nodeName), nodeName, port)
+        val mongos = mongoManager.mongos(File(File(clusterRoot, "mongos"), nodeName), nodeName, port)
         mongos.configure(configuration)
         mongos.configure(config)
         mongoses += mongos

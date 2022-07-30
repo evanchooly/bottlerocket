@@ -2,13 +2,17 @@ package com.antwerkz.bottlerocket.clusters
 
 import com.antwerkz.bottlerocket.BottleRocket
 import com.antwerkz.bottlerocket.configuration.Configuration
+import com.antwerkz.bottlerocket.doc
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.runCommand
 import com.github.zafarkhaja.semver.Version
 import com.jayway.awaitility.Awaitility
+import com.jayway.awaitility.Duration
 import com.mongodb.ServerAddress
 import org.bson.Document
+import org.bson.json.JsonWriterSettings
 import java.io.File
+import java.lang.Thread.sleep
 import java.util.concurrent.TimeUnit.SECONDS
 
 class ReplicaSet @JvmOverloads constructor(
@@ -17,10 +21,11 @@ class ReplicaSet @JvmOverloads constructor(
     version: Version = BottleRocket.DEFAULT_VERSION,
     allocator: PortAllocator = BottleRocket.PORTS,
 ) : MongoCluster(clusterRoot, name, version, allocator) {
-    private var nodeMap = hashMapOf<Int, Mongod>()
-    var initialized: Boolean = false
+    private var members = mutableListOf<Mongod>()
+    private var initialized: Boolean = false
 
     init {
+        addNode()
         configure {
             replication {
                 oplogSizeMB = 10
@@ -32,56 +37,59 @@ class ReplicaSet @JvmOverloads constructor(
     override
     fun start() {
         if (!isStarted()) {
-            if (nodeMap.isEmpty()) {
-                addNode()
-            }
-
-            for (node in nodeMap.values) {
+            for (node in members) {
                 node.start()
             }
 
             initialize()
+            Awaitility.await()
+                .atMost(Duration.TEN_SECONDS)
+                .pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS)
+                .until<Boolean> {
+                    members
+                        .map { getClient() }
+                        .any {
+                            val document = it.runCommand("{ isMaster: null }")
+//                            println("document = ${document.toJson(JsonWriterSettings.builder().indent(true).build())}")
+
+                            document.getBoolean("ismaster", false)
+                        }
+                }
             super.start()
         }
     }
 
     override fun isStarted(): Boolean {
-        return nodeMap.values.filter { it.isAlive() }.count() != 0
+        return members.any { it.isAlive() }
     }
 
     fun addNode(config: Configuration = Configuration()) {
         val port = config.net?.port ?: allocator.next()
-        val nodeName = "$name-node${nodeMap.size}"
+        val nodeName = "$name-node${members.size}"
         val node = mongoManager.mongod(File(clusterRoot, nodeName), nodeName, port)
         node.configure(configuration.update(config))
 
-        nodeMap.put(node.port, node)
+        members += node
     }
 
     fun getPrimary(): Mongod? {
-        nodeMap.values
+        return members
             .filter { it.isAlive() }
-            .forEach { mongod ->
-                val result = mongod.getClient()
+            .firstOrNull { mongod ->
+                mongod.getClient()
                     .runCommand("{ isMaster: null }")
-
-                if (result.containsKey("primary")) {
-                    return nodeMap[result.getString("primary").substringAfter(":").toInt()]
-                }
+                    .containsKey("primary")
             }
-        return null
     }
 
-    fun hasPrimary(): Boolean {
-        return getPrimary() != null
-    }
+    fun hasPrimary(): Boolean = getPrimary() != null
 
     fun waitForPrimary(): Mongod? {
         Awaitility.await("Waiting for primary in $clusterRoot")
             .atMost(30, SECONDS)
-            .until<Boolean>({
+            .until<Boolean> {
                 hasPrimary()
-            })
+            }
 
         return getPrimary()
     }
@@ -89,7 +97,7 @@ class ReplicaSet @JvmOverloads constructor(
     override
     fun shutdown() {
         val primary = getPrimary()
-        nodeMap.values
+        members
             .filter { it != primary }
             .forEach(Mongod::shutdown)
         primary?.shutdown()
@@ -103,8 +111,8 @@ class ReplicaSet @JvmOverloads constructor(
             nodes.forEach { mongoManager.enableAuth(it, keyFile) }
         }
     */
-    fun initialize() {
-        val first = nodeMap.values.filter { it.isAlive() }.firstOrNull() ?: throw IllegalStateException("No servers found")
+    private fun initialize() {
+        val first = members.firstOrNull { it.isAlive() } ?: throw IllegalStateException("No servers found")
         val replicaSetConfig = mongoManager.getReplicaSetConfig(first.getClient())
         if (!initialized && replicaSetConfig == null) {
             initiateReplicaSet()
@@ -112,21 +120,14 @@ class ReplicaSet @JvmOverloads constructor(
             waitForPrimary()
             logger.info("primary found.  adding other members.")
             addMemberNodes()
-            waitForPrimary()
+            waitForPrimary() ?: throw IllegalStateException("Should have found a primary node.")
 
-            if (getPrimary() == null) {
-                throw IllegalStateException("Should have found a primary node.")
-            }
-            if(version.lessThan(Version.forIntegers(4))) {
-                logger.info("Waiting a moment to let the cluster settle.")
-                Thread.sleep(3000)
-            }
             logger.info("replica set $name started.")
         }
     }
 
     private fun initiateReplicaSet() {
-        val primary = nodeMap.values.first()
+        val primary = members.first()
         val results = primary.getClient()
             .runCommand(
                 """{
@@ -147,16 +148,16 @@ class ReplicaSet @JvmOverloads constructor(
     }
 
     private fun addMemberNodes() {
-        if (nodeMap.size > 1) {
-            val client = getAdminClient()
+        if (members.size > 1) {
+            val client = adminClient
             val config = mongoManager.getReplicaSetConfig(client)
             if (config != null) {
-                config.set("version", config.getInteger("version") + 1)
+                config["version"] = config.getInteger("version") + 1
                 val members = config.getList("members", Document::class.java)
                 var id = members[0].getInteger("_id")
-                nodeMap.values.asSequence().withIndex()
+                this.members.withIndex()
                     .filter { it.index > 0 }
-                    .map { Document("_id", ++id).append("host", "localhost:${it.value.port}") }
+                    .map { "{ _id: ${++id}, host: localhost:${it.value.port}".doc() }
                     .toCollection(members)
                 val results = client.runCommand(Document("replSetReconfig", config))
 
@@ -171,20 +172,21 @@ class ReplicaSet @JvmOverloads constructor(
 
     override fun configure(update: Configuration) {
         super.configure(update)
-        nodeMap.values.forEach {
+        members.forEach {
             it.configure(update)
         }
     }
 
     override fun getServerAddressList(): List<ServerAddress> {
-        return nodeMap.values.map { it.getServerAddress() }
+        return members.map { it.getServerAddress() }
     }
 
     override fun isAuthEnabled(): Boolean {
-        return nodeMap.values.map { it.isAuthEnabled() }.fold(true) { r, t -> r && t }
+        return members.map { it.isAuthEnabled() }.fold(true) { r, t -> r && t }
     }
 
     fun replicaSetUrl(): String {
-        return "$name/" + (nodeMap.values.joinToString(",") { "localhost:${it.port}" })
+        return "$name/" + (members.joinToString(",") { "localhost:${it.port}" })
     }
+
 }

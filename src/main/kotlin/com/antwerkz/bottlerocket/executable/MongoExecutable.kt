@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
 abstract class MongoExecutable
     internal constructor(internal val manager: MongoManager, val baseDir: File, val name: String, val port: Int) : Configurable {
     private var process: PidProcess? = null
-    private lateinit var client: MongoClient
+    private var client: MongoClient? = null
     internal var config = manager.initialConfig(baseDir, name, port)
         private set
     val logger: Logger = LoggerFactory.getLogger("${this::class.simpleName}.$port")
@@ -59,7 +59,7 @@ abstract class MongoExecutable
 
     fun shutdown() {
 //        shutdownWithDriver()
-        client.close()
+        client?.close()
         shutdownWithKill()
         Awaitility
             .await()
@@ -97,7 +97,7 @@ abstract class MongoExecutable
     }
 
     fun getClient(): MongoClient {
-        if (!::client.isInitialized) {
+        if (client == null) {
             this.client = MongoClients.create(MongoClientSettings.builder()
                 .applyToClusterSettings { builder ->
                     builder.hosts(listOf(getServerAddress()))
@@ -105,7 +105,7 @@ abstract class MongoExecutable
                 .build())
         }
 
-        return client
+        return client!!
     }
 
     fun waitForStartUp() {

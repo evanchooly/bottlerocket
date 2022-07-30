@@ -7,13 +7,14 @@ import org.testng.annotations.Test
 import java.io.File
 
 class ShardedClusterTest : BaseTest() {
-    @Test(dataProvider = "versions", enabled = false)
+    @Test(dataProvider = "versions")
     fun sharded(version: Version) {
-        ShardedCluster(baseDir = File("${basePath(DEFAULT_VERSION)}/sharded"), version = version).use {
-            startCluster(it)
-            testClusterWrites(it)
-            validateShards(it)
-        }
+        ShardedCluster(baseDir = File("${basePath(version)}/sharded"), version = version)
+            .use {
+                startCluster(it)
+                testClusterWrites(it)
+                validateShards(it)
+            }
     }
 
     @Test(dataProvider = "versions", enabled = false)

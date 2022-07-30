@@ -9,7 +9,7 @@ class Mongos internal constructor(manager: MongoManager, baseDir: File, name: St
 
     fun start() {
         if (!isAlive()) {
-            logger.info("Starting mongos $name")
+            logger.info("Starting mongos $name (${manager.version})")
             config.writeConfig(File(baseDir, "mongos.conf"), MONGOS)
             exec(listOf(manager.mongos(), "--config", File(baseDir, "mongos.conf").absolutePath))
         } else {

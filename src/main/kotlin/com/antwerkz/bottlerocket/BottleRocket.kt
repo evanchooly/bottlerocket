@@ -28,10 +28,12 @@ object BottleRocket {
 
 internal fun MongoClient.runCommand(command: String): Document {
     return getDatabase("admin")
-        .runCommand(Document.parse(command))
+        .runCommand(command.doc())
 }
 
 internal fun MongoClient.runCommand(command: Document, readPreference: ReadPreference = ReadPreference.primary()): Document {
     return getDatabase("admin")
         .runCommand(command, readPreference)
 }
+
+fun String.doc(): Document = Document.parse(this)
