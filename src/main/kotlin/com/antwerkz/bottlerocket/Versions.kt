@@ -20,7 +20,9 @@ enum class Versions {
     };
 
     companion object {
+        @JvmStatic
         fun latest() = values().first().version()
+        @JvmStatic
         fun list() = values()
             .map { it.version() }
             .toList()

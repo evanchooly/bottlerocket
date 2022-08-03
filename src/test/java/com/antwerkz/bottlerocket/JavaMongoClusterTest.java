@@ -54,7 +54,7 @@ public class JavaMongoClusterTest {
 
     @Test(enabled = false)
     void replicaSet() {
-        final ReplicaSet cluster = new ReplicaSet(new File("target/rocket-java/replicaSet"));
+        final ReplicaSet cluster = new ReplicaSet(BottleRocket.DEFAULT_VERSION, BottleRocket.DEFAULT_NAME, new File("target/rocket-java/replicaSet"));
         try {
             startCluster(cluster);
 
@@ -72,7 +72,7 @@ public class JavaMongoClusterTest {
 
     @Test(enabled = false)
     void sharded() {
-        final ShardedCluster cluster = new ShardedCluster(new File("target/rocket-java/sharded"));
+        final ShardedCluster cluster = new ShardedCluster(BottleRocket.DEFAULT_VERSION, BottleRocket.DEFAULT_NAME, new File("target/rocket-java/sharded"));
         try {
             startCluster(cluster);
             testWrites(cluster);
@@ -98,7 +98,8 @@ public class JavaMongoClusterTest {
 
     @Test(enabled = false)
     void singleNode() throws InterruptedException, UnknownHostException {
-        final SingleNode cluster = new SingleNode(new File("target/rocket-java/singleNode"));
+        final SingleNode cluster = new SingleNode(BottleRocket.DEFAULT_VERSION, BottleRocket.DEFAULT_NAME,
+            new File("target/rocket-java/singleNode"), BottleRocket.PORTS.next());
         try {
             startCluster(cluster);
             testWrites(cluster);

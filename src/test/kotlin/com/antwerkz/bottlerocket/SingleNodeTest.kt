@@ -8,7 +8,7 @@ import java.io.File
 class SingleNodeTest : BaseTest() {
     @Test(dataProvider = "versions")
     fun singleNode(version: Version) {
-        SingleNode(clusterRoot = File("${basePath(version)}/singleNode"), version = version).use {
+        SingleNode(version = version, clusterRoot = File("${basePath(version)}/singleNode")).use {
             startCluster(it)
             testClusterWrites(it)
         }
@@ -16,7 +16,7 @@ class SingleNodeTest : BaseTest() {
 
     @Test(dataProvider = "versions", enabled = false)
     fun singleNodeAuth(version: Version) {
-        SingleNode(clusterRoot = File("${basePath(version)}/singleNodeAuth"), version = version).use {
+        SingleNode(version = version, clusterRoot = File("${basePath(version)}/singleNodeAuth")).use {
             startCluster(it)
             testClusterAuth(it)
             testClusterWrites(it)
