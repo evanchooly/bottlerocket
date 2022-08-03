@@ -26,7 +26,7 @@ open class BottleRocketTest {
         ?.substring(0, 3)?.toDouble()
         ?: throw IllegalStateException("Could not determine server version")
 
-    open fun createCluster(version: Version) = SingleNode(File(dbPath()), databaseName(), version)
+    open fun createCluster(version: Version) = SingleNode(version, databaseName(), clusterRoot = File(dbPath()))
     open fun databaseName() = "mongoTest"
     open fun dbPath() = "target/mongo/"
     open fun uuidRepresentation() = STANDARD

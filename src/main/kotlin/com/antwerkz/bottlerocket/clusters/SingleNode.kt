@@ -8,9 +8,9 @@ import com.mongodb.ServerAddress
 import java.io.File
 
 class SingleNode @JvmOverloads constructor(
-    clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
-    name: String = BottleRocket.DEFAULT_NAME,
     version: Version = BottleRocket.DEFAULT_VERSION,
+    name: String = BottleRocket.DEFAULT_NAME,
+    clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
     port: Int = BottleRocket.PORTS.next()
 ) : MongoCluster(clusterRoot, name, version) {
 

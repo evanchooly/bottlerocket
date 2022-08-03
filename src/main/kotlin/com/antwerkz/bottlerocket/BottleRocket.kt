@@ -23,7 +23,7 @@ object BottleRocket {
     var DEFAULT_BASE_DIR = File(if (File("build").exists()) "build" else "target", DEFAULT_NAME)
 
     @JvmField
-    var PORTS = PortAllocator(DEFAULT_PORT)
+    var PORTS = PortAllocator
 }
 
 internal fun MongoClient.runCommand(command: String): Document {

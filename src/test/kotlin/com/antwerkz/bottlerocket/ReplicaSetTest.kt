@@ -9,7 +9,7 @@ import java.io.File
 class ReplicaSetTest : BaseTest() {
     @Test(dataProvider = "versions")
     fun replicaSet(version: Version) {
-        ReplicaSet(clusterRoot = File("${basePath(version)}/replicaSet"), version = version).use {
+        ReplicaSet(version = version, clusterRoot = File("${basePath(version)}/replicaSet")).use {
             startCluster(it)
             testClusterWrites(it)
             assertHasPrimary(it)
@@ -18,7 +18,7 @@ class ReplicaSetTest : BaseTest() {
 
     @Test(dataProvider = "versions", enabled = false)
     fun replicaSetAuth(version: Version) {
-        ReplicaSet(clusterRoot = File("${basePath(version)}/replicaSetAuth"), version = version).use {
+        ReplicaSet(version = version, clusterRoot = File("${basePath(version)}/replicaSetAuth")).use {
             startCluster(it)
             testClusterAuth(it)
             testClusterWrites(it)

@@ -7,13 +7,15 @@ import com.antwerkz.bottlerocket.configuration.types.ClusterRole.configsvr
 import com.antwerkz.bottlerocket.configuration.types.ClusterRole.shardsvr
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.github.zafarkhaja.semver.Version
+import com.mongodb.MongoClientSettings.Builder
 import com.mongodb.ServerAddress
+import com.mongodb.client.MongoClient
 import java.io.File
 
 class ShardedCluster @JvmOverloads constructor(
-    baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
-    name: String = BottleRocket.DEFAULT_NAME,
     version: Version = BottleRocket.DEFAULT_VERSION,
+    name: String = BottleRocket.DEFAULT_NAME,
+    baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
     allocator: PortAllocator = BottleRocket.PORTS
 ) : MongoCluster(baseDir, name, version, allocator) {
     val shards = arrayListOf<ReplicaSet>()
@@ -22,7 +24,7 @@ class ShardedCluster @JvmOverloads constructor(
     var initialized = false
 
     init {
-        configServer = ReplicaSet(File(clusterRoot, "configserver"), "configserver", version, allocator = allocator)
+        configServer = ReplicaSet(version, "configserver", File(clusterRoot, "configserver"), allocator = allocator)
         configServer.configure {
                 sharding {
                     clusterRole = configsvr
@@ -30,6 +32,10 @@ class ShardedCluster @JvmOverloads constructor(
             }
         addShard()
         addMongos()
+    }
+
+    override fun getClient(builder: Builder): MongoClient {
+        return mongoses.first().getClient()
     }
 
     override
@@ -93,8 +99,10 @@ class ShardedCluster @JvmOverloads constructor(
         configServer.configure(update)
     }
 
-    fun addShard(shard: ReplicaSet = ReplicaSet(File(clusterRoot, "shard${shards.size}"),
-        "shard-${shards.size}", version, allocator)) {
+    fun addShard(shard: ReplicaSet = ReplicaSet(
+        version,
+        "shard-${shards.size}", File(clusterRoot, "shard${shards.size}"), allocator
+    )) {
         shard.configure(configuration)
         shard.configure {
             sharding {

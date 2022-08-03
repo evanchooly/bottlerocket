@@ -11,7 +11,7 @@ import java.io.File
 class MongoDistributionTest : BaseTest() {
     @Test
     fun addUsers() {
-        SingleNode(File("target/rocket/addUsersTest")).use { node ->
+        SingleNode(clusterRoot = File("target/rocket/addUsersTest")).use { node ->
             node.start()
             node.addUser("test", "rocket-user", "i'm a dummy", listOf())
 

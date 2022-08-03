@@ -10,15 +10,13 @@ import com.jayway.awaitility.Awaitility
 import com.jayway.awaitility.Duration
 import com.mongodb.ServerAddress
 import org.bson.Document
-import org.bson.json.JsonWriterSettings
 import java.io.File
-import java.lang.Thread.sleep
 import java.util.concurrent.TimeUnit.SECONDS
 
 class ReplicaSet @JvmOverloads constructor(
-    clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
-    name: String = BottleRocket.DEFAULT_NAME,
     version: Version = BottleRocket.DEFAULT_VERSION,
+    name: String = BottleRocket.DEFAULT_NAME,
+    clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
     allocator: PortAllocator = BottleRocket.PORTS,
 ) : MongoCluster(clusterRoot, name, version, allocator) {
     private var members = mutableListOf<Mongod>()

@@ -15,19 +15,19 @@ class ReuseClusterTest: BaseTest() {
 
     fun reuseSingleNode() {
         reuseDirectory {
-            SingleNode(rootDir)
+            SingleNode(clusterRoot = rootDir)
         }
     }
 
     fun reuseReplicaSet() {
         reuseDirectory {
-            ReplicaSet(rootDir)
+            ReplicaSet(clusterRoot = rootDir)
         }
     }
 
     fun reuseShardedCluster() {
         reuseDirectory {
-            ShardedCluster(rootDir)
+            ShardedCluster(baseDir = rootDir)
         }
     }
 
