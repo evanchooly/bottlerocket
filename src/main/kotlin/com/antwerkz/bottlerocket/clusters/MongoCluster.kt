@@ -14,6 +14,7 @@ import com.mongodb.MongoCredential.createCredential
 import com.mongodb.ServerAddress
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
+import org.bson.UuidRepresentation.STANDARD
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.Closeable
@@ -110,6 +111,7 @@ abstract class MongoCluster(
 
     private fun configure(builder: Builder) {
         builder
+            .uuidRepresentation(STANDARD)
             .applyToConnectionPoolSettings {
                 it.maxWaitTime(30, SECONDS)
             }

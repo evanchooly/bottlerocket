@@ -13,6 +13,7 @@ import com.mongodb.ServerAddress
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
 import org.bson.Document
+import org.bson.UuidRepresentation.STANDARD
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.zeroturnaround.exec.ProcessExecutor
@@ -99,6 +100,7 @@ abstract class MongoExecutable
     fun getClient(): MongoClient {
         if (client == null) {
             this.client = MongoClients.create(MongoClientSettings.builder()
+                .uuidRepresentation(STANDARD)
                 .applyToClusterSettings { builder ->
                     builder.hosts(listOf(getServerAddress()))
                 }

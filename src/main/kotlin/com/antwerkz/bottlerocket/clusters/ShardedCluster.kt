@@ -101,7 +101,7 @@ class ShardedCluster @JvmOverloads constructor(
 
     fun addShard(shard: ReplicaSet = ReplicaSet(
         version,
-        "shard-${shards.size}", File(clusterRoot, "shard${shards.size}"), allocator
+        "shard${shards.size}", File(clusterRoot, "shard${shards.size}"), allocator
     )) {
         shard.configure(configuration)
         shard.configure {
