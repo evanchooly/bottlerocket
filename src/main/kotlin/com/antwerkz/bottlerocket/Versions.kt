@@ -7,7 +7,7 @@ enum class Versions {
         override fun version(): Version = Version.forIntegers(6, 0, 1)
     },
     Version50 {
-        override fun version(): Version = Version.forIntegers(5, 0, 11)
+        override fun version(): Version = Version.forIntegers(5, 0, 12)
     },
     Version44 {
         override fun version(): Version = Version.forIntegers(4, 4, 16)
