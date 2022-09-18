@@ -34,8 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' && github.event_name == 'pull_request' }}
     needs:
-      - Tests
-      - Quality
+      - BottleRocket
     permissions:
       contents: write
       pull-requests: write
