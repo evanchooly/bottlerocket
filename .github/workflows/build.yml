@@ -16,11 +16,11 @@ jobs:
       matrix:
         os: [ ubuntu-22.04, ubuntu-20.04, ubuntu-18.04, ubuntu-16.04, windows-latest, macos-latest ]
         java: [ 11, 17 ]
-    uses: evanchooly/workflows/build-project.yml@master
+    uses: evanchooly/workflows/.github/workflows/build-project.yml@master
     with:
       os: ${{matrix.os}}
       java: ${{matrix.java}}
   dependabot:
     needs:
       - critter
-    uses: evanchooly/workflows/critter.yml@master
+    uses: evanchooly/workflows/.github/workflows/dependabot.yml@master
