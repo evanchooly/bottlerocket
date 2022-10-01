@@ -21,4 +21,6 @@ jobs:
       os: ${{matrix.os}}
       java: ${{matrix.java}}
   Snapshots:
+    needs:
+      - Build
     uses: evanchooly/workflows/.github/workflows/snapshots.yml@master
