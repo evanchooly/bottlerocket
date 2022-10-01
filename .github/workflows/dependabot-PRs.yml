@@ -3,10 +3,10 @@ name: Tests
 on: pull_request
 
 jobs:
-  BottleRocket:
+  Build:
     strategy:
       matrix:
-        os: [ ubuntu-22.04, ubuntu-20.04, ubuntu-18.04, ubuntu-16.04, windows-latest, macos-latest ]
+        os: [ ubuntu-22.04, ubuntu-20.04, ubuntu-18.04, windows-latest, macos-latest ]
         java: [ 11, 17 ]
     uses: evanchooly/workflows/.github/workflows/build-project.yml@master
     with:
@@ -14,5 +14,5 @@ jobs:
       java: ${{matrix.java}}
   dependabot:
     needs:
-      - BottleRocket
+      - Build
     uses: evanchooly/workflows/.github/workflows/dependabot.yml@master
