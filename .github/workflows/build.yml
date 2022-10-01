@@ -12,40 +12,15 @@ on:
 
 jobs:
   BottleRocket:
-    runs-on: ubuntu-latest
-    if: "github.repository == 'evanchooly/bottlerocket' && startsWith(github.ref, 'refs/heads/')"
     strategy:
       matrix:
         os: [ ubuntu-22.04, ubuntu-20.04, ubuntu-18.04, ubuntu-16.04, windows-latest, macos-latest ]
         java: [ 11, 17 ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v2
-        with:
-          java-version: ${{ matrix.java }}
-          distribution: 'temurin'
-          cache: 'maven'
-      - name: Build
-        run: mvn install
+    uses: evanchooly/workflows/build-project.yml@master
+    with:
+      os: ${{matrix.os}}
+      java: ${{matrix.java}}
   dependabot:
-    runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' && github.event_name == 'pull_request' }}
     needs:
-      - BottleRocket
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@v1.1.1
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-      - name: Enable auto-merge for Dependabot PRs
-        run: gh pr merge --auto --merge "$PR_URL"
-        env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - critter
+    uses: evanchooly/workflows/critter.yml@master
