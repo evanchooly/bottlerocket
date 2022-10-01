@@ -22,5 +22,5 @@ jobs:
       java: ${{matrix.java}}
   dependabot:
     needs:
-      - critter
+      - BottleRocket
     uses: evanchooly/workflows/.github/workflows/dependabot.yml@master
