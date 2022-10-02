@@ -9,7 +9,3 @@ jobs:
   release:
     name: Release
     uses: evanchooly/workflows/.github/workflows/release.yml@master
-    with:
-      MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-      MAVEN_CENTRAL_TOKEN: ${{ secrets.SONATYPE_PASSWORD }}
-      MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
