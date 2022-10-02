@@ -11,12 +11,16 @@ on:
     - cron:  '0 0 * * *'
 
 jobs:
-  Build:
-    strategy:
-      matrix:
-        os: [ ubuntu-22.04, ubuntu-20.04, windows-latest, macos-latest ]
-        java: [ 11, 17 ]
-    uses: evanchooly/workflows/.github/workflows/build-project.yml@master
-    with:
-      os: ${{matrix.os}}
-      java: ${{matrix.java}}
+#  Build:
+#    strategy:
+#      matrix:
+#        os: [ ubuntu-22.04, ubuntu-20.04, windows-latest, macos-latest ]
+#        java: [ 11, 17 ]
+#    uses: evanchooly/workflows/.github/workflows/build-project.yml@master
+#    with:
+#      os: ${{matrix.os}}
+#      java: ${{matrix.java}}
+  Snapshots:
+    needs:
+#      - Build
+    uses: evanchooly/workflows/.github/workflows/snapshots.yml@master
