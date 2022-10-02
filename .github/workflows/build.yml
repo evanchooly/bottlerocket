@@ -24,3 +24,9 @@ jobs:
 #    needs:
 #      - Build
     uses: evanchooly/workflows/.github/workflows/snapshots.yml@master
+    secrets:
+      SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+      SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+      MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+      MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
