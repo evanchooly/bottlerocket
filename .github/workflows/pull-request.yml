@@ -1,0 +1,7 @@
+name: Dependabot PRs
+
+on: pull_request
+
+jobs:
+  dependabot:
+    uses: evanchooly/workflows/.github/workflows/pull-request.yml@master
