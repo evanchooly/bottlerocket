@@ -23,7 +23,7 @@ jobs:
   Snapshots:
 #    needs:
 #      - Build
-    uses: evanchooly/workflows/.github/workflows/snapshots.yml@master
+    uses: evanchooly/workflows/.github/workflows/release.yml@master
     secrets:
       SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
       SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
