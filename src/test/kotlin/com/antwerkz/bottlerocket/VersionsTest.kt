@@ -17,6 +17,7 @@ class VersionsTest {
             .flatMap { it.getElementsByTag("li") }
             .map { it.text().substringBefore(" ") }
             .map { Version.valueOf(it) }
+            .filter { it.preReleaseVersion == null}
             .filter { it.greaterThan(Version.valueOf("4.0.0")) }
             .filter { it !in Versions.list() }
 
