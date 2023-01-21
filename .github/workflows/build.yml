@@ -20,7 +20,6 @@ jobs:
     with:
       os: ${{matrix.os}}
       java: ${{matrix.java}}
-      experimental: ${{ matrix.experimental }}
   Snapshots:
     needs:
       - Build
