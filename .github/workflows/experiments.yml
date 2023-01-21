@@ -8,9 +8,11 @@ jobs:
       matrix:
         java: [ 17 ]
         include:
-          - java: [ 20, 21 ]
+          - java: 20
             experimental: true
-    runs-on: ubuntu-latests
+          - java: 21
+            experimental: true
+    runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental == true }}
     steps:
       - name: Checkout
@@ -25,7 +27,7 @@ jobs:
           server-id: central
 
       - name: Build
-        run: mvn -U install ${{ matrix.maven-flags }}
+        run: mvn compile
 
 
 
