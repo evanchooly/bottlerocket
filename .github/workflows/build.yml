@@ -17,7 +17,6 @@ jobs:
           - java: 20
             experimental: true
     uses: evanchooly/workflows/.github/workflows/build.yml@master
-    continue-on-error: ${{ matrix.experimental }}
     with:
       os: ${{matrix.os}}
       java: ${{matrix.java}}
