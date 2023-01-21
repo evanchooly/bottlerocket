@@ -1,5 +1,7 @@
 name: Experimental Builds
 
+on: push
+
 jobs:
   Build:
     strategy:
