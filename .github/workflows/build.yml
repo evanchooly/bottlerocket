@@ -13,9 +13,6 @@ jobs:
       matrix:
         os: [ ubuntu-22.04, ubuntu-20.04, windows-latest, macos-latest ]
         java: [ 11, 17 ]
-        include:
-          - java: 20
-            experimental: true
     uses: evanchooly/workflows/.github/workflows/build.yml@master
     with:
       os: ${{matrix.os}}
