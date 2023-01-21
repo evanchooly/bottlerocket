@@ -6,7 +6,7 @@ jobs:
   Build:
     strategy:
       matrix:
-        java: [ 17 ]
+        java: [ 11, 17, 19 ]
         include:
           - java: 20
             experimental: true
