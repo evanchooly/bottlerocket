@@ -14,11 +14,12 @@ sealed class LinuxDistribution(private val meta: Properties = Properties()) {
                 osRelease.inputStream().use {
                     props.load(it)
                 }
-                val id = props.getProperty("ID").replace("\"", "")
-                when (id) {
-                    "ubuntu" -> Ubuntu(props)
-                    "fedora" -> Fedora(props)
-                    else -> throw UnsupportedOperationException("Unknown distribution:  $id")
+                val name = props.getProperty("NAME").replace("\"", "")
+                when (name) {
+                    "Ubuntu" -> Ubuntu(props)
+                    "Fedora" -> Fedora(props)
+                    "Fedora Linux" -> Fedora(props)
+                    else -> throw UnsupportedOperationException("Unknown distribution:  $name")
                 }
             } else {
                 LOG.warn("No /etc/os-release file found.  Assuming Ubuntu.")
@@ -47,7 +48,7 @@ sealed class LinuxDistribution(private val meta: Properties = Properties()) {
         }
     }
 
-    internal class TestDistro(val name: String, val version: String, val mongoVersion: String) 
+    internal class TestDistro(val name: String, val version: String, val mongoVersion: String, val id: String = name.lowercase()) 
         : LinuxDistribution() {
         override fun name() = name
         override fun mongoVersion() = mongoVersion

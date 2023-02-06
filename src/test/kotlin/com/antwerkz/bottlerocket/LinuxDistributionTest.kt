@@ -8,9 +8,9 @@ import java.io.File
 
 class LinuxDistributionTest {
     @Test(dataProvider = "distros")
-    private fun distros(testDistro: LinuxDistribution, path: File) {
-        val distribution = LinuxDistribution.parse(path)
-        assertEquals(distribution.name(), testDistro.name())
+    private fun distros(testDistro: TestDistro, path: String) {
+        val distribution = LinuxDistribution.parse(File("target/test-classes/releases/$path"))
+        assertEquals(distribution.name(), testDistro.id)
         assertEquals(distribution.version(), testDistro.version())
         assertEquals(distribution.mongoVersion(), testDistro.mongoVersion())
     }
@@ -18,10 +18,10 @@ class LinuxDistributionTest {
     @DataProvider(name = "distros")
     fun linux(): Array<Array<Any>> {
         return arrayOf(
-            arrayOf(TestDistro("ubuntu", "20.04", "ubuntu2004"), File("target/test-classes/releases/ubuntu2004.release")),
-            arrayOf(TestDistro("ubuntu", "18.04", "ubuntu1804"), File("target/test-classes/releases/ubuntu1804.release")),
-            arrayOf(TestDistro("fedora", "31", "rhel80"), File("target/test-classes/releases/fedora31.release")),
-            arrayOf(TestDistro("fedora", "37", "rhel80"), File("target/test-classes/releases/fedora37.release"))
+            arrayOf(TestDistro("Ubuntu", "20.04", "ubuntu2004"), "ubuntu2004.release"),
+            arrayOf(TestDistro("Ubuntu", "18.04", "ubuntu1804"), "ubuntu1804.release"),
+            arrayOf(TestDistro("Fedora", "31", "rhel80"), "fedora31.release"),
+            arrayOf(TestDistro("Fedora Linux", "37", "rhel80", "fedora"), "fedora37.release")
         )
     }
 }
