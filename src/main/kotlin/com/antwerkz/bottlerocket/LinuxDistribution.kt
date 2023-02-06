@@ -34,7 +34,7 @@ sealed class LinuxDistribution(private val meta: Properties = Properties()) {
     open fun version(): String = meta.getProperty("VERSION_ID").replace("\"", "")
     abstract fun mongoVersion(): String
     override fun toString(): String {
-        return "${name()} ${version()} [MongoDB qualifier: ${mongoVersion()}]"
+        return "${meta.getProperty("ID")} ${version()} [MongoDB qualifier: ${mongoVersion()}]"
     }
 
     class Fedora(props: Properties) : LinuxDistribution(props) {
