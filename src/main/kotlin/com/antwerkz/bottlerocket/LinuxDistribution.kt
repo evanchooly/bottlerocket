@@ -5,7 +5,7 @@ import java.io.File
 import java.util.Properties
 
 @Suppress("unused")
-sealed class LinuxDistribution(private val meta: Properties) {
+sealed class LinuxDistribution(private val meta: Properties = Properties()) {
     companion object {
         private val LOG = LoggerFactory.getLogger(LinuxDistribution::class.java)
         internal fun parse(osRelease: File): LinuxDistribution {
@@ -14,11 +14,11 @@ sealed class LinuxDistribution(private val meta: Properties) {
                 osRelease.inputStream().use {
                     props.load(it)
                 }
-                val name = props.getProperty("NAME").replace("\"", "")
-                when (name) {
-                    "Ubuntu" -> Ubuntu(props)
-                    "Fedora" -> Fedora(props)
-                    else -> throw UnsupportedOperationException("Unknown distribution:  $name")
+                val id = props.getProperty("ID").replace("\"", "")
+                when (id) {
+                    "ubuntu" -> Ubuntu(props)
+                    "fedora" -> Fedora(props)
+                    else -> throw UnsupportedOperationException("Unknown distribution:  $id")
                 }
             } else {
                 LOG.warn("No /etc/os-release file found.  Assuming Ubuntu.")
@@ -33,7 +33,7 @@ sealed class LinuxDistribution(private val meta: Properties) {
     open fun version(): String = meta.getProperty("VERSION_ID").replace("\"", "")
     abstract fun mongoVersion(): String
     override fun toString(): String {
-        return "${this::class.simpleName} ${version()} [MongoDB qualifier: ${mongoVersion()}]"
+        return "${name()} ${version()} [MongoDB qualifier: ${mongoVersion()}]"
     }
 
     class Fedora(props: Properties) : LinuxDistribution(props) {
@@ -47,7 +47,8 @@ sealed class LinuxDistribution(private val meta: Properties) {
         }
     }
 
-    internal class TestDistro(val name: String, val version: String, val mongoVersion: String) : LinuxDistribution(Properties()) {
+    internal class TestDistro(val name: String, val version: String, val mongoVersion: String) 
+        : LinuxDistribution() {
         override fun name() = name
         override fun mongoVersion() = mongoVersion
         override fun version() = version
