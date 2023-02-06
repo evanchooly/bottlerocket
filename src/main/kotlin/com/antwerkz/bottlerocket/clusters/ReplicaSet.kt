@@ -47,10 +47,8 @@ class ReplicaSet @JvmOverloads constructor(
                     members
                         .map { getClient() }
                         .any {
-                            val document = it.runCommand("{ isMaster: null }")
-//                            println("document = ${document.toJson(JsonWriterSettings.builder().indent(true).build())}")
-
-                            document.getBoolean("ismaster", false)
+                            it.runCommand("{ isMaster: null }")
+                                .getBoolean("ismaster", false)
                         }
                 }
             super.start()

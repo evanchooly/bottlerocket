@@ -85,7 +85,7 @@ abstract class MongoCluster(
     */
     fun clean() {
         if (clusterRoot.exists()) {
-            println("cleaning cluster root: $clusterRoot")
+            logger.info("cleaning cluster root: $clusterRoot")
             if (!clusterRoot.deleteRecursively()) {
                 throw java.lang.RuntimeException("Failed to clean ${clusterRoot}")
             }
