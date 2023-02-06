@@ -309,6 +309,21 @@
 
     <profiles>
         <profile>
+            <id>code-audits</id>
+            <activation>
+                <property>
+                    <name>code-audits</name>
+                </property>
+            </activation>
+            <properties>
+                <skipTests>true</skipTests>
+            </properties>
+            <build>
+                <defaultGoal>verify</defaultGoal>
+            </build>
+        </profile>
+
+        <profile>
             <id>publication</id>
             <activation>
                 <property>
