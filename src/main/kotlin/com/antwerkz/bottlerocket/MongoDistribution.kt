@@ -8,9 +8,9 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipUtils
 import org.apache.commons.lang3.SystemUtils
+import org.apache.hc.client5.http.HttpResponseException
 import org.apache.hc.client5.http.fluent.Request
 import org.slf4j.LoggerFactory
-import org.testng.CommandLineArgs.LOG
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -113,10 +113,15 @@ open class MongoDistribution(val version: Version) {
             if (!archive.exists()) {
                 LOG.info("$archive does not exist.  Downloading binaries from $url")
                 archive.parentFile.mkdirs()
-                Request.get(path)
-                    .userAgent("Mozilla/5.0 (compatible; bottlerocket; +https://github.com/evanchooly/bottlerocket)")
-                    .execute()
-                    .saveContent(archive)
+                try {
+                    Request.get(path)
+                        .userAgent("Mozilla/5.0 (compatible; bottlerocket; +https://github.com/evanchooly/bottlerocket)")
+                        .execute()
+                        .saveContent(archive)
+                } catch (e: HttpResponseException) {
+                    LOG.warn("Failed to download archive from $url")
+                    throw e
+                }
             }
         }
     }
