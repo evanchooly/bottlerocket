@@ -30,7 +30,9 @@ sealed class LinuxDistribution(private val meta: Properties = Properties()) {
         }
     }
 
-    open fun name(): String = meta.getProperty("ID")
+    open fun name(): String {
+        return meta.getProperty("ID")
+    }
     open fun version(): String = meta.getProperty("VERSION_ID").replace("\"", "")
     abstract fun mongoVersion(): String
     override fun toString(): String {
