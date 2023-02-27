@@ -42,10 +42,7 @@ sealed class LinuxDistribution(private val meta: Properties = Properties()) {
     }
 
     class Ubuntu(props: Properties) : LinuxDistribution(props) {
-        override fun mongoVersion(): String = "ubuntu" + when (version()) {
-            "18.04", "20.04" -> version().replace(".", "")
-            else -> "1804"
-        }
+        override fun mongoVersion() = "ubuntu" + version().replace(".", "")
     }
 
     internal class TestDistro(val name: String, val version: String, val mongoVersion: String, val id: String = name.lowercase()) 

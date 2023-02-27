@@ -4,16 +4,16 @@ import com.github.zafarkhaja.semver.Version
 
 enum class Versions {
     Version60 {
-        override fun version(): Version = Version.forIntegers(6, 0, 2)
+        override fun version(): Version = Version.forIntegers(6, 0, 4)
     },
     Version50 {
-        override fun version(): Version = Version.forIntegers(5, 0, 13)
+        override fun version(): Version = Version.forIntegers(5, 0, 15)
     },
     Version44 {
-        override fun version(): Version = Version.forIntegers(4, 4, 17)
+        override fun version(): Version = Version.forIntegers(4, 4, 19)
     },
     Version42 {
-        override fun version(): Version = Version.forIntegers(4, 2, 23)
+        override fun version(): Version = Version.forIntegers(4, 2, 24)
     },
     Version40 {
         override fun version(): Version = Version.forIntegers(4, 0, 28)

@@ -18,10 +18,11 @@ class LinuxDistributionTest {
     @DataProvider(name = "distros")
     fun linux(): Array<Array<Any>> {
         return arrayOf(
-            arrayOf(TestDistro("Ubuntu", "20.04", "ubuntu2004"), "ubuntu2004.release"),
-            arrayOf(TestDistro("Ubuntu", "18.04", "ubuntu1804"), "ubuntu1804.release"),
-            arrayOf(TestDistro("Fedora", "31", "rhel80"), "fedora31.release"),
-            arrayOf(TestDistro("Fedora Linux", "37", "rhel80", "fedora"), "fedora37.release")
+            arrayOf(TestDistro("Ubuntu", "22.04", "ubuntu2204"), "os-release-ubuntu2204.release"),
+            arrayOf(TestDistro("Ubuntu", "20.04", "ubuntu2004"), "os-release-ubuntu2004.release"),
+            arrayOf(TestDistro("Ubuntu", "18.04", "ubuntu1804"), "os-release-ubuntu1804.release"),
+            arrayOf(TestDistro("Fedora", "31", "rhel80"), "os-release-fedora31.release"),
+            arrayOf(TestDistro("Fedora", "37", "rhel80"), "os-release-fedora37.release")
         )
     }
 }

@@ -8,6 +8,7 @@ import java.io.File
 class SingleNodeTest : BaseTest() {
     @Test(dataProvider = "versions")
     fun singleNode(version: Version) {
+        assumeNotOldUbuntu(version)
         SingleNode(version = version, clusterRoot = File("${basePath(version)}/singleNode")).use {
             startCluster(it)
             testClusterWrites(it)

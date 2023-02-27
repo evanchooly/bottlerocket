@@ -4,6 +4,7 @@ import com.antwerkz.bottlerocket.clusters.MongoCluster
 import com.github.zafarkhaja.semver.Version
 import org.bson.Document
 import org.testng.Assert
+import org.testng.SkipException
 import org.testng.annotations.DataProvider
 import java.io.File
 import java.util.ArrayList
@@ -66,5 +67,11 @@ open class BaseTest {
 
     protected fun basePath(version: Version): File {
         return File("target/rocket/$version")
+    }
+    protected fun assumeNotOldUbuntu(version: Version) {
+        val distro = LinuxDistribution.parse(File("/etc/os-release"))
+        if (distro.name().equals("ubuntu", true) && version.lessThan(Version.valueOf("6.0.0"))) {
+            throw SkipException("$version not supported on Ubuntu")
+        }
     }
 }

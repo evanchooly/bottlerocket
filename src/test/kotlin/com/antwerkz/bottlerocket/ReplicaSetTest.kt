@@ -9,6 +9,8 @@ import java.io.File
 class ReplicaSetTest : BaseTest() {
     @Test(dataProvider = "versions")
     fun replicaSet(version: Version) {
+        assumeNotOldUbuntu(version)
+
         ReplicaSet(version = version, clusterRoot = File("${basePath(version)}/replicaSet")).use {
             startCluster(it)
             testClusterWrites(it)

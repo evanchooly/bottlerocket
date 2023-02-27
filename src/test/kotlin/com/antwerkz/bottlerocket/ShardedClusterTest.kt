@@ -8,6 +8,7 @@ import java.io.File
 class ShardedClusterTest : BaseTest() {
     @Test(dataProvider = "versions")
     fun sharded(version: Version) {
+        assumeNotOldUbuntu(version)
         ShardedCluster(version = version, baseDir = File("${basePath(version)}/sharded"))
             .use {
                 startCluster(it)
