@@ -11,12 +11,10 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     strategy:
       matrix:
-        os: [ ubuntu-22.04, ubuntu-20.04, windows-latest, macos-latest ]
-        java: [ 11, 17 ]
+        os: [ ubuntu-latest, ubuntu-22.04, ubuntu-20.04, windows-latest, macos-latest ]
     uses: evanchooly/workflows/.github/workflows/build.yml@master
     with:
       os: ${{matrix.os}}
-      java: ${{matrix.java}}
   Snapshots:
     needs:
       - Build
