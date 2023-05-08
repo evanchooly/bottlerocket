@@ -4,7 +4,7 @@ import com.github.zafarkhaja.semver.Version
 
 enum class Versions {
     Version60 {
-        override fun version(): Version = Version.forIntegers(6, 0, 4)
+        override fun version(): Version = Version.forIntegers(6, 0, 5)
     },
     Version50 {
         override fun version(): Version = Version.forIntegers(5, 0, 15)
