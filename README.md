@@ -1,3 +1,6 @@
+This project has been deprecated in favor of [testcontainers](http://testcontainers.org).  I'm keeping it around to test various CI/release changes I want to make for my other projects.  Any new releases should be ignored.
+---
+
 # BottleRocket
 
 BottleRocket is an API to create MongoDB clusters in a variety shapes.  It's intended for use in various testing scenarios where you need
