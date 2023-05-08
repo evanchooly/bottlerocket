@@ -25,7 +25,7 @@
 
     <properties>
         <kotlin.version>1.7.20</kotlin.version>
-        <slf4j.version>2.0.6</slf4j.version>
+        <slf4j.version>2.0.7</slf4j.version>
         <testng.version>7.7.0</testng.version>
         <jacoco.version>0.8.8</jacoco.version>
         <dokka.version>1.7.20</dokka.version>
