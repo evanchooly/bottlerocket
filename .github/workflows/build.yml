@@ -2,26 +2,41 @@ name: Build
 
 on:
   push:
+    branches-ignore:
+      - 'dependabot/**'
+    tags-ignore:
+      - r[0-9]*
   workflow_dispatch:
   schedule:
     - cron:  '0 0 * * *'
 
 jobs:
   Build:
-    if: ${{ github.actor != 'dependabot[bot]' }}
+    uses: evanchooly/workflows/.github/workflows/build.yml@master
+    with:
+      java: 20
+      saveBuild: true
+      maven-flags: "-Dmongodb=6"
+
+  Test:
+    needs:
+      - Build
     strategy:
       matrix:
         os: [ ubuntu-latest, ubuntu-22.04, ubuntu-20.04, windows-latest, macos-latest ]
     uses: evanchooly/workflows/.github/workflows/build.yml@master
     with:
       os: ${{matrix.os}}
+      reuseBuild: true
+      archive-name: "${{matrix.mongo}}-${{matrix.driver}}-${{matrix.java}}-${{github.run_id}}"
   Snapshots:
+    if: github.ref_type == 'branch'
     needs:
-      - Build
+      - Test
     uses: evanchooly/workflows/.github/workflows/release.yml@master
     secrets:
       SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
       SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
       MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-      GH_TOKEN:   ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_OAUTH }}
