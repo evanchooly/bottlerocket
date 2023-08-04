@@ -9,11 +9,13 @@ import com.github.zafarkhaja.semver.Version
 import com.jayway.awaitility.Awaitility
 import com.jayway.awaitility.Duration
 import com.mongodb.ServerAddress
-import org.bson.Document
 import java.io.File
 import java.util.concurrent.TimeUnit.SECONDS
+import org.bson.Document
 
-class ReplicaSet @JvmOverloads constructor(
+class ReplicaSet
+@JvmOverloads
+constructor(
     version: Version = BottleRocket.DEFAULT_VERSION,
     name: String = BottleRocket.DEFAULT_NAME,
     clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
@@ -32,8 +34,7 @@ class ReplicaSet @JvmOverloads constructor(
         }
     }
 
-    override
-    fun start() {
+    override fun start() {
         if (!isStarted()) {
             for (node in members) {
                 node.start()
@@ -46,10 +47,7 @@ class ReplicaSet @JvmOverloads constructor(
                 .until<Boolean> {
                     members
                         .map { getClient() }
-                        .any {
-                            it.runCommand("{ isMaster: null }")
-                                .getBoolean("ismaster", false)
-                        }
+                        .any { it.runCommand("{ isMaster: null }").getBoolean("ismaster", false) }
                 }
             super.start()
         }
@@ -72,30 +70,23 @@ class ReplicaSet @JvmOverloads constructor(
         return members
             .filter { it.isAlive() }
             .firstOrNull { mongod ->
-                mongod.getClient()
-                    .runCommand("{ isMaster: null }")
-                    .containsKey("primary")
+                mongod.getClient().runCommand("{ isMaster: null }").containsKey("primary")
             }
     }
 
     fun hasPrimary(): Boolean = getPrimary() != null
 
     fun waitForPrimary(): Mongod? {
-        Awaitility.await("Waiting for primary in $clusterRoot")
-            .atMost(30, SECONDS)
-            .until<Boolean> {
-                hasPrimary()
-            }
+        Awaitility.await("Waiting for primary in $clusterRoot").atMost(30, SECONDS).until<Boolean> {
+            hasPrimary()
+        }
 
         return getPrimary()
     }
 
-    override
-    fun shutdown() {
+    override fun shutdown() {
         val primary = getPrimary()
-        members
-            .filter { it != primary }
-            .forEach(Mongod::shutdown)
+        members.filter { it != primary }.forEach(Mongod::shutdown)
         primary?.shutdown()
         super.shutdown()
     }
@@ -108,7 +99,8 @@ class ReplicaSet @JvmOverloads constructor(
         }
     */
     private fun initialize() {
-        val first = members.firstOrNull { it.isAlive() } ?: throw IllegalStateException("No servers found")
+        val first =
+            members.firstOrNull { it.isAlive() } ?: throw IllegalStateException("No servers found")
         val replicaSetConfig = mongoManager.getReplicaSetConfig(first.getClient())
         if (!initialized && replicaSetConfig == null) {
             initiateReplicaSet()
@@ -124,9 +116,11 @@ class ReplicaSet @JvmOverloads constructor(
 
     private fun initiateReplicaSet() {
         val primary = members.first()
-        val results = primary.getClient()
-            .runCommand(
-                """{
+        val results =
+            primary
+                .getClient()
+                .runCommand(
+                    """{
                 'replSetInitiate': {
                 '_id': '$name', 
                 'members': [ 
@@ -136,7 +130,7 @@ class ReplicaSet @JvmOverloads constructor(
                     } ],
                 }
             }"""
-            )
+                )
         if (!(results.getDouble("ok")?.toInt()?.equals(1) ?: false)) {
             throw IllegalStateException("Failed to initiate replica set: $results")
         }
@@ -151,7 +145,8 @@ class ReplicaSet @JvmOverloads constructor(
                 config["version"] = config.getInteger("version") + 1
                 val members = config.getList("members", Document::class.java)
                 var id = members[0].getInteger("_id")
-                this.members.withIndex()
+                this.members
+                    .withIndex()
                     .filter { it.index > 0 }
                     .map { "{ _id: ${++id}, host: localhost:${it.value.port}".doc() }
                     .toCollection(members)
@@ -168,9 +163,7 @@ class ReplicaSet @JvmOverloads constructor(
 
     override fun configure(update: Configuration) {
         super.configure(update)
-        members.forEach {
-            it.configure(update)
-        }
+        members.forEach { it.configure(update) }
     }
 
     override fun getServerAddressList(): List<ServerAddress> {
@@ -184,5 +177,4 @@ class ReplicaSet @JvmOverloads constructor(
     fun replicaSetUrl(): String {
         return "$name/" + (members.joinToString(",") { "localhost:${it.port}" })
     }
-
 }

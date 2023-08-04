@@ -2,20 +2,18 @@ package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.clusters.MongoCluster
 import com.github.zafarkhaja.semver.Version
+import java.io.File
+import java.util.ArrayList
 import org.bson.Document
 import org.testcontainers.shaded.org.apache.commons.lang3.SystemUtils
 import org.testng.Assert
 import org.testng.SkipException
 import org.testng.annotations.DataProvider
-import java.io.File
-import java.util.ArrayList
 
 open class BaseTest {
     @DataProvider(name = "versions")
     fun versions(): Array<Version> {
-        return Versions.values()
-            .map { it.version() }
-            .toTypedArray()
+        return Versions.values().map { it.version() }.toTypedArray()
     }
 
     fun testClusterWrites(cluster: MongoCluster) {
@@ -37,12 +35,18 @@ open class BaseTest {
             cluster.start()
             if (enableAuth) {
                 cluster.addUser(
-                    "rockettest", "rocket", "cluster",
-                    listOf(DatabaseRole("readWrite"), DatabaseRole("clusterAdmin", "admin"), DatabaseRole("dbAdmin"))
+                    "rockettest",
+                    "rocket",
+                    "cluster",
+                    listOf(
+                        DatabaseRole("readWrite"),
+                        DatabaseRole("clusterAdmin", "admin"),
+                        DatabaseRole("dbAdmin")
+                    )
                 )
 
                 cluster.shutdown()
-//                cluster.enableAuth()
+                //                cluster.enableAuth()
                 cluster.start()
             }
         }
@@ -58,11 +62,12 @@ open class BaseTest {
     }
 
     fun validateShards(cluster: MongoCluster) {
-        val list = cluster.adminClient
-            .getDatabase("config")
-            .getCollection("shards")
-            .find()
-            .into(ArrayList())
+        val list =
+            cluster.adminClient
+                .getDatabase("config")
+                .getCollection("shards")
+                .find()
+                .into(ArrayList())
         Assert.assertEquals(list.size, 1, "Should find 1 shard")
     }
 
@@ -72,7 +77,9 @@ open class BaseTest {
     protected fun assumeNotOldUbuntu(version: Version) {
         if (SystemUtils.IS_OS_LINUX) {
             val distro = LinuxDistribution.parse(File("/etc/os-release"))
-            if (distro.name().equals("ubuntu", true) && version.lessThan(Version.valueOf("6.0.0"))) {
+            if (
+                distro.name().equals("ubuntu", true) && version.lessThan(Version.valueOf("6.0.0"))
+            ) {
                 throw SkipException("$version not supported on Ubuntu")
             }
         }

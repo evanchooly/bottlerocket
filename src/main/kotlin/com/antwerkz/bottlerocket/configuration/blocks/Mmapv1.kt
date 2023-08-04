@@ -6,13 +6,10 @@ import com.antwerkz.bottlerocket.configuration.Mode
 import com.antwerkz.bottlerocket.configuration.Removed
 
 class Mmapv1(
-    @Removed("4.2.0")
-    @Mode(ConfigMode.MONGOD) var preallocDataFiles: Boolean? = null,
-    @Removed("4.2.0")
-    @Mode(ConfigMode.MONGOD) var nsSize: Int? = null,
+    @Removed("4.2.0") @Mode(ConfigMode.MONGOD) var preallocDataFiles: Boolean? = null,
+    @Removed("4.2.0") @Mode(ConfigMode.MONGOD) var nsSize: Int? = null,
     var quota: Quota? = null,
-    @Removed("4.2.0")
-    @Mode(ConfigMode.MONGOD) var smallFiles: Boolean? = null,
+    @Removed("4.2.0") @Mode(ConfigMode.MONGOD) var smallFiles: Boolean? = null,
     var journal: Journal? = null
 ) : ConfigBlock {
     fun quota(init: Quota.() -> Unit) {
@@ -24,16 +21,12 @@ class Mmapv1(
     }
 
     class Quota(
-        @Removed("4.2.0")
-        @Mode(ConfigMode.MONGOD) var enforced: Boolean? = null,
-        @Removed("4.2.0")
-        @Mode(ConfigMode.MONGOD) var maxFilesPerDB: Int? = null
+        @Removed("4.2.0") @Mode(ConfigMode.MONGOD) var enforced: Boolean? = null,
+        @Removed("4.2.0") @Mode(ConfigMode.MONGOD) var maxFilesPerDB: Int? = null
     ) : ConfigBlock
 
     class Journal(
-        @Removed("4.2.0")
-        @Mode(ConfigMode.MONGOD) var debugFlags: Int? = null,
-        @Removed("4.2.0")
-        @Mode(ConfigMode.MONGOD) var commitIntervalMs: Int? = null
+        @Removed("4.2.0") @Mode(ConfigMode.MONGOD) var debugFlags: Int? = null,
+        @Removed("4.2.0") @Mode(ConfigMode.MONGOD) var commitIntervalMs: Int? = null
     ) : ConfigBlock
 }

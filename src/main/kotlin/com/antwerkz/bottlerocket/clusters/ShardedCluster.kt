@@ -12,7 +12,9 @@ import com.mongodb.ServerAddress
 import com.mongodb.client.MongoClient
 import java.io.File
 
-class ShardedCluster @JvmOverloads constructor(
+class ShardedCluster
+@JvmOverloads
+constructor(
     version: Version = BottleRocket.DEFAULT_VERSION,
     name: String = BottleRocket.DEFAULT_NAME,
     baseDir: File = BottleRocket.DEFAULT_BASE_DIR,
@@ -24,12 +26,14 @@ class ShardedCluster @JvmOverloads constructor(
     var initialized = false
 
     init {
-        configServer = ReplicaSet(version, "configserver", File(clusterRoot, "configserver"), allocator = allocator)
-        configServer.configure {
-                sharding {
-                    clusterRole = configsvr
-                }
-            }
+        configServer =
+            ReplicaSet(
+                version,
+                "configserver",
+                File(clusterRoot, "configserver"),
+                allocator = allocator
+            )
+        configServer.configure { sharding { clusterRole = configsvr } }
         addShard()
         addMongos()
     }
@@ -38,19 +42,14 @@ class ShardedCluster @JvmOverloads constructor(
         return mongoses.first().getClient()
     }
 
-    override
-    fun start() {
+    override fun start() {
         if (!isStarted()) {
             configServer.start()
 
             shards.forEach { it.start() }
 
             mongoses.forEach {
-                it.configure {
-                    sharding {
-                        configDB = configServer.replicaSetUrl()
-                    }
-                }
+                it.configure { sharding { configDB = configServer.replicaSetUrl() } }
                 it.start()
             }
 
@@ -77,32 +76,33 @@ class ShardedCluster @JvmOverloads constructor(
             shards.any { it.isStarted() }
     }
 
-/*
-    override
-    fun enableAuth() {
-        super.enableAuth()
-        configServers.forEach { mongoManager.enableAuth(it, keyFile) }
-        shards.forEach { replSet ->
-            replSet.nodes.forEach { mongoManager.enableAuth(it, keyFile) }
+    /*
+        override
+        fun enableAuth() {
+            super.enableAuth()
+            configServers.forEach { mongoManager.enableAuth(it, keyFile) }
+            shards.forEach { replSet ->
+                replSet.nodes.forEach { mongoManager.enableAuth(it, keyFile) }
+            }
+            mongoses.forEach { mongoManager.enableAuth(it, keyFile) }
         }
-        mongoses.forEach { mongoManager.enableAuth(it, keyFile) }
-    }
-*/
+    */
     override fun configure(update: Configuration) {
         super.configure(update)
-        shards.forEach {
-            it.configure(update)
-        }
-        mongoses.forEach {
-            it.configure(update)
-        }
+        shards.forEach { it.configure(update) }
+        mongoses.forEach { it.configure(update) }
         configServer.configure(update)
     }
 
-    fun addShard(shard: ReplicaSet = ReplicaSet(
-        version,
-        "shard${shards.size}", File(clusterRoot, "shard${shards.size}"), allocator
-    )) {
+    fun addShard(
+        shard: ReplicaSet =
+            ReplicaSet(
+                version,
+                "shard${shards.size}",
+                File(clusterRoot, "shard${shards.size}"),
+                allocator
+            )
+    ) {
         shard.configure(configuration)
         shard.configure {
             sharding {
@@ -113,17 +113,17 @@ class ShardedCluster @JvmOverloads constructor(
         shards += shard
     }
 
-    fun addMongos(config: Configuration = configuration { }) {
+    fun addMongos(config: Configuration = configuration {}) {
         val port = allocator.next()
         val nodeName = "$name-$port"
-        val mongos = mongoManager.mongos(File(File(clusterRoot, "mongos"), nodeName), nodeName, port)
+        val mongos =
+            mongoManager.mongos(File(File(clusterRoot, "mongos"), nodeName), nodeName, port)
         mongos.configure(configuration)
         mongos.configure(config)
         mongoses += mongos
     }
 
-    override
-    fun shutdown() {
+    override fun shutdown() {
         super.shutdown()
         mongoses.forEach { it.shutdown() }
         shards.forEach { it.shutdown() }

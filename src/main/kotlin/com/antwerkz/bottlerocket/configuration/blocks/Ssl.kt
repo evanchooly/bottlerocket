@@ -6,15 +6,12 @@ import com.antwerkz.bottlerocket.configuration.Removed
 import com.antwerkz.bottlerocket.configuration.types.SslMode
 
 class Ssl(
-    @Removed("4.0.0")
-    var sslOnNormalPorts: Boolean? = null,
+    @Removed("4.0.0") var sslOnNormalPorts: Boolean? = null,
     var mode: SslMode? = null,
     var PEMKeyFile: String? = null,
     var PEMKeyPassword: String? = null,
-    @Added("4.0.0")
-    var certificateSelector: String? = null,
-    @Added("4.0.0")
-    var clusterCertificateSelector: String? = null,
+    @Added("4.0.0") var certificateSelector: String? = null,
+    @Added("4.0.0") var clusterCertificateSelector: String? = null,
     var clusterFile: String? = null,
     var clusterCAFile: String? = null,
     var clusterPassword: String? = null,

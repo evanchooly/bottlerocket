@@ -6,12 +6,11 @@ import com.antwerkz.bottlerocket.executable.MongoExecutable
 import com.antwerkz.bottlerocket.executable.Mongod
 import com.antwerkz.bottlerocket.executable.Mongos
 import com.github.zafarkhaja.semver.Version
-import com.mongodb.MongoNotPrimaryException
 import com.mongodb.client.MongoClient
+import java.io.File
 import org.apache.commons.lang3.SystemUtils
 import org.bson.Document
 import org.slf4j.LoggerFactory
-import java.io.File
 
 internal class MongoManager(val version: Version) {
     companion object {
@@ -29,12 +28,8 @@ internal class MongoManager(val version: Version) {
                 bindIp = "127.0.0.1"
                 this.port = port
             }
-            processManagement {
-                pidFilePath = File(baseDir, "$name.pid").path
-            }
-            storage {
-                dbPath = baseDir.path
-            }
+            processManagement { pidFilePath = File(baseDir, "$name.pid").path }
+            storage { dbPath = baseDir.path }
         }
     }
 
@@ -43,8 +38,7 @@ internal class MongoManager(val version: Version) {
     }
 
     fun getReplicaSetConfig(client: MongoClient): Document? {
-        return client.getDatabase("local")
-            .getCollection("system.replset").find().first()
+        return client.getDatabase("local").getCollection("system.replset").find().first()
     }
 
     /*
@@ -57,13 +51,22 @@ internal class MongoManager(val version: Version) {
             })
         }
     */
-    fun addUser(client: MongoClient, database: String, userName: String, password: String, roles: List<DatabaseRole>) {
+    fun addUser(
+        client: MongoClient,
+        database: String,
+        userName: String,
+        password: String,
+        roles: List<DatabaseRole>
+    ) {
         if (!hasUser(client, database, userName)) {
             try {
-                client.getDatabase(database)
-                    .runCommand(Document("createUser", userName)
-                    .append("pwd", password)
-                    .append("roles", roles.map { it.toDB() }))
+                client
+                    .getDatabase(database)
+                    .runCommand(
+                        Document("createUser", userName)
+                            .append("pwd", password)
+                            .append("roles", roles.map { it.toDB() })
+                    )
             } catch (e: Exception) {
                 throw e
             }
@@ -71,16 +74,22 @@ internal class MongoManager(val version: Version) {
     }
 
     private fun hasUser(client: MongoClient, database: String, userName: String): Boolean {
-        val document = client.getDatabase(database)
-            .runCommand(Document("usersInfo", userName))
+        val document = client.getDatabase(database).runCommand(Document("usersInfo", userName))
         return (document["users"] as List<*>?)?.isNotEmpty() ?: false
     }
 
     fun addAdminUser(client: MongoClient) {
-        addUser(client, "admin", MongoExecutable.SUPER_USER, MongoExecutable.SUPER_USER_PASSWORD,
-            listOf(DatabaseRole("root", "admin"),
+        addUser(
+            client,
+            "admin",
+            MongoExecutable.SUPER_USER,
+            MongoExecutable.SUPER_USER_PASSWORD,
+            listOf(
+                DatabaseRole("root", "admin"),
                 DatabaseRole("userAdminAnyDatabase", "admin"),
-                DatabaseRole("readWriteAnyDatabase", "admin")))
+                DatabaseRole("readWriteAnyDatabase", "admin")
+            )
+        )
     }
 
     internal fun mongod(baseDir: File, name: String, port: Int): Mongod {

@@ -7,26 +7,24 @@ import com.mongodb.MongoClientSettings
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoDatabase
+import java.io.File
 import org.bson.Document
 import org.bson.UuidRepresentation.STANDARD
 import org.testng.SkipException
-import java.io.File
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 open class BottleRocketTest {
-    val mongoClient: MongoClient by lazy {
-        startMongo()
-    }
-    val database: MongoDatabase by lazy {
-        mongoClient.getDatabase(databaseName())
-    }
-    val serverVersion: Double = (mongoClient
-        .getDatabase("admin")
-        .runCommand(Document("serverStatus", 1))["version"] as String?)
-        ?.substring(0, 3)?.toDouble()
-        ?: throw IllegalStateException("Could not determine server version")
+    val mongoClient: MongoClient by lazy { startMongo() }
+    val database: MongoDatabase by lazy { mongoClient.getDatabase(databaseName()) }
+    val serverVersion: Double =
+        (mongoClient.getDatabase("admin").runCommand(Document("serverStatus", 1))["version"]
+                as String?)
+            ?.substring(0, 3)
+            ?.toDouble()
+            ?: throw IllegalStateException("Could not determine server version")
 
-    open fun createCluster(version: Version) = SingleNode(version, databaseName(), clusterRoot = File(dbPath()))
+    open fun createCluster(version: Version) =
+        SingleNode(version, databaseName(), clusterRoot = File(dbPath()))
     open fun databaseName() = "mongoTest"
     open fun dbPath() = "target/mongo/"
     open fun uuidRepresentation() = STANDARD
@@ -42,8 +40,7 @@ open class BottleRocketTest {
     }
 
     private fun runIsMaster(): Document {
-        return mongoClient.getDatabase("admin")
-            .runCommand(Document("ismaster", 1))
+        return mongoClient.getDatabase("admin").runCommand(Document("ismaster", 1))
     }
 
     private fun startMongo(): MongoClient {

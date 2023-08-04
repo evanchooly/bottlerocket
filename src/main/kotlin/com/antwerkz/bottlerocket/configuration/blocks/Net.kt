@@ -8,15 +8,12 @@ import com.antwerkz.bottlerocket.configuration.types.ServiceExecutor
 class Net(
     var port: Int? = null,
     var bindIp: String? = "127.0.0.1",
-    @Added("3.6.0")
-    var bindIpAll: Boolean? = null,
+    @Added("3.6.0") var bindIpAll: Boolean? = null,
     var compression: Compression? = null,
     var ipv6: Boolean? = null,
     var maxIncomingConnections: Int? = null,
-    @Added("3.6.0")
-    var serviceExecutor: ServiceExecutor? = null,
-    @Removed("4.0.0")
-    var transportLayer: String? = null,
+    @Added("3.6.0") var serviceExecutor: ServiceExecutor? = null,
+    @Removed("4.0.0") var transportLayer: String? = null,
     var ssl: Ssl? = null,
     var tls: Tls? = null,
     var unixDomainSocket: UnixDomainSocket? = null,

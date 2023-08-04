@@ -6,7 +6,7 @@ import com.github.zafarkhaja.semver.Version
 import org.testng.Assert.assertNotNull
 import org.testng.annotations.Test
 
-class Tester: BottleRocketTest() {
+class Tester : BottleRocketTest() {
     override fun version(): Version {
         return BottleRocket.DEFAULT_VERSION
     }

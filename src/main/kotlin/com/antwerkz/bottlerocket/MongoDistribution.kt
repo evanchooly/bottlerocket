@@ -2,6 +2,12 @@ package com.antwerkz.bottlerocket
 
 import com.antwerkz.bottlerocket.LinuxDistribution.TestDistro
 import com.github.zafarkhaja.semver.Version
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.net.URL
+import java.util.zip.GZIPInputStream
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.ArchiveInputStream
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
@@ -11,27 +17,26 @@ import org.apache.commons.lang3.SystemUtils
 import org.apache.hc.client5.http.HttpResponseException
 import org.apache.hc.client5.http.fluent.Request
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.IOException
-import java.net.URL
-import java.util.zip.GZIPInputStream
 
 open class MongoDistribution(val version: Version) {
     companion object {
         private val LOG = LoggerFactory.getLogger(MongoDistribution::class.java)
         internal fun of(version: Version): MongoDistribution {
             return when ("${version.majorVersion}.${version.minorVersion}") {
-                "4.2" -> object: MongoDistribution(version) {
-                    override fun linux() = maxUbuntu(super.linux(), "ubuntu1804")
-                    override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2012plus-$version.zip"
-                }
-                "4.0" -> object: MongoDistribution(version) {
-                    override fun linux() = maxUbuntu(super.linux(), "ubuntu1804")
-                    override fun macDownload(version: Version) = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-$version.tgz"
-                    override fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-$version.zip"
-                }
+                "4.2" ->
+                    object : MongoDistribution(version) {
+                        override fun linux() = maxUbuntu(super.linux(), "ubuntu1804")
+                        override fun windowsDownload(version: Version) =
+                            "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2012plus-$version.zip"
+                    }
+                "4.0" ->
+                    object : MongoDistribution(version) {
+                        override fun linux() = maxUbuntu(super.linux(), "ubuntu1804")
+                        override fun macDownload(version: Version) =
+                            "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-$version.tgz"
+                        override fun windowsDownload(version: Version) =
+                            "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-$version.zip"
+                    }
                 else -> MongoDistribution(version)
             }
         }
@@ -40,9 +45,12 @@ open class MongoDistribution(val version: Version) {
     internal lateinit var archive: File
     internal val binDir: String by lazy { "${download()}/bin" }
     internal var downloadPath: File = File(BottleRocket.TEMP_DIR, "mongo-downloads")
-    internal open fun macDownload(version: Version) = "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-$version.tgz"
-    internal open fun linuxDownload(version: Version) = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-$version.tgz"
-    internal open fun windowsDownload(version: Version) = "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-${version}.zip"
+    internal open fun macDownload(version: Version) =
+        "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-$version.tgz"
+    internal open fun linuxDownload(version: Version) =
+        "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-$version.tgz"
+    internal open fun windowsDownload(version: Version) =
+        "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-${version}.zip"
 
     internal var linux: LinuxDistribution = TestDistro("test", "...", "...")
         get() {
@@ -58,12 +66,14 @@ open class MongoDistribution(val version: Version) {
     }
 
     private fun download(): File {
-        val url = when {
-            SystemUtils.IS_OS_LINUX -> linuxDownload(version)
-            SystemUtils.IS_OS_MAC_OSX -> macDownload(version)
-            SystemUtils.IS_OS_WINDOWS -> windowsDownload(version)
-            else -> throw RuntimeException("Unsupported operating system: ${SystemUtils.OS_NAME}")
-        }
+        val url =
+            when {
+                SystemUtils.IS_OS_LINUX -> linuxDownload(version)
+                SystemUtils.IS_OS_MAC_OSX -> macDownload(version)
+                SystemUtils.IS_OS_WINDOWS -> windowsDownload(version)
+                else ->
+                    throw RuntimeException("Unsupported operating system: ${SystemUtils.OS_NAME}")
+            }
 
         return extractDownload(String.format(url, version))
     }
@@ -96,10 +106,7 @@ open class MongoDistribution(val version: Version) {
             }
 
             file?.let {
-                File(it, "bin").listFiles()
-                    ?.forEach { file ->
-                        file.setExecutable(true)
-                    }
+                File(it, "bin").listFiles()?.forEach { file -> file.setExecutable(true) }
                 return it
             }
         }
@@ -115,7 +122,9 @@ open class MongoDistribution(val version: Version) {
                 archive.parentFile.mkdirs()
                 try {
                     Request.get(path)
-                        .userAgent("Mozilla/5.0 (compatible; bottlerocket; +https://github.com/evanchooly/bottlerocket)")
+                        .userAgent(
+                            "Mozilla/5.0 (compatible; bottlerocket; +https://github.com/evanchooly/bottlerocket)"
+                        )
                         .execute()
                         .saveContent(archive)
                 } catch (e: HttpResponseException) {
@@ -128,11 +137,12 @@ open class MongoDistribution(val version: Version) {
 
     private fun File.extract(): File {
         val destination = File(parentFile, "mongo-$version")
-        val stream = if (GzipUtils.isCompressedFilename(name)) {
-            TarArchiveInputStream(GZIPInputStream(FileInputStream(this)))
-        } else {
-            ZipArchiveInputStream(FileInputStream(this))
-        }
+        val stream =
+            if (GzipUtils.isCompressedFilename(name)) {
+                TarArchiveInputStream(GZIPInputStream(FileInputStream(this)))
+            } else {
+                ZipArchiveInputStream(FileInputStream(this))
+            }
         stream.extractTo(destination)
         return destination
     }
@@ -145,9 +155,7 @@ open class MongoDistribution(val version: Version) {
                 file.parentFile.mkdirs()
                 if (!file.exists() || entry.size != file.length()) {
                     LOG.debug("Extracting archive entry to $file")
-                    FileOutputStream(file).use {
-                        inputStream.copyTo(it)
-                    }
+                    FileOutputStream(file).use { inputStream.copyTo(it) }
                 }
                 entry = inputStream.nextEntry
             }
@@ -156,7 +164,9 @@ open class MongoDistribution(val version: Version) {
 }
 
 private fun maxUbuntu(proposed: String, max: String): String {
-    return if(proposed.contains("ubuntu") && proposed.substring(6).toInt() > max.substring(6).toInt()) {
+    return if (
+        proposed.contains("ubuntu") && proposed.substring(6).toInt() > max.substring(6).toInt()
+    ) {
         max
     } else {
         proposed

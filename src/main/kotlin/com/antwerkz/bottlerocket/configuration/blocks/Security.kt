@@ -9,8 +9,7 @@ import com.antwerkz.bottlerocket.configuration.types.State
 class Security(
     var keyFile: String? = null,
     var clusterAuthMode: ClusterAuthMode? = null,
-    @Mode(ConfigMode.MONGOD)
-    var authorization: State? = null,
+    @Mode(ConfigMode.MONGOD) var authorization: State? = null,
     var ldap: Ldap? = null,
     var sasl: Sasl? = null,
     var kmip: Kmip? = null,

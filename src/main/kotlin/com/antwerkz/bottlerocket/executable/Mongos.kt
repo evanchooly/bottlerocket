@@ -4,8 +4,8 @@ import com.antwerkz.bottlerocket.MongoManager
 import com.antwerkz.bottlerocket.configuration.ConfigMode.MONGOS
 import java.io.File
 
-class Mongos internal constructor(manager: MongoManager, baseDir: File, name: String, port: Int)
-    : MongoExecutable(manager, baseDir, name, port) {
+class Mongos internal constructor(manager: MongoManager, baseDir: File, name: String, port: Int) :
+    MongoExecutable(manager, baseDir, name, port) {
 
     fun start() {
         if (!isAlive()) {

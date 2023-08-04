@@ -48,9 +48,7 @@ class Configuration(
 
     fun update(updates: Configuration): Configuration {
         val target = empty<Configuration>()
-        return target
-            .mergeValues(this)
-            .mergeValues(updates) as Configuration
+        return target.mergeValues(this).mergeValues(updates) as Configuration
     }
 
     private fun <T : ConfigBlock> ConfigBlock.empty(): T {
@@ -58,17 +56,15 @@ class Configuration(
     }
 
     private fun ConfigBlock.mergeValues(source: ConfigBlock): ConfigBlock {
-        source.javaClass.kotlin.memberProperties
-            .forEach { p: KProperty1<ConfigBlock, *> ->
-                var fieldValue = p.get(source)
-                if (fieldValue != null) {
-                    if (fieldValue is ConfigBlock) {
-                        fieldValue = fieldValue.empty<ConfigBlock>()
-                            .mergeValues(fieldValue)
-                    }
-                    (p as KMutableProperty<*>).setter.call(this, fieldValue)
+        source.javaClass.kotlin.memberProperties.forEach { p: KProperty1<ConfigBlock, *> ->
+            var fieldValue = p.get(source)
+            if (fieldValue != null) {
+                if (fieldValue is ConfigBlock) {
+                    fieldValue = fieldValue.empty<ConfigBlock>().mergeValues(fieldValue)
                 }
+                (p as KMutableProperty<*>).setter.call(this, fieldValue)
             }
+        }
         return this
     }
 

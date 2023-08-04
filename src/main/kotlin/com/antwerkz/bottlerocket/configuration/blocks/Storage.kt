@@ -9,18 +9,15 @@ import com.antwerkz.bottlerocket.configuration.Removed
 class Storage(
     @Mode(ConfigMode.MONGOD) var dbPath: String? = null,
     @Mode(ConfigMode.MONGOD) var directoryPerDB: Boolean? = null,
-    @Removed("4.4.0")
-    @Mode(ConfigMode.MONGOD) var indexBuildRetry: Boolean? = null,
-    @Removed("4.2.0")
-    @Mode(ConfigMode.MONGOD) var repairPath: String? = null,
+    @Removed("4.4.0") @Mode(ConfigMode.MONGOD) var indexBuildRetry: Boolean? = null,
+    @Removed("4.2.0") @Mode(ConfigMode.MONGOD) var repairPath: String? = null,
     @Mode(ConfigMode.MONGOD) var syncPeriodSecs: Int? = null,
     var engine: String? = null,
     @Mode(ConfigMode.MONGOD) var journal: Journal? = null,
     var mmapv1: Mmapv1? = null,
     var inMemory: InMemory? = null,
     var wiredTiger: WiredTiger? = null,
-    @Added("4.4.0")
-    var oplogMinRetentionHours: Int? = null
+    @Added("4.4.0") var oplogMinRetentionHours: Int? = null
 ) : ConfigBlock {
     fun journal(init: Journal.() -> Unit) {
         journal = initConfigBlock(Journal(), init)

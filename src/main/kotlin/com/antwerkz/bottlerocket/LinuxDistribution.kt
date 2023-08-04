@@ -1,8 +1,8 @@
 package com.antwerkz.bottlerocket
 
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.Properties
+import org.slf4j.LoggerFactory
 
 @Suppress("unused")
 sealed class LinuxDistribution(private val meta: Properties = Properties()) {
@@ -11,9 +11,7 @@ sealed class LinuxDistribution(private val meta: Properties = Properties()) {
         internal fun parse(osRelease: File): LinuxDistribution {
             return if (osRelease.exists()) {
                 val props = Properties()
-                osRelease.inputStream().use {
-                    props.load(it)
-                }
+                osRelease.inputStream().use { props.load(it) }
                 val name = props.getProperty("NAME").replace("\"", "")
                 when (name) {
                     "Ubuntu" -> Ubuntu(props)
@@ -47,8 +45,12 @@ sealed class LinuxDistribution(private val meta: Properties = Properties()) {
         override fun mongoVersion() = "ubuntu" + version().replace(".", "")
     }
 
-    internal class TestDistro(val name: String, val version: String, val mongoVersion: String, val id: String = name.lowercase()) 
-        : LinuxDistribution() {
+    internal class TestDistro(
+        val name: String,
+        val version: String,
+        val mongoVersion: String,
+        val id: String = name.lowercase()
+    ) : LinuxDistribution() {
         override fun name() = name
         override fun mongoVersion() = mongoVersion
         override fun version() = version

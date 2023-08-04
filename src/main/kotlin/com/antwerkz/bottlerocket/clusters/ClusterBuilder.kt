@@ -33,12 +33,13 @@ class ClusterBuilder(var type: ClusterType) {
         return this
     }
 
-   fun <T: MongoCluster> build(): T {
-        return when(type) {
+    fun <T : MongoCluster> build(): T {
+        return when (type) {
             SINGLE -> SingleNode(version, name, baseDir, allocator.next())
             REPLICA_SET -> ReplicaSet(version, name, baseDir, allocator)
             SHARDED -> ShardedCluster(version, name, baseDir, allocator)
-        } as T
+        }
+            as T
     }
 }
 

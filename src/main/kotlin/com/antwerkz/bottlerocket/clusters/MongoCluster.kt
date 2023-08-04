@@ -14,13 +14,13 @@ import com.mongodb.MongoCredential.createCredential
 import com.mongodb.ServerAddress
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
-import org.bson.UuidRepresentation.STANDARD
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.io.File
 import java.lang.Thread.sleep
 import java.util.concurrent.TimeUnit.SECONDS
+import org.bson.UuidRepresentation.STANDARD
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 abstract class MongoCluster(
     val clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
@@ -37,12 +37,18 @@ abstract class MongoCluster(
     internal val mongoManager: MongoManager = MongoManager(version)
 
     //    val keyFile: String = File(clusterRoot, "rocket.key").absolutePath
-//    val pemFile: String = File(clusterRoot, "rocket.pem").absolutePath
+    //    val pemFile: String = File(clusterRoot, "rocket.pem").absolutePath
     val adminClient: MongoClient by lazy {
         val builder = builder()
         configure(builder)
         if (isAuthEnabled()) {
-            builder.credential(createCredential(MongoExecutable.SUPER_USER, "admin", SUPER_USER_PASSWORD.toCharArray()))
+            builder.credential(
+                createCredential(
+                    MongoExecutable.SUPER_USER,
+                    "admin",
+                    SUPER_USER_PASSWORD.toCharArray()
+                )
+            )
         }
         MongoClients.create(builder.build())
     }
@@ -66,7 +72,7 @@ abstract class MongoCluster(
     }
 
     open fun shutdown() {
-        sleep(1000)  // make sure the processes are gone
+        sleep(1000) // make sure the processes are gone
         adminClient.close()
         client?.close()
         client = null
@@ -100,9 +106,7 @@ abstract class MongoCluster(
     open fun getClient(builder: Builder = builder()): MongoClient {
         if (client == null) {
             configure(builder)
-            credentials?.let {
-                builder.credential(it)
-            }
+            credentials?.let { builder.credential(it) }
             client = MongoClients.create(builder.build())
         }
 
@@ -112,12 +116,8 @@ abstract class MongoCluster(
     private fun configure(builder: Builder) {
         builder
             .uuidRepresentation(STANDARD)
-            .applyToConnectionPoolSettings {
-                it.maxWaitTime(30, SECONDS)
-            }
-            .applyToClusterSettings {
-                it.hosts(getServerAddressList())
-            }
+            .applyToConnectionPoolSettings { it.maxWaitTime(30, SECONDS) }
+            .applyToClusterSettings { it.hosts(getServerAddressList()) }
     }
     /*
         fun generateKeyFile() {
@@ -194,17 +194,18 @@ abstract class MongoCluster(
                 } finally {
                     pemStream.close()
                 }
-    *//*
+    */
+    /*
 
+            }
+            try {
+                Files.setPosixFilePermissions(pem.toPath(), perms)
+                Files.setPosixFilePermissions(keyFile.toPath(), perms)
+                Files.setPosixFilePermissions(crtFile.toPath(), perms)
+            } catch (ignored: UnsupportedOperationException) {
+            }
         }
-        try {
-            Files.setPosixFilePermissions(pem.toPath(), perms)
-            Files.setPosixFilePermissions(keyFile.toPath(), perms)
-            Files.setPosixFilePermissions(crtFile.toPath(), perms)
-        } catch (ignored: UnsupportedOperationException) {
-        }
-    }
-*/
+    */
     fun addUser(database: String, userName: String, password: String, roles: List<DatabaseRole>) {
         mongoManager.addUser(adminClient, database, userName, password, roles)
         credentials = createCredential(userName, database, password.toCharArray())

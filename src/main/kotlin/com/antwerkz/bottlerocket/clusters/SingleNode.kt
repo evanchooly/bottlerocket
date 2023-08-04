@@ -7,7 +7,9 @@ import com.github.zafarkhaja.semver.Version
 import com.mongodb.ServerAddress
 import java.io.File
 
-class SingleNode @JvmOverloads constructor(
+class SingleNode
+@JvmOverloads
+constructor(
     version: Version = BottleRocket.DEFAULT_VERSION,
     name: String = BottleRocket.DEFAULT_NAME,
     clusterRoot: File = BottleRocket.DEFAULT_BASE_DIR,
@@ -16,16 +18,14 @@ class SingleNode @JvmOverloads constructor(
 
     private val mongod: Mongod = mongoManager.mongod(clusterRoot, name, port)
 
-    override
-    fun start() {
+    override fun start() {
         if (!mongod.isAlive()) {
             mongod.start()
         }
         super.start()
     }
 
-    override
-    fun shutdown() {
+    override fun shutdown() {
         mongod.shutdown()
         super.shutdown()
     }
@@ -54,7 +54,8 @@ class SingleNode @JvmOverloads constructor(
     }
 
     override fun toString(): String {
-        var content = "name = $name, version = $version, port = $allocator, baseDir = $clusterRoot, running = ${mongod.isAlive()}"
+        var content =
+            "name = $name, version = $version, port = $allocator, baseDir = $clusterRoot, running = ${mongod.isAlive()}"
         if (isAuthEnabled()) {
             content += ", authentication = enabled"
         }

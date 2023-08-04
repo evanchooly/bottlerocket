@@ -23,10 +23,10 @@ interface ConfigBlock {
         return mode == null || mode.value == configMode || configMode == ConfigMode.ALL
     }
 
-    private inline fun <reified T : Annotation> getAnnotation(property: KProperty1<ConfigBlock, *>): T? {
-        return property.annotations
-            .filterIsInstance(T::class.java)
-            .firstOrNull()
+    private inline fun <reified T : Annotation> getAnnotation(
+        property: KProperty1<ConfigBlock, *>
+    ): T? {
+        return property.annotations.filterIsInstance(T::class.java).firstOrNull()
     }
 
     fun toMap(mode: ConfigMode = ConfigMode.MONGOD, includeAll: Boolean = false): Map<String, Any> {
@@ -74,16 +74,13 @@ fun Map<*, *>.toYaml(indent: String = ""): String {
                 builder.append("$indent${it.key}:\n$yaml")
             }
         } else {
-            builder.append(indent)
-                .append(it.key)
-                .append(": ")
-                .append(it.value)
-                .append("\n")
+            builder.append(indent).append(it.key).append(": ").append(it.value).append("\n")
         }
     }
     return builder.toString()
 }
 
 fun String.toCamelCase(): String {
-    return if (length > 1) this[0].lowercaseChar() + substring(1) else lowercase(Locale.getDefault())
+    return if (length > 1) this[0].lowercaseChar() + substring(1)
+    else lowercase(Locale.getDefault())
 }
