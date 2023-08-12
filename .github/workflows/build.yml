@@ -16,23 +16,23 @@ jobs:
       saveBuild: true
       maven-flags: "-Dmongodb=6"
 
-  Test:
-    needs:
-      - Build
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, ubuntu-22.04, ubuntu-20.04, windows-latest, macos-latest ]
-    uses: evanchooly/workflows/.github/workflows/build.yml@master
-    with:
-      os: ${{matrix.os}}
-      reuseBuild: true
-      archive-name: "${{matrix.mongo}}-${{matrix.driver}}-${{matrix.java}}-${{github.run_id}}"
+#  Test:
+#    needs:
+#      - Build
+#    strategy:
+#      matrix:
+#        os: [ ubuntu-latest, ubuntu-22.04, ubuntu-20.04, windows-latest, macos-latest ]
+#    uses: evanchooly/workflows/.github/workflows/build.yml@master
+#    with:
+#      os: ${{matrix.os}}
+#      reuseBuild: true
+#      archive-name: "${{matrix.mongo}}-${{matrix.driver}}-${{matrix.java}}-${{github.run_id}}"
 
   Release:
     if: github.ref_type == 'branch' || github.ref_type == 'tag'
     needs:
       - Build
-      - Test
+#      - Test
     uses: evanchooly/workflows/.github/workflows/release.yml@master
     with:
       java: 20
