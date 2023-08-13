@@ -9,12 +9,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  Build:
-    uses: evanchooly/workflows/.github/workflows/build.yml@master
-    with:
-      java: 20
-      saveBuild: true
-      maven-flags: "-Dmongodb=6"
+#  Build:
+#    uses: evanchooly/workflows/.github/workflows/build.yml@master
+#    with:
+#      java: 20
+#      saveBuild: true
+#      maven-flags: "-Dmongodb=6"
 
 #  Test:
 #    needs:
@@ -30,8 +30,8 @@ jobs:
 
   Release:
     if: github.ref_type == 'branch' || github.ref_type == 'tag'
-    needs:
-      - Build
+#    needs:
+#      - Build
 #      - Test
     uses: evanchooly/workflows/.github/workflows/release.yml@master
     with:
