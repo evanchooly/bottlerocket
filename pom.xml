@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.antwerkz</groupId>
         <artifactId>antwerkz-parent</artifactId>
-        <version>18</version>
+        <version>20</version>
     </parent>
 
     <groupId>com.antwerkz.bottlerocket</groupId>
