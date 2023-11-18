@@ -4,45 +4,51 @@ on:
   push:
     branches-ignore:
       - 'dependabot/**'
-    tags:
-      - r[0-9]*
   workflow_dispatch:
 
 jobs:
-#  Build:
-#    uses: evanchooly/workflows/.github/workflows/build.yml@master
-#    with:
-#      java: 20
-#      saveBuild: true
-#      maven-flags: "-Dmongodb=6"
+  Matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Is releasable branch
+        id: releasable
+        run: |
+          if [ "${{ github.event.ref }}" == 'refs/heads/master' ] \
+            || [ "${{ github.event.ref }}" == 'refs/heads/main' ] \
+            || [[ "${{ github.event.ref }}" =~ ^refs/heads/[0-9]+\.[0-9]+\.x$ ]] \
+            || [[ "${{ github.event.ref }}" =~ ^refs/tags/v[0-9]+\.[0-9]+.[0-9]+$ ]]
+          then
+            echo "releasable=true" >> $GITHUB_OUTPUT
+          else
+            echo "releasable=false" >> $GITHUB_OUTPUT
+          fi          
 
-#  Test:
-#    needs:
-#      - Build
-#    strategy:
-#      matrix:
-#        os: [ ubuntu-latest, ubuntu-22.04, ubuntu-20.04, windows-latest, macos-latest ]
-#    uses: evanchooly/workflows/.github/workflows/build.yml@master
-#    with:
-#      os: ${{matrix.os}}
-#      reuseBuild: true
-#      archive-name: "${{matrix.mongo}}-${{matrix.driver}}-${{matrix.java}}-${{github.run_id}}"
+    outputs:
+      releasable: ${{ steps.releasable.outputs.releasable }}
+
+  Test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, ubuntu-22.04, ubuntu-20.04, windows-latest, macos-latest ]
+    uses: evanchooly/workflows/.github/workflows/build.yml@master
+    with:
+      os: ${{matrix.os}}
+      reuseBuild: true
+      archive-name: "${{matrix.mongo}}-${{matrix.driver}}-${{matrix.java}}-${{github.run_id}}"
 
   Release:
-    if: github.ref_type == 'branch' || github.ref_type == 'tag'
-#    needs:
-#      - Build
-#      - Test
-    uses: evanchooly/workflows/.github/workflows/release.yml@master
+    needs:
+      - Test
+      - Matrix
+    if: needs.Matrix.outputs.releasable == 'true'
+    uses: evanchooly/workflows/.github/workflows/jreleaser.yml@master
     with:
       java: 20
     secrets:
-      BLUESKY_PASSWORD: ${{secrets.BLUESKY_PASSWORD }}
-      BLUESKY_USERNAME: ${{secrets.BLUESKY_USERNAME }}
-      JRELEASER_GITHUB_TOKEN: ${{secrets.JRELEASER_GITHUB_TOKEN }}
-      JRELEASER_GPG_PASSPHRASE: ${{secrets.JRELEASER_GPG_PASSPHRASE }}
-      JRELEASER_GPG_PUBLIC_KEY: ${{secrets.JRELEASER_GPG_PUBLIC_KEY }}
-      JRELEASER_GPG_SECRET_KEY: ${{secrets.JRELEASER_GPG_SECRET_KEY }}
-      JRELEASER_NEXUS2_PASSWORD: ${{secrets.JRELEASER_NEXUS2_PASSWORD }}
-      JRELEASER_NEXUS2_USERNAME: ${{secrets.JRELEASER_NEXUS2_USERNAME }}
-      MASTODON_ACCESS_KEY: ${{secrets.MASTODON_ACCESS_KEY }}
+      GH_PUSH_TOKEN       : ${{ secrets.GH_PUSH_TOKEN }}
+      GPG_PASSPHRASE      : ${{ secrets.GPG_PASSPHRASE }}
+      GPG_PUBLIC_KEY      : ${{ secrets.GPG_PUBLIC_KEY }}
+      GPG_PRIVATE_KEY     : ${{ secrets.GPG_PRIVATE_KEY }}
+      SONATYPE_USERNAME   : ${{ secrets.SONATYPE_USERNAME }}
+      SONATYPE_PASSWORD   : ${{ secrets.SONATYPE_PASSWORD }}
