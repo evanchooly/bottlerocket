@@ -27,15 +27,7 @@ jobs:
       releasable: ${{ steps.releasable.outputs.releasable }}
 
   Test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, ubuntu-22.04, ubuntu-20.04, windows-latest, macos-latest ]
     uses: evanchooly/workflows/.github/workflows/build.yml@master
-    with:
-      os: ${{matrix.os}}
-      reuseBuild: true
-      archive-name: "${{matrix.mongo}}-${{matrix.driver}}-${{matrix.java}}-${{github.run_id}}"
 
   Release:
     needs:
