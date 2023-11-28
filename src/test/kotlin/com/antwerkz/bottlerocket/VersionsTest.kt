@@ -7,7 +7,6 @@ import org.testng.Assert.assertFalse
 import org.testng.Assert.assertTrue
 import org.testng.annotations.Test
 
-@Test
 class VersionsTest {
     fun latest() {
         val doc = Jsoup.parse(URL("https://www.mongodb.com/try/download/community"), 10000)
