@@ -25,10 +25,15 @@ open class BottleRocketTest {
 
     open fun createCluster(version: Version) =
         SingleNode(version, databaseName(), clusterRoot = File(dbPath()))
+
     open fun databaseName() = "mongoTest"
+
     open fun dbPath() = "target/mongo/"
+
     open fun uuidRepresentation() = STANDARD
+
     open fun version() = System.getenv("MONGODB")?.let { Version.valueOf(it) }
+
     fun isReplicaSet(): Boolean {
         return runIsMaster()["setName"] != null
     }

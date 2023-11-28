@@ -70,6 +70,7 @@ constructor(
             throw RuntimeException("Failed to add ${replicaSet.name} to cluster:  $results")
         }
     }
+
     override fun isStarted(): Boolean {
         return mongoses.any { it.isAlive() } &&
             configServer.isStarted() &&

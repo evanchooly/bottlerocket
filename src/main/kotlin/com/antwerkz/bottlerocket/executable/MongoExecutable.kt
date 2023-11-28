@@ -35,6 +35,7 @@ internal constructor(
     private var client: MongoClient? = null
     internal var config = manager.initialConfig(baseDir, name, port)
         private set
+
     val logger: Logger = LoggerFactory.getLogger("${this::class.simpleName}.$port")
 
     companion object {

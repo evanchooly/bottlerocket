@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 sealed class LinuxDistribution(private val meta: Properties = Properties()) {
     companion object {
         private val LOG = LoggerFactory.getLogger(LinuxDistribution::class.java)
+
         internal fun parse(osRelease: File): LinuxDistribution {
             return if (osRelease.exists()) {
                 val props = Properties()
@@ -31,8 +32,11 @@ sealed class LinuxDistribution(private val meta: Properties = Properties()) {
     open fun name(): String {
         return meta.getProperty("ID")
     }
+
     open fun version(): String = meta.getProperty("VERSION_ID").replace("\"", "")
+
     abstract fun mongoVersion(): String
+
     override fun toString(): String {
         return "${meta.getProperty("ID")} ${version()} [MongoDB qualifier: ${mongoVersion()}]"
     }
@@ -52,7 +56,9 @@ sealed class LinuxDistribution(private val meta: Properties = Properties()) {
         val id: String = name.lowercase()
     ) : LinuxDistribution() {
         override fun name() = name
+
         override fun mongoVersion() = mongoVersion
+
         override fun version() = version
     }
 }

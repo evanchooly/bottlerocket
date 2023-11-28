@@ -21,19 +21,23 @@ import org.slf4j.LoggerFactory
 open class MongoDistribution(val version: Version) {
     companion object {
         private val LOG = LoggerFactory.getLogger(MongoDistribution::class.java)
+
         internal fun of(version: Version): MongoDistribution {
             return when ("${version.majorVersion}.${version.minorVersion}") {
                 "4.2" ->
                     object : MongoDistribution(version) {
                         override fun linux() = maxUbuntu(super.linux(), "ubuntu1804")
+
                         override fun windowsDownload(version: Version) =
                             "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2012plus-$version.zip"
                     }
                 "4.0" ->
                     object : MongoDistribution(version) {
                         override fun linux() = maxUbuntu(super.linux(), "ubuntu1804")
+
                         override fun macDownload(version: Version) =
                             "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-$version.tgz"
+
                         override fun windowsDownload(version: Version) =
                             "https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-$version.zip"
                     }
@@ -45,10 +49,13 @@ open class MongoDistribution(val version: Version) {
     internal lateinit var archive: File
     internal val binDir: String by lazy { "${download()}/bin" }
     internal var downloadPath: File = File(BottleRocket.TEMP_DIR, "mongo-downloads")
+
     internal open fun macDownload(version: Version) =
         "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-$version.tgz"
+
     internal open fun linuxDownload(version: Version) =
         "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${linux()}-$version.tgz"
+
     internal open fun windowsDownload(version: Version) =
         "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-${version}.zip"
 

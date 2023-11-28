@@ -74,6 +74,7 @@ open class BaseTest {
     protected fun basePath(version: Version): File {
         return File("target/rocket/$version")
     }
+
     protected fun assumeNotOldUbuntu(version: Version) {
         if (SystemUtils.IS_OS_LINUX) {
             val distro = LinuxDistribution.parse(File("/etc/os-release"))

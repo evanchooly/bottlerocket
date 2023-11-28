@@ -16,12 +16,17 @@ internal class MongoManager(val version: Version) {
     companion object {
         val log = LoggerFactory.getLogger(MongoManager::class.java)
     }
+
     internal val extension = if (SystemUtils.IS_OS_WINDOWS) ".exe" else ""
     private val mongoDistribution = MongoDistribution.of(version)
     private val binDir = mongoDistribution.binDir
+
     internal fun mongo() = "$binDir/mongo${extension}"
+
     internal fun mongod() = "$binDir/mongod${extension}"
+
     internal fun mongos() = "$binDir/mongos${extension}"
+
     fun initialConfig(baseDir: File, name: String, port: Int): Configuration {
         return configuration {
             net {

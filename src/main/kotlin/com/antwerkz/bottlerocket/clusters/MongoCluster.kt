@@ -61,7 +61,9 @@ abstract class MongoCluster(
     }
 
     abstract fun getServerAddressList(): List<ServerAddress>
+
     abstract fun isStarted(): Boolean
+
     fun restart() {
         shutdown()
         start()
