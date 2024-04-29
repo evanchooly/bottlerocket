@@ -38,7 +38,7 @@
     </scm>
 
     <properties>
-        <slf4j.version>2.0.12</slf4j.version>
+        <slf4j.version>2.0.13</slf4j.version>
         <testng.version>7.10.2</testng.version>
 
 <!--        <maven.source.forceCreation>true</maven.source.forceCreation>-->
